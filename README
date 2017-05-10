@@ -1,0 +1,17 @@
+Note: to run the following scripts, you may need to open them up and edit paths and file names depending on your local setup.
+
+First, start with a HepMC event (made with Pythia or some other generator) describing a generated process, such as ee->jj.
+Convert this to HEPEvt using the convertHepMCToHEPEvt.sh script. Same thing, just a different file format.
+You'll need to install the HepMC/ and HepMCToHEPEvt/ Packages first and point the script to the directories where they are installed.
+
+From the HEPEvt file, DD4Sim does simulation and reconstruction, creating a ROOT file. Use the runDdsim.sh script to run this. The ROOT file saves in ROOTFiles/.
+
+Convert this ROOT file to H5 format, giving us the ECAL and HCAL arrays we want to use.
+Edit convertROOTToH5 scripts to point to the right files.
+Run convertROOTToH5_Part1.sh and convertROOTToH5_Part2.sh in different sessions. This is because the ILCSoft version of Python doesn't have numpy installed, so you'll want to use the default lxplus environment to run part 2.
+
+convertROOTToH5_Part1 just takes the x, y, z, and E data for ECAL and HCAL, along with metadata such as gun pT and pdgID, and writes them to a text file.
+convertROOTToH5_Part2 does the calculations of barycenters in order to cut out chunks of calorimeter. Features are also calculated in this script.
+The txt and h5 files save in TxtFiles/ and H5Files/.
+
+In my Macbook projects folder I have some Jupyter notebooks where I played around with looking at data, moving the h5 files to my local directory first.
