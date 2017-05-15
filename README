@@ -14,4 +14,6 @@ convertROOTToH5_Part1 just takes the x, y, z, and E data for ECAL and HCAL, alon
 convertROOTToH5_Part2 does the calculations of barycenters in order to cut out chunks of calorimeter. Features are also calculated in this script.
 The txt and h5 files save in TxtFiles/ and H5Files/.
 
+Use the skimH5.py script to create a file with only events with HCAL/ECAL of less than 0.2. This saves in SkimmedH5Files/.
+
 In my Macbook projects folder I have some Jupyter notebooks where I played around with looking at data, moving the h5 files to my local directory first.
