@@ -25,7 +25,7 @@ def scatter3d(x,y,z, values, colorsMap='jet'):
     fig.colorbar(scalarMap) # plot color bar
     plt.show()
 
-data = h5py.File("../AllFiles/SkimmedH5Files/gamma_60_GeV_1.h5")
+data = h5py.File("../AllFiles/H5Files/v1/Skimmed/Gamma/gamma_60_GeV_1.h5")
 events = [0, 1, 2, 3, 4]
 
 for eventN in events:
