@@ -11,10 +11,11 @@ def scatter3d(x,y,z, values, colorsMap='jet'):
     cm = plt.get_cmap(colorsMap) # set up color map
     cNorm = matplotlib.colors.Normalize(vmin=min(values), vmax=max(values)) # normalize to min and max of data
     scalarMap = cmx.ScalarMappable(norm=cNorm, cmap=cm) # map data using color scale
+    sizes = values/max(values)*50
 
     fig = plt.figure()
     ax = Axes3D(fig)
-    ax.scatter(x, y, z, c=scalarMap.to_rgba(values)) # plot 3D grid
+    ax.scatter(x, y, z, s=sizes, c=scalarMap.to_rgba(values)) # plot 3D grid
     ax.set_title("Energy in calorimeter")
     ax.set_xlabel("x")
     ax.set_ylabel("y")
@@ -25,15 +26,18 @@ def scatter3d(x,y,z, values, colorsMap='jet'):
     plt.show()
 
 data = h5py.File("../AllFiles/SkimmedH5Files/gamma_60_GeV_1.h5")
+events = [0, 1, 2, 3, 4]
 
-ECAL = data['ECAL']
-x, y, z = np.nonzero(ECAL[0]) # first event
-E = ECAL[0][np.nonzero(ECAL[0])]
-print x.shape, y.shape, z.shape, E.shape
-scatter3d(x,y,z, E)
+for eventN in events:
 
-HCAL = data['HCAL']
-x, y, z = np.nonzero(HCAL[0]) # first event
-E = HCAL[0][np.nonzero(HCAL[0])]
-print x.shape, y.shape, z.shape, E.shape
-scatter3d(x,y,z, E)
+    ECAL = data['ECAL']
+    x, y, z = np.nonzero(ECAL[eventN]) # first event
+    E = ECAL[eventN][np.nonzero(ECAL[eventN])]
+    print x.shape, y.shape, z.shape, E.shape
+    scatter3d(x,y,z, E)
+
+    HCAL = data['HCAL']
+    x, y, z = np.nonzero(HCAL[eventN]) # first event
+    E = HCAL[eventN][np.nonzero(HCAL[eventN])]
+    print x.shape, y.shape, z.shape, E.shape
+    scatter3d(x,y,z, E)
