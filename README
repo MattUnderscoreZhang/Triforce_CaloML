@@ -1,4 +1,4 @@
-Note: to run the following scripts, you may need to open them up and edit paths and file names depending on your local setup.
+Note: to run the following scripts, you need to open them up and edit paths and file names depending on your local setup. I did some reorganizing, so all file paths are probably wrong.
 
 First, start with a HepMC event (made with Pythia or some other generator) describing a generated process, such as ee->jj.
 Convert this to HEPEvt using the convertHepMCToHEPEvt.sh script. Same thing, just a different file format.
