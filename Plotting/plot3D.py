@@ -17,15 +17,15 @@ def scatter3d(x,y,z, values, colorsMap='jet'):
     ax = Axes3D(fig)
     ax.scatter(x, y, z, s=sizes, c=scalarMap.to_rgba(values)) # plot 3D grid
     ax.set_title("Energy in calorimeter")
-    ax.set_xlabel("x")
-    ax.set_ylabel("y")
-    ax.set_zlabel("z")
+    ax.set_xlabel("X")
+    ax.set_ylabel("Y")
+    ax.set_zlabel("Layer")
 
     scalarMap.set_array(values)
     fig.colorbar(scalarMap) # plot color bar
     plt.show()
 
-data = h5py.File("../AllFiles/H5Files/v1/Skimmed/Gamma/gamma_60_GeV_1.h5")
+data = h5py.File("../AllFiles/SkimmedH5Files/pi0_60_GeV_1.h5")
 events = [0, 1, 2, 3, 4]
 
 for eventN in events:

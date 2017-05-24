@@ -16,9 +16,9 @@ for fileName in filesToSkim:
     oldFile = h5py.File(oldFilePath + fileName)
     newFile = h5py.File(newFilePath + fileName, "w")
 
-    badIndices = [index for index, ratio in enumerate(oldFile['ECAL_HCAL_ERatio']) if ratio < 5 or not np.isfinite(ratio)]
+    badIndices = [index for index, ratio in enumerate(oldFile['HCAL_ECAL_ERatio']) if ratio > 0.2 or not np.isfinite(ratio)]
 
-    if len(badIndices) < len(oldFile['ECAL_HCAL_ERatio']):
+    if len(badIndices) < len(oldFile['HCAL_ECAL_ERatio']):
         for dsetName in oldFile.keys():
             dset = h5pp.deleteRows(oldFile, dsetName, badIndices, newFile)
 
