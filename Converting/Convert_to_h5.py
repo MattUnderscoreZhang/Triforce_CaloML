@@ -176,8 +176,8 @@ def convertFile(inFile, outFile):
         myFeatures.add("HCAL_nHits", HCAL_hits)
 
         # Ratio of HCAL/ECAL energy, and other ratios
-        myFeatures.add("HCAL_ECAL_ERatio", ECAL_E/HCAL_E)
-        myFeatures.add("HCAL_ECAL_nHitsRatio", ECAL_hits/HCAL_hits)
+        myFeatures.add("HCAL_ECAL_ERatio", HCAL_E/ECAL_E)
+        myFeatures.add("HCAL_ECAL_nHitsRatio", HCAL_hits/ECAL_hits)
         ECAL_E_firstLayer = np.sum(ECALarray[0])
         HCAL_E_firstLayer = np.sum(HCALarray[0])
         myFeatures.add("ECAL_ratioFirstLayerToTotalE", ECAL_E_firstLayer/ECAL_E)
