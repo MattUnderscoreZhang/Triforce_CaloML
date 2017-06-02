@@ -154,7 +154,7 @@ def convertFile(inFile, outFile):
 
         # Append the ECAL array of 25x25x25 cells around the barycenter to the ECAL array list
         ECALarray = ECAL_barycenter_details[0]/1000.
-        myFeatures.add("ECAL", ECALarray)
+        myFeatures.add("ECAL/ECAL", ECALarray)
 
         # Make a list containing all the cell readouts of HCAL for the event and store it in a single ECAL array
         HCAL_list = []
@@ -163,29 +163,29 @@ def convertFile(inFile, outFile):
 
         # Pass the absolute Y and Z cooridnates as input for determining HCAL array around barrycenter and append it to the HCAl array list
         HCALarray = getHCALArray(np.array(HCAL_list),ECAL_barycenter_details[1],ECAL_barycenter_details[2])/1000.
-        myFeatures.add("HCAL", HCALarray)
+        myFeatures.add("HCAL/HCAL", HCALarray)
 
         # Calorimeter total energy and number of hits
         ECAL_E = np.sum(ECALarray)
         ECAL_hits = np.sum(ECALarray>0)
-        myFeatures.add("ECAL_E", ECAL_E)
-        myFeatures.add("ECAL_nHits", ECAL_hits)
+        myFeatures.add("ECAL/ECAL_E", ECAL_E)
+        myFeatures.add("ECAL/ECAL_nHits", ECAL_hits)
         HCAL_E = np.sum(HCALarray)
         HCAL_hits = np.sum(HCALarray>0)
-        myFeatures.add("HCAL_E", HCAL_E)
-        myFeatures.add("HCAL_nHits", HCAL_hits)
+        myFeatures.add("HCAL/HCAL_E", HCAL_E)
+        myFeatures.add("HCAL/HCAL_nHits", HCAL_hits)
 
         # Ratio of HCAL/ECAL energy, and other ratios
-        myFeatures.add("HCAL_ECAL_ERatio", HCAL_E/ECAL_E)
-        myFeatures.add("HCAL_ECAL_nHitsRatio", HCAL_hits/ECAL_hits)
+        myFeatures.add("ECAL_HCAL_Ratios/HCAL_ECAL_ERatio", HCAL_E/ECAL_E)
+        myFeatures.add("ECAL_HCAL_Ratios/HCAL_ECAL_nHitsRatio", HCAL_hits/ECAL_hits)
         ECAL_E_firstLayer = np.sum(ECALarray[0])
         HCAL_E_firstLayer = np.sum(HCALarray[0])
-        myFeatures.add("ECAL_ratioFirstLayerToTotalE", ECAL_E_firstLayer/ECAL_E)
-        myFeatures.add("HCAL_ratioFirstLayerToTotalE", HCAL_E_firstLayer/HCAL_E)
+        myFeatures.add("ECAL_Ratios/ECAL_ratioFirstLayerToTotalE", ECAL_E_firstLayer/ECAL_E)
+        myFeatures.add("HCAL_Ratios/HCAL_ratioFirstLayerToTotalE", HCAL_E_firstLayer/HCAL_E)
         ECAL_E_secondLayer = np.sum(ECALarray[1])
         HCAL_E_secondLayer = np.sum(HCALarray[1])
-        myFeatures.add("ECAL_ratioFirstLayerToSecondLayerE", ECAL_E_firstLayer/ECAL_E_secondLayer)
-        myFeatures.add("HCAL_ratioFirstLayerToSecondLayerE", HCAL_E_firstLayer/HCAL_E_secondLayer)
+        myFeatures.add("ECAL_Ratios/ECAL_ratioFirstLayerToSecondLayerE", ECAL_E_firstLayer/ECAL_E_secondLayer)
+        myFeatures.add("HCAL_Ratios/HCAL_ratioFirstLayerToSecondLayerE", HCAL_E_firstLayer/HCAL_E_secondLayer)
 
         # ECAL moments
         ECALprojX = np.sum(np.sum(ECALarray, axis=2), axis=1)
@@ -193,13 +193,13 @@ def convertFile(inFile, outFile):
         ECALprojZ = np.sum(np.sum(ECALarray, axis=0), axis=0)
         for i in range(6):
             ECAL_momentX = scipy.stats.moment(ECALprojX, moment=i+1)
-            myFeatures.add("ECALmomentX" + str(i), ECAL_momentX)
+            myFeatures.add("ECAL_Moments/ECALmomentX" + str(i), ECAL_momentX)
         for i in range(6):
             ECAL_momentY = scipy.stats.moment(ECALprojY, moment=i+1)
-            myFeatures.add("ECALmomentY" + str(i), ECAL_momentY)
+            myFeatures.add("ECAL_Moments/ECALmomentY" + str(i), ECAL_momentY)
         for i in range(6):
             ECAL_momentZ = scipy.stats.moment(ECALprojZ, moment=i+1)
-            myFeatures.add("ECALmomentZ" + str(i), ECAL_momentZ)
+            myFeatures.add("ECAL_Moments/ECALmomentZ" + str(i), ECAL_momentZ)
 
         # HCAL moments
         HCALprojX = np.sum(np.sum(HCALarray, axis=2), axis=1)
@@ -207,13 +207,13 @@ def convertFile(inFile, outFile):
         HCALprojZ = np.sum(np.sum(HCALarray, axis=0), axis=0)
         for i in range(6):
             HCAL_momentX = scipy.stats.moment(HCALprojX, moment=i+1)
-            myFeatures.add("HCALmomentX" + str(i), HCAL_momentX)
+            myFeatures.add("HCAL_Moments/HCALmomentX" + str(i), HCAL_momentX)
         for i in range(6):
             HCAL_momentY = scipy.stats.moment(HCALprojY, moment=i+1)
-            myFeatures.add("HCALmomentY" + str(i), HCAL_momentY)
+            myFeatures.add("HCAL_Moments/HCALmomentY" + str(i), HCAL_momentY)
         for i in range(6):
             HCAL_momentZ = scipy.stats.moment(HCALprojZ, moment=i+1)
-            myFeatures.add("HCALmomentZ" + str(i), HCAL_momentZ)
+            myFeatures.add("HCAL_Moments/HCALmomentZ" + str(i), HCAL_momentZ)
 
         # Collecting particle ID, energy of hit, and 3-vector of momentum
         pdgID = my_event['pdgID']
@@ -230,8 +230,8 @@ def convertFile(inFile, outFile):
         # target = np.zeros(2)
         # target[0], target[1] = (pdgID, energy)
         # target_array_list.append(target)
-        myFeatures.add("pdgID", pdgID)
-        myFeatures.add("energy", energy)
+        myFeatures.add("Event/pdgID", pdgID)
+        myFeatures.add("Event/energy", energy)
 
     # Save features to an h5 file
     f = h5py.File(outFile, "w")
