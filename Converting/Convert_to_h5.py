@@ -193,13 +193,13 @@ def convertFile(inFile, outFile):
         ECALprojZ = np.sum(np.sum(ECALarray, axis=0), axis=0)
         for i in range(6):
             ECAL_momentX = scipy.stats.moment(ECALprojX, moment=i+1)
-            myFeatures.add("ECAL_Moments/ECALmomentX" + str(i), ECAL_momentX)
+            myFeatures.add("ECAL_Moments/ECALmomentX" + str(i+1), ECAL_momentX)
         for i in range(6):
             ECAL_momentY = scipy.stats.moment(ECALprojY, moment=i+1)
-            myFeatures.add("ECAL_Moments/ECALmomentY" + str(i), ECAL_momentY)
+            myFeatures.add("ECAL_Moments/ECALmomentY" + str(i+1), ECAL_momentY)
         for i in range(6):
             ECAL_momentZ = scipy.stats.moment(ECALprojZ, moment=i+1)
-            myFeatures.add("ECAL_Moments/ECALmomentZ" + str(i), ECAL_momentZ)
+            myFeatures.add("ECAL_Moments/ECALmomentZ" + str(i+1), ECAL_momentZ)
 
         # HCAL moments
         HCALprojX = np.sum(np.sum(HCALarray, axis=2), axis=1)
@@ -207,13 +207,13 @@ def convertFile(inFile, outFile):
         HCALprojZ = np.sum(np.sum(HCALarray, axis=0), axis=0)
         for i in range(6):
             HCAL_momentX = scipy.stats.moment(HCALprojX, moment=i+1)
-            myFeatures.add("HCAL_Moments/HCALmomentX" + str(i), HCAL_momentX)
+            myFeatures.add("HCAL_Moments/HCALmomentX" + str(i+1), HCAL_momentX)
         for i in range(6):
             HCAL_momentY = scipy.stats.moment(HCALprojY, moment=i+1)
-            myFeatures.add("HCAL_Moments/HCALmomentY" + str(i), HCAL_momentY)
+            myFeatures.add("HCAL_Moments/HCALmomentY" + str(i+1), HCAL_momentY)
         for i in range(6):
             HCAL_momentZ = scipy.stats.moment(HCALprojZ, moment=i+1)
-            myFeatures.add("HCAL_Moments/HCALmomentZ" + str(i), HCAL_momentZ)
+            myFeatures.add("HCAL_Moments/HCALmomentZ" + str(i+1), HCAL_momentZ)
 
         # Collecting particle ID, energy of hit, and 3-vector of momentum
         pdgID = my_event['pdgID']
