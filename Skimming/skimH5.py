@@ -5,6 +5,8 @@ import numpy as np
 oldFilePath = "H5Files/v1/Unskimmed/"
 newFilePath = "H5Files/v1/Skimmed/"
 
+filesToSkim = []
+
 for fileN in range(1, 11):
     filesToSkim.append("gamma_60_GeV_"+str(fileN)+".h5")
     filesToSkim.append("pi0_60_GeV_"+str(fileN)+".h5")

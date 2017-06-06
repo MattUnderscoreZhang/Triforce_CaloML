@@ -7,8 +7,6 @@ def deleteRows(oldFile, dsetName, badRows, newFile):
     badRows.sort() # sort in increasing order
 
     oldDset = oldFile[dsetName]
-    if len(oldDset.shape) == 1: # force 1D array to be 2D, with a second dimension of 1
-        oldDset = np.reshape(oldDset, (-1, 1)) # numpy stacking only works with "2D arrays"
 
     newShape = list(oldDset.shape)
     newShape[0] -= len(badRows)
