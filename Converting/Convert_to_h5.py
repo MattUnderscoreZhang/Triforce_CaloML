@@ -23,6 +23,84 @@ def findEventMidpoint(event):
     Zave = findMidpoint(event[:,6], event[:,3]) 
     return (Yave, Zave)
 
+###############################################
+# Jet functions for calculating nsubjettiness #
+###############################################
+
+# Find dR between two "particles" (calorimeter cells)
+def dR(position1, position2):
+    # CHECKPOINT - fill out function
+    return 1
+
+# Calculate eta
+def eta(r, z):
+    theta = np.atan(z/r)
+    return -np.ln(np.tan(theta/2))
+
+# Find d_ij between two "particles" (calorimeter cells)
+def dij(v1, v2): # each vector is [ET, r, phi, z]
+    R = 1 # Chosen parameter, should be close to 1
+    eta1 = eta(v1[1], v1[3])
+    eta2 = eta(v2[1], v2[3])
+    return np.min(v1[0]*v1[0], v2[0]*v2[0]) * (np.pow(eta1-eta2, 2) + np.pow(v1[2]-v2[2], 2)) / (R*R)
+
+# All particles with energy above a threshold
+def particleIndices(caloData, threshold):
+    return np.nonzero(caloData > threshold) # returns ([x], [y], [z]), which I interpret as ([r], [phi], [z])
+
+# Exclusive-kT clustering algorithm from https://arxiv.org/pdf/hep-ph/9305266.pdf
+# eventVector is in the form (px, py, pz) for the incident particle, used only for geometry purposes
+def bestJets(caloData, eventVector, nJets):
+
+    # Detector geometry in meters, from https://twiki.cern.ch/twiki/bin/view/CLIC/ClicNDM_ECal
+    ECALMinRadius = 1.5
+    ECALCellRSize = 0.00636
+    ECALCellZSize = 0.0051
+    ECALCellPhiSize = 0.0051 / ECALMinRadius
+
+    # Use event vector to determine geometric location of calorimeter slice (center of first layer)
+    (px, py, pz) = eventVector
+    pr = np.sqrt(px*px + py*py)
+    ECALR = ECALMinRadius
+    ECALPhi = np.arctan(py / px)
+    ECALZ = ECALMinRadius * pz / pr
+
+    # Calculate vectors for all particles with energy above a threshold
+    (r, phi, z) = particleIndices(caloData, threshold = np.mean(caloData)/10)
+    nParticles = len(particleIndices[0])
+    E = np.zeros(nParticles)
+    for n in range(nParticles):
+        E[n] = caloData[r[n], phi[n], z[n]]
+    ET = E * pr / np.sqrt(pz*pz + pr*pr) # Tangent component of energy (approximation)
+
+    # Translate from pixel indices to distances from beam center
+    r = [ri * ECALCellRSize + ECALR for ri in r]
+    phi = [(phii - 12) * ECALCellPhiSize + ECALPhi for phii in phi]
+    z = [(zi - 12) * ECALCellZSize + ECALZ for zi in z]
+
+    # Get initial dij values
+    dij = np.zeros((nParticles, nParticles))
+    for n1 in range(nParticles):
+        for n2 in range(n1+1, nParticles):
+            vector1 = [ET[n1], r[n1], phi[n1], z[n1]]
+            vector2 = [ET[n2], r[n2], phi[n2], z[n2]]
+            dij[n1][n2] = dij(vector1, vector2)
+            dij[n2][n1] = dij[n1][n2] # Symmetric
+    for n in range(nParticles):
+        dij[n][n] = np.pow(ET[n], 2) # E_T squared
+
+# CHECKPOINT - not completed yet
+    # Update dij iteratively
+    while(True):
+        lowestIndex = np.unravel_index(dij.argmin(), dij.shape)
+        if (lowestIndex[0] != lowestIndex[1]): # Different particles - merge into one jet and give it the lower of two indices
+            # CHECKPOINT - merge
+            nParticles -= 1
+
+    # Return best jets
+    bestJets = []
+    return bestJets
+
 ##################################################
 # Check if between bounds for calorimeter window #
 ##################################################
@@ -217,21 +295,24 @@ def convertFile(inFile, outFile):
 
         # Collecting particle ID, energy of hit, and 3-vector of momentum
         pdgID = my_event['pdgID']
-        #if pdgID == 211 or pdgID == 111:
-        #    pdgID = 0
-        #if pdgID == 22:
-        #    pdgID = 1
+        myFeatures.add("Event/pdgID", pdgID)
         energy = my_event['E']
         energy = energy/1000.
-        #(px, py, pz) = (my_event['px'], my_event['py'], my_event['pz'])
-        #(px, py, pz) = (px/1000., py/1000., pz/1000.)
-        #target = np.zeros((1, 5))
-        #target[:,0], target[:,1], target[:,2], target[:,3], target[:,4] = (pdgID, energy, px, py, pz)
-        # target = np.zeros(2)
-        # target[0], target[1] = (pdgID, energy)
-        # target_array_list.append(target)
-        myFeatures.add("Event/pdgID", pdgID)
         myFeatures.add("Event/energy", energy)
+        (px, py, pz) = (my_event['px'], my_event['py'], my_event['pz'])
+        (px, py, pz) = (px/1000., py/1000., pz/1000.)
+        myFeatures.add("Event/px", px)
+        myFeatures.add("Event/py", py)
+        myFeatures.add("Event/pz", pz)
+
+        # N-subjettiness, as described in this paper: https://arxiv.org/pdf/1011.2268.pdf. We will save tau1, tau2, tau3, and the ratios of tau2/tau1 and tau3/tau2.
+        # we will treat each energy deposition in a calorimeter cell as a separate particle with pT = E
+        # jets reconstructed using anti-kT algorithm here: https://arxiv.org/pdf/hep-ph/9305266.pdf
+        # for now we will only use ECAL data
+        eventVector = (60, 0, 0) # Change this to match event
+        bestJet = antiKtJets(ECALarray, eventVector, 1) 
+        bestTwoJets = antiKtJets(ECALarray, eventVector, 2) 
+        HCALprojX = np.sum(np.sum(HCALarray, axis=2), axis=1)
 
     # Save features to an h5 file
     f = h5py.File(outFile, "w")
