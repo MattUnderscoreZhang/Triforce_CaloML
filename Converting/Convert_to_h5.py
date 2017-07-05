@@ -34,15 +34,15 @@ def dR(position1, position2):
 
 # Calculate eta
 def eta(r, z):
-    theta = np.atan(z/r)
-    return -np.ln(np.tan(theta/2))
+    theta = np.arctan(z/r)
+    return -np.log(np.tan(theta/2))
 
 # Find d_ij between two "particles" (calorimeter cells)
-def dij(v1, v2): # each vector is [ET, r, phi, z]
+def calcDij(v1, v2): # each vector is [ET, r, phi, z]
     R = 1 # Chosen parameter, should be close to 1
     eta1 = eta(v1[1], v1[3])
     eta2 = eta(v2[1], v2[3])
-    return np.min(v1[0]*v1[0], v2[0]*v2[0]) * (np.pow(eta1-eta2, 2) + np.pow(v1[2]-v2[2], 2)) / (R*R)
+    return np.min(v1[0]*v1[0], v2[0]*v2[0]) * (np.power(eta1-eta2, 2) + np.power(v1[2]-v2[2], 2)) / (R*R)
 
 # All particles with energy above a threshold
 def particleIndices(caloData, threshold):
@@ -50,7 +50,7 @@ def particleIndices(caloData, threshold):
 
 # Exclusive-kT clustering algorithm from https://arxiv.org/pdf/hep-ph/9305266.pdf
 # eventVector is in the form (px, py, pz) for the incident particle, used only for geometry purposes
-def bestJets(caloData, eventVector, nJets):
+def antiKtJets(caloData, eventVector, nJets):
 
     # Detector geometry in meters, from https://twiki.cern.ch/twiki/bin/view/CLIC/ClicNDM_ECal
     ECALMinRadius = 1.5
@@ -67,7 +67,12 @@ def bestJets(caloData, eventVector, nJets):
 
     # Calculate vectors for all particles with energy above a threshold
     (r, phi, z) = particleIndices(caloData, threshold = np.mean(caloData)/10)
-    nParticles = len(particleIndices[0])
+    nParticles = len(r)
+
+    # If there are none, just abort early and return an empty list
+    if nParticles == 0:
+        return []
+
     E = np.zeros(nParticles)
     for n in range(nParticles):
         E[n] = caloData[r[n], phi[n], z[n]]
@@ -84,10 +89,10 @@ def bestJets(caloData, eventVector, nJets):
         for n2 in range(n1+1, nParticles):
             vector1 = [ET[n1], r[n1], phi[n1], z[n1]]
             vector2 = [ET[n2], r[n2], phi[n2], z[n2]]
-            dij[n1][n2] = dij(vector1, vector2)
+            dij[n1][n2] = calcDij(vector1, vector2)
             dij[n2][n1] = dij[n1][n2] # Symmetric
     for n in range(nParticles):
-        dij[n][n] = np.pow(ET[n], 2) # E_T squared
+        dij[n][n] = np.power(ET[n], 2) # E_T squared
 
 # CHECKPOINT - not completed yet
     # Update dij iteratively
