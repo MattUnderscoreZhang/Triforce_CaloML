@@ -1,1 +1,1 @@
-../HepMCToHEPEvt/build/src/HepMCToHEPEvt ../GeneratorFiles/eejj.hepmc ../GeneratorFiles/eejj.hepevt
+HepMCToHEPEvt/build/src/HepMCToHEPEvt ../GeneratorFiles/eejj.hepmc ../GeneratorFiles/eejj.hepevt
