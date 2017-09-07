@@ -8,6 +8,7 @@ import scipy.stats
 import sys
 import ast
 import h5py
+from __future__ import division
 
 ##################################
 # Functions for finding centroid #
@@ -27,83 +28,95 @@ def findEventMidpoint(event):
 # Jet functions for calculating nsubjettiness #
 ###############################################
 
-# Find dR between two "particles" (calorimeter cells)
+# Find dR between two postiions (eta, phi)
 def dR(position1, position2):
-    # CHECKPOINT - fill out function
-    return 1
+    return np.sqrt(np.pow(position1[0] - position2[0], 2), np.pow(position1[1] - position2[1], 2))
 
 # Calculate eta
 def eta(r, z):
-    theta = np.arctan(z/r)
+    theta = np.arctan(r/z)
     return -np.log(np.tan(theta/2))
 
-# Find d_ij between two "particles" (calorimeter cells)
-def calcDij(v1, v2): # each vector is [ET, r, phi, z]
-    R = 1 # Chosen parameter, should be close to 1
-    eta1 = eta(v1[1], v1[3])
-    eta2 = eta(v2[1], v2[3])
-    return np.min(v1[0]*v1[0], v2[0]*v2[0]) * (np.power(eta1-eta2, 2) + np.power(v1[2]-v2[2], 2)) / (R*R)
-
-# All particles with energy above a threshold
-def particleIndices(caloData, threshold):
-    return np.nonzero(caloData > threshold) # returns ([x], [y], [z]), which I interpret as ([r], [phi], [z])
-
-# Exclusive-kT clustering algorithm from https://arxiv.org/pdf/hep-ph/9305266.pdf
-# eventVector is in the form (px, py, pz) for the incident particle, used only for geometry purposes
-def antiKtJets(caloData, eventVector, nJets):
-
+# All particles with energy above a threshold - returns [particle1, particle2...], where particle = (eta, phi, pT)
+# eventVector is in the form (px, py, pz) for the calorimeter slice
+def particlesAboveThreshold(caloData, threshold, eventVector):
+    # CHECKPOINT - are x and y interpreted correctly?
+    (z, Rphi, r) = np.nonzero(caloData > threshold) # returns ([x], [y], [z]), which I interpret as ([z], [Rphi], [r])
+    nParticles = len(r)
+    E = np.zeros(nParticles)
+    for n in range(nParticles):
+        E[n] = caloData[z[n], Rphi[n], r[n]] # E of hit used as pT
+    # CHECKPOINT - check these numbers
     # Detector geometry in meters, from https://twiki.cern.ch/twiki/bin/view/CLIC/ClicNDM_ECal
-    ECALMinRadius = 1.5
-    ECALCellRSize = 0.00636
-    ECALCellZSize = 0.0051
-    ECALCellPhiSize = 0.0051 / ECALMinRadius
-
+    EventMinRadius = 1.5
+    SliceCellRSize = 0.00636
+    SliceCellZSize = 0.0051
+    SliceCellPhiSize = 0.0051
     # Use event vector to determine geometric location of calorimeter slice (center of first layer)
     (px, py, pz) = eventVector
     pr = np.sqrt(px*px + py*py)
-    ECALR = ECALMinRadius
-    ECALPhi = np.arctan(py / px)
-    ECALZ = ECALMinRadius * pz / pr
+    EventPhi = np.arctan(py / px)
+    EventZ = EventMinRadius * pz / pr
+    # Change from indices to actual measurements in meters
+    scaledZ = [(i-12)*SliceCellZSize+EventZ for i in z]
+    scaledR = [i*SliceCellRSize+EventMinRadius for i in r]
+    scaledPhi = [(i-12)*SliceCellPhiSize/(EventMinRadius+j)+EventPhi for i, j in zip(Rphi, scaledR)]
+    scaledEta = [eta(i, j) for i, j in zip(scaledR, scaledZ)]
+    return zip(scaledEta, scaledPhi, E)
 
-    # Calculate vectors for all particles with energy above a threshold
-    (r, phi, z) = particleIndices(caloData, threshold = np.mean(caloData)/10)
-    nParticles = len(r)
+# Find d_ij between two protojets
+def dij(v1, v2): # each vector is (eta, phi, E)
+    eta1, phi1, E1 = v1
+    eta2, phi2, E2 = v2
+    return np.min(E1*E1, E2*E2) * (np.power(eta1-eta2, 2) + np.power(phi1-phi2, 2)) # letting R = 1
 
-    # If there are none, just abort early and return an empty list
-    if nParticles == 0:
+# based on exclusive-kT clustering algorithm from https://arxiv.org/pdf/hep-ph/9305266.pdf
+# however, I force protojet combination until exactly N jets are left, ignoring the possibility of beam jets
+# particles in the form [particle1, particle2...], where particle = (eta, phi, pT)
+# jets in form [jet1, jet2...], where jet = (eta, phi)
+def antiKtJets(particles, nJets):
+
+    protojets = particles[:]
+    nParticles = len(particles)
+
+    # If there are not enough particles, just abort early and return an empty list
+    if nParticles < nJets:
         return []
 
-    E = np.zeros(nParticles)
-    for n in range(nParticles):
-        E[n] = caloData[r[n], phi[n], z[n]]
-    ET = E * pr / np.sqrt(pz*pz + pr*pr) # Tangent component of energy (approximation)
-
-    # Translate from pixel indices to distances from beam center
-    r = [ri * ECALCellRSize + ECALR for ri in r]
-    phi = [(phii - 12) * ECALCellPhiSize + ECALPhi for phii in phi]
-    z = [(zi - 12) * ECALCellZSize + ECALZ for zi in z]
-
-    # Get initial dij values
+    # Initial values of dij
     dij = np.zeros((nParticles, nParticles))
     for n1 in range(nParticles):
         for n2 in range(n1+1, nParticles):
-            vector1 = [ET[n1], r[n1], phi[n1], z[n1]]
-            vector2 = [ET[n2], r[n2], phi[n2], z[n2]]
-            dij[n1][n2] = calcDij(vector1, vector2)
+            dij[n1][n2] = dij(particles[n1], particles[n2])
             dij[n2][n1] = dij[n1][n2] # Symmetric
     for n in range(nParticles):
-        dij[n][n] = np.power(ET[n], 2) # E_T squared
+        # dij[n][n] = np.power(particles[n][2], 2) # E_T squared
+        dij[n][n] = 1000 # Ignore possibility of ending merge algorithm
 
-# CHECKPOINT - not completed yet
     # Update dij iteratively
-    while(True):
+    while(len(protojets) > nJets):
         lowestIndex = np.unravel_index(dij.argmin(), dij.shape)
-        if (lowestIndex[0] != lowestIndex[1]): # Different particles - merge into one jet and give it the lower of two indices
-            # CHECKPOINT - merge
-            nParticles -= 1
+        if (lowestIndex[0] != lowestIndex[1]): # Merge into one jet and give it the lower of two indices
+            removedProtojetIndex = max(lowestIndex[0], lowestIndex[1])
+            newProtojetIndex = min(lowestIndex[0], lowestIndex[1])
+            eta1, phi1, E1 = protojets[lowestIndex[0]]
+            eta2, phi2, E2 = protojets[lowestIndex[1]]
+            E3 = E1 + E2
+            eta3 = (E1*eta1 + E2*eta2) / E3
+            phi3 = (E1*phi1 + E2*phi2) / E3
+            newProtojet = (eta3, phi3, E3)
+            protojets.pop(removedProtojetIndex)
+            dij = np.delete(dij, removedProtojetIndex, axis=0)
+            dij = np.delete(dij, removedProtojetIndex, axis=1)
+            protojets[newProtojetIndex] = newProtojet
+            for n in range(len(protojets)):
+                dij[n][newProtojetIndex] = dij(protojets[n], newProtojet)
+                dij[newProtojetIndex][n] = dij[n][newProtojetIndex] # Symmetric
+        # else:
+            # not considered
 
     # Return best jets
-    bestJets = []
+    bestJets = [i[0:2] for i in protojets]
     return bestJets
 
 ##################################################
@@ -310,14 +323,35 @@ def convertFile(inFile, outFile):
         myFeatures.add("Event/py", py)
         myFeatures.add("Event/pz", pz)
 
-        # N-subjettiness, as described in this paper: https://arxiv.org/pdf/1011.2268.pdf. We will save tau1, tau2, tau3, and the ratios of tau2/tau1 and tau3/tau2.
-        # we will treat each energy deposition in a calorimeter cell as a separate particle with pT = E
-        # jets reconstructed using anti-kT algorithm here: https://arxiv.org/pdf/hep-ph/9305266.pdf
-        # for now we will only use ECAL data
-        eventVector = (60, 0, 0) # Change this to match event
-        bestJet = antiKtJets(ECALarray, eventVector, 1) 
-        bestTwoJets = antiKtJets(ECALarray, eventVector, 2) 
-        HCALprojX = np.sum(np.sum(HCALarray, axis=2), axis=1)
+        # N-subjettiness algorithm, as described in this paper: https://arxiv.org/pdf/1011.2268.pdf.
+        eventVector = (60, 0, 0) # change this to match event
+        threshold = np.mean(caloData)/20 # energy threshold for a calo hit
+        particles= particlesAboveThreshold(caloData, threshold, eventVector) # particles in the form (eta, phi, pT)
+        # After identifying N candidate subjets, we calculate tauN.
+        # Ignoring characteristic jet radius, since I'm focused on exclusive jet clustering, and it's only a scalar for taus.
+        tauN = []
+        for nJets in range(3):
+            # Jets reconstructed using anti-kT algorithm here: https://arxiv.org/pdf/hep-ph/9305266.pdf (use only ECAL data).
+            jets = antiKtJets(particles, nJets+1) 
+            if len(jets) > 0: # if jet-finding succeeded
+                tau = 0
+                d0 = 0 # normalization factor
+                for particle in particles:
+                    dRList = []
+                    particlePosition = (particle[0], particle[1])
+                    for jet in jets:
+                        dRList.append(dR(particlePosition, jet))
+                    tau += particle[3] * min(dRList) # pT * min(dR)
+                    d0 += particle[3] # pT
+                tau = tau/d0
+                tauN.append(tau) 
+            else:
+                tauN.append(1000) # put in a ridiculously large tau value 
+        myFeatures.add("N_Subjettiness/tau1", tau[0])
+        myFeatures.add("N_Subjettiness/tau2", tau[1])
+        myFeatures.add("N_Subjettiness/tau3", tau[2])
+        myFeatures.add("N_Subjettiness/tau2_over_tau1", tau[1]/tau[0])
+        myFeatures.add("N_Subjettiness/tau3_over_tau2", tau[2]/tau[1])
 
     # Save features to an h5 file
     f = h5py.File(outFile, "w")
