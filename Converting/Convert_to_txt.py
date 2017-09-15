@@ -1,6 +1,7 @@
 # Remember that we need to do this beforehand
 # source /afs/cern.ch/eng/clic/work/ilcsoft/HEAD-2016-04-06/init_ilcsoft.sh
 
+import math
 import ROOT
 import sys
 
@@ -64,7 +65,20 @@ def getEnergies(path_to_file, outfile):
 
     event_list.append({'pdgID' : pdgID, 'E': gunE, 'px':gunpx, 'py':gunpy, 'pz':gunpz, 'ECAL': hit_list, 'HCAL': hit_listHCAL})
 
-    print(len(hit_list), len(hit_listHCAL))
+    # Add opening angle for pi0 -> photons
+    # CHECKPOINT: check this calculation
+    openingAngle = -1
+    if (len(event.MCParticles)>=3 and event.MCParticles[0].pdgID==111 and event.MCParticles[1].pdgID==22 and event.MCParticles[2].pdgID==22):
+      gamma1px = event.MCParticles[1].psx
+      gamma1py = event.MCParticles[1].psy
+      gamma1pz = event.MCParticles[1].psz
+      gamma2px = event.MCParticles[2].psx
+      gamma2py = event.MCParticles[2].psy
+      gamma2pz = event.MCParticles[2].psz
+      cos_theta = (gamma1px*gamma2px+gamma1py*gamma2py+gamma1pz*gamma2pz)/math.sqrt((gamma1px*gamma1px+gamma1py*gamma1py+gamma1pz*gamma1pz)*(gamma2px*gamma2px+gamma2py*gamma2py+gamma2pz*gamma2pz))
+      openingAngle = math.acos(cos_theta) 
+      if openingAngle < 0: print "Oh no, the angle's not supposed to be negative. Fix this bug."
+    event_list.append({'openingAngle' : openingAngle})
 
   # Append this event to the event list
   text_file = open(outfile, "w") 

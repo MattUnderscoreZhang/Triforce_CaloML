@@ -22,6 +22,8 @@ convertROOTToH5_Part1 just takes the x, y, z, and E data for ECAL and HCAL, alon
 convertROOTToH5_Part2 does the calculations of barycenters in order to cut out chunks of calorimeter. Features are also calculated in this script.
 The txt and h5 files save in TxtFiles/ and H5Files/.
 
+Convert_to_txt_OpeningAngleCut requires a cut of 0.01 rad on passing events.
+
 -----
 
 Skimming:
