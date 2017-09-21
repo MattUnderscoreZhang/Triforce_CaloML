@@ -247,9 +247,12 @@ def convertFile(inFile, outFile):
     myFeatures = FeaturesList()
 
     # Loop through all the events
-    for string in my_events_string:
+    for index, string in enumerate(my_events_string):
 
         my_event = ast.literal_eval(string)
+
+        if index%10 == 0:
+            print "Event", index, "out of", len(my_events_string)
 
         # Make a list containing all the cell readouts of ECAL for the event and store it in a single ECAL array
         ECAL_list = []
@@ -284,8 +287,8 @@ def convertFile(inFile, outFile):
         myFeatures.add("HCAL/HCAL_nHits", HCAL_hits)
 
         # Ratio of HCAL/ECAL energy, and other ratios
-        myFeatures.add("ECAL_HCAL_Ratios/HCAL_ECAL_ERatio", HCAL_E/ECAL_E)
-        myFeatures.add("ECAL_HCAL_Ratios/HCAL_ECAL_nHitsRatio", HCAL_hits/ECAL_hits)
+        myFeatures.add("HCAL_ECAL_Ratios/HCAL_ECAL_ERatio", HCAL_E/ECAL_E)
+        myFeatures.add("HCAL_ECAL_Ratios/HCAL_ECAL_nHitsRatio", HCAL_hits/ECAL_hits)
         ECAL_E_firstLayer = np.sum(ECALarray[0])
         HCAL_E_firstLayer = np.sum(HCALarray[0])
         myFeatures.add("ECAL_Ratios/ECAL_ratioFirstLayerToTotalE", ECAL_E_firstLayer/ECAL_E)
@@ -367,6 +370,10 @@ def convertFile(inFile, outFile):
         myFeatures.add("N_Subjettiness/tau3", tauN[2])
         myFeatures.add("N_Subjettiness/tau2_over_tau1", tauN[1]/tauN[0])
         myFeatures.add("N_Subjettiness/tau3_over_tau2", tauN[2]/tauN[1])
+
+        # Opening angle
+        openingAngle = my_event['openingAngle']
+        myFeatures.add("OpeningAngle", openingAngle)
 
     # Save features to an h5 file
     f = h5py.File(outFile, "w")

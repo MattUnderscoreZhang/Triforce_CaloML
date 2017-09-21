@@ -63,8 +63,6 @@ def getEnergies(path_to_file, outfile):
     gunE = ROOT.TMath.Sqrt(m*m + gunpx*gunpx + gunpy*gunpy + gunpz*gunpz)
     pdgID = event.MCParticles[0].pdgID
 
-    event_list.append({'pdgID' : pdgID, 'E': gunE, 'px':gunpx, 'py':gunpy, 'pz':gunpz, 'ECAL': hit_list, 'HCAL': hit_listHCAL})
-
     # Add opening angle for pi0 -> photons
     # CHECKPOINT: check this calculation
     openingAngle = -1
@@ -78,7 +76,8 @@ def getEnergies(path_to_file, outfile):
       cos_theta = (gamma1px*gamma2px+gamma1py*gamma2py+gamma1pz*gamma2pz)/math.sqrt((gamma1px*gamma1px+gamma1py*gamma1py+gamma1pz*gamma1pz)*(gamma2px*gamma2px+gamma2py*gamma2py+gamma2pz*gamma2pz))
       openingAngle = math.acos(cos_theta) 
       if openingAngle < 0: print "Oh no, the angle's not supposed to be negative. Fix this bug."
-    event_list.append({'openingAngle' : openingAngle})
+
+    event_list.append({'pdgID' : pdgID, 'E': gunE, 'px':gunpx, 'py':gunpy, 'pz':gunpz, 'ECAL': hit_list, 'HCAL': hit_listHCAL, 'openingAngle' : openingAngle})
 
   # Append this event to the event list
   text_file = open(outfile, "w") 

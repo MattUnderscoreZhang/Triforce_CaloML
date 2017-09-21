@@ -16,7 +16,7 @@ def deleteRows(oldFile, dsetName, badRows, newFile):
     # Filling new dataset #
     #######################
 
-    if len(badRows == 0):
+    if len(badRows) == 0:
         newDset = oldDset
 
     else:
