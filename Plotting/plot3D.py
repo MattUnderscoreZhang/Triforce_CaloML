@@ -52,17 +52,18 @@ def scatter3d(x, y, z, values, jets=None, eventVector=None, size=25, colorsMap='
             dCellY = SliceCellRSize*size/(np.tan(theta)*SliceCellZSize)
             ax.plot([12.5, 12.5+dCellX], [12.5, 12.5+dCellY], [0, size])
 
-    plt.show()
-    # plt.savefig(saveName, bbox_inches="tight")
+    # plt.show()
+    plt.savefig(saveName, bbox_inches="tight")
 
 #########################
 # CHOOSE EVENTS TO PLOT #
 #########################
 
-data = h5py.File("../AllFiles/H5Files/v1/Skimmed_withOpeningAngle_FixedCoordinates/pi0_60_GeV_1.h5")
+# data = h5py.File("/data/LCD/V3/GammaPi0/Pi0/Pi0Escan_0.h5")
+data = h5py.File("/home/mazhang/CaloSampleGeneration/Converting/littleData/littlerPi0.h5")
 events = [0, 1, 2, 3, 4]
 
-saveDirectory = "JetPlots/"
+saveDirectory = "Plots/NSub/"
 if not os.path.exists(saveDirectory): os.makedirs(saveDirectory)
 
 # plot each event
@@ -77,9 +78,9 @@ for eventN in events:
     EventEta = 0.5 * np.log((p + pz) / (p - pz))
     eventVector = (EventEta, EventPhi)
 
-    ECAL = data['ECAL/ECAL']
-    jet1 = data['N_Subjettiness/bestJet1']
-    jet2 = data['N_Subjettiness/bestJet2']
+    ECAL = data['ECAL']
+    jet1 = data['N_Subjettiness/bestJets1']
+    jet2 = data['N_Subjettiness/bestJets2']
     x, y, z = np.nonzero(ECAL[eventN]) # first event
     E = ECAL[eventN][np.nonzero(ECAL[eventN])]
     if len(E)>0: scatter3d(x, y, z, E, (jet1[eventN], jet2[eventN]), eventVector, size=25, saveName=saveDirectory+"ECAL_event"+str(eventN)+".pdf")
