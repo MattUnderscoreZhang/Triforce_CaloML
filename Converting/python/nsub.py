@@ -137,13 +137,13 @@ def nsub(ECALarray, eventVector, threshold = 0):
                 d0 += particle[2] # pT
             tau = tau/d0
             tauN.append(tau) 
-        myFeatures["bestJets1"] = jetSets[1][0] # 1st of 2 best jets
-        myFeatures["bestJets2"] = jetSets[1][1] # 2nd of 2 best jets
+        myFeatures["bestJet1"] = jetSets[1][0] # 1st of 2 best jets
+        myFeatures["bestJet2"] = jetSets[1][1] # 2nd of 2 best jets
     else:
         for n in range(nJets):
             tauN.append(1000) # put in a ridiculously large tau value 
-        myFeatures["bestJets1"] = [0, 0]
-        myFeatures["bestJets2"] = [0, 0]
+        myFeatures["bestJet1"] = [0, 0]
+        myFeatures["bestJet2"] = [0, 0]
     myFeatures["tau1"] = tauN[0]
     myFeatures["tau2"] = tauN[1]
     myFeatures["tau3"] = tauN[2]
