@@ -1,13 +1,9 @@
 from __future__ import division
 import numpy as np
-import scipy.stats
-import sys
-import ast
-import h5py as h5
 
-###############################################
-# Jet functions for calculating nsubjettiness #
-###############################################
+##############################################################################################
+# N-subjettiness algorithm, as described in this paper: https://arxiv.org/pdf/1011.2268.pdf. #
+##############################################################################################
 
 # Find dR between two positions (eta, phi)
 def dR(position1, position2):
@@ -22,17 +18,19 @@ def eta(r, z):
 # eventVector is in the form (px, py, pz) for the calorimeter slice
 def particlesAboveThreshold(caloData, threshold, eventVector):
     # CHECKPOINT - are x and y interpreted correctly?
-    (z, Rphi, r) = np.nonzero(caloData > threshold) # returns ([x], [y], [z]), which I interpret as ([z], [Rphi], [r])
+    # (z, Rphi, r) = np.nonzero(caloData > threshold) # returns ([x], [y], [z]), which I interpret as ([z], [Rphi], [r])
+    (Rphi, z, r) = np.nonzero(caloData > threshold) # returns ([x], [y], [z]), which I interpret as ([Rphi], [z], [r])
     nParticles = len(r)
     E = np.zeros(nParticles)
     for n in range(nParticles):
-        E[n] = caloData[z[n], Rphi[n], r[n]] # E of hit used as pT
+        # E[n] = caloData[z[n], Rphi[n], r[n]] # E of hit used as pT
+        E[n] = caloData[Rphi[n], z[n], r[n]] # E of hit used as pT
     # CHECKPOINT - check these numbers
     # Detector geometry in meters, from https://twiki.cern.ch/twiki/bin/view/CLIC/ClicNDM_ECal
     EventMinRadius = 1.5
     SliceCellRSize = 0.00636
     SliceCellZSize = 0.0051
-    SliceCellPhiSize = 0.0051
+    SliceCellPhiSize = 0.0051 # in radians
     # Use event vector to determine geometric location of calorimeter slice (center of first layer)
     (px, py, pz) = eventVector
     pr = np.sqrt(px*px + py*py)
@@ -59,8 +57,8 @@ def calc_dij(v1, v2): # each vector is (eta, phi, E)
 def antiKtJets(particles, nJets):
 
     setsOfBestJets = []
-    protojets = particles[:]
     nParticles = len(particles)
+    protojets = particles[:]
 
     # If there are not enough particles, just abort early and return an empty list
     if nParticles < nJets:
@@ -112,88 +110,43 @@ def antiKtJets(particles, nJets):
     # Return sets of best jets
     return setsOfBestJets
 
-############
-# Features #
-############
+#########################
+# Main calling function #
+#########################
 
-class FeaturesList(object):
-
-    def __init__(self):
-        self.features = {}
-
-    def add(self, featureName, feature):
-        self.features.setdefault(featureName, []).append(feature)
-
-    def keys(self):
-        return self.features.keys()
-
-    def get(self, featureName):
-        return self.features[featureName]
-
-############################
-# File reading and writing #
-############################
-
-def convertFile(fileName):
-
-    # Open file and extract events
-    myFile = h5.File(fileName, "r+")
-    ECALs = myFile["ECAL"]
-
-    ########################
-    # Calculating features #
-    ########################
-
-    myFeatures = FeaturesList()
-
-    # Loop through all the events
-    for index, ECALarray in enumerate(ECALs):
-
-        print "Event", index, "out of", len(ECALs)
-
-        # N-subjettiness algorithm, as described in this paper: https://arxiv.org/pdf/1011.2268.pdf.
-        eventVector = (60, 0, 0) # change this to match event
-        threshold = np.mean(ECALarray)/20 # energy threshold for a calo hit
-        particles = particlesAboveThreshold(ECALarray, threshold, eventVector) # particles in the form (eta, phi, pT)
-        # After identifying N candidate subjets, we calculate tauN.
-        # Ignoring characteristic jet radius, since I'm focused on exclusive jet clustering, and it's only a scalar for taus.
-        tauN = []
-        # Return the sets of best 1, 2, and 3 jets
-        # Jets reconstructed using anti-kT algorithm here: https://arxiv.org/pdf/hep-ph/9305266.pdf (use only ECAL data).
-        nJets = 3
-        jetSets = antiKtJets(particles, nJets) 
-        if len(jetSets) > 0: # if jet-finding succeeded
-            for jets in jetSets:
-                tau = 0
-                d0 = 0 # normalization factor
-                for particle in particles:
-                    dRList = []
-                    particlePosition = (particle[0], particle[1])
-                    for jet in jets:
-                        dRList.append(dR(particlePosition, jet))
-                    tau += particle[2] * min(dRList) # pT * min(dR)
-                    d0 += particle[2] # pT
-                tau = tau/d0
-                tauN.append(tau) 
-        else:
-            for n in range(nJets):
-                tauN.append(1000) # put in a ridiculously large tau value 
-        myFeatures.add("N_Subjettiness/tau1", tauN[0])
-        myFeatures.add("N_Subjettiness/tau2", tauN[1])
-        myFeatures.add("N_Subjettiness/tau3", tauN[2])
-        myFeatures.add("N_Subjettiness/tau2_over_tau1", tauN[1]/tauN[0])
-        myFeatures.add("N_Subjettiness/tau3_over_tau2", tauN[2]/tauN[1])
-
-    # Save features to h5 file
-    for key in myFeatures.keys():
-        myFile.create_dataset(key, data=np.array(myFeatures.get(key)).squeeze(),compression='gzip')
-    myFile.close()
-    
-#################
-# Main function #
-#################
-
-if __name__ == "__main__":
-    import sys
-    fileName = sys.argv[1]
-    convertFile(fileName)
+def nsub(ECALarray, eventVector, threshold = 0):
+    particles = particlesAboveThreshold(ECALarray, threshold, eventVector) # particles in the form (eta, phi, pT)
+    # After identifying N candidate subjets, we calculate tauN.
+    # Ignoring characteristic jet radius, since I'm focused on exclusive jet clustering, and it's only a scalar for taus.
+    tauN = []
+    # Return the sets of best 1, 2, and 3 jets
+    # Jets reconstructed using anti-kT algorithm here: https://arxiv.org/pdf/hep-ph/9305266.pdf (use only ECAL data).
+    nJets = 3
+    jetSets = antiKtJets(particles, nJets) 
+    myFeatures = {}
+    if len(jetSets) > 0: # if jet-finding succeeded
+        for jets in jetSets:
+            tau = 0
+            d0 = 0 # normalization factor
+            for particle in particles:
+                dRList = []
+                particlePosition = (particle[0], particle[1])
+                for jet in jets:
+                    dRList.append(dR(particlePosition, jet))
+                tau += particle[2] * min(dRList) # pT * min(dR)
+                d0 += particle[2] # pT
+            tau = tau/d0
+            tauN.append(tau) 
+        myFeatures["bestJets1"] = jetSets[1][0] # 1st of 2 best jets
+        myFeatures["bestJets2"] = jetSets[1][1] # 2nd of 2 best jets
+    else:
+        for n in range(nJets):
+            tauN.append(1000) # put in a ridiculously large tau value 
+        myFeatures["bestJets1"] = [0, 0]
+        myFeatures["bestJets2"] = [0, 0]
+    myFeatures["tau1"] = tauN[0]
+    myFeatures["tau2"] = tauN[1]
+    myFeatures["tau3"] = tauN[2]
+    myFeatures["tau2_over_tau1"] = tauN[1]/tauN[0]
+    myFeatures["tau3_over_tau2"] = tauN[2]/tauN[1]
+    return myFeatures
