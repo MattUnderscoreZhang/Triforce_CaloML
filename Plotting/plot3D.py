@@ -1,3 +1,4 @@
+from __future__ import division
 import matplotlib.pyplot as plt
 import matplotlib.colors
 import matplotlib.cm as cmx
@@ -26,9 +27,9 @@ def scatter3d(x, y, z, values, jets=None, eventVector=None, size=25, colorsMap='
     ax.set_ylabel("Y")
     ax.set_zlabel("Layer")
 
-    ax.set_xlim3d(0, size)
-    ax.set_ylim3d(0, size)
-    ax.set_zlim3d(0, size)
+    ax.set_xlim3d(0, size-1)
+    ax.set_ylim3d(0, size-1)
+    ax.set_zlim3d(0, size-1)
 
     scalarMap.set_array(values)
     fig.colorbar(scalarMap) # plot color bar
@@ -42,18 +43,24 @@ def scatter3d(x, y, z, values, jets=None, eventVector=None, size=25, colorsMap='
 
     # also plot each protojet
     if jets is not [[0, 0], [0, 0]] and jets is not None:
-        print jets
         for jet in jets:
-            dPhi = jet[0] - eventVector[0]
-            eta = jet[1]
-            theta = 2*np.arctan(np.exp(-eta))
-            # CHECKPOINT - should really convert from eta to theta to be completely accurate
-            dCellX = SliceCellRSize*size*np.tan(dPhi)/(SliceCellPhiSize*(EventMinRadius+SliceCellRSize*size))
-            dCellY = SliceCellRSize*size/(np.tan(theta)*SliceCellZSize)
-            ax.plot([12.5, 12.5+dCellX], [12.5, 12.5+dCellY], [0, size])
+            # CHECKPOINT - geometry may be different (last layers thicker?)
+            Ri = EventMinRadius # R to beginning of first layer
+            Rf = EventMinRadius + size*SliceCellRSize # R to end of last layer
+            dPhi = jet[0] - eventVector[0] # difference between phi of jet and event
+            etaJet = jet[1] # eta is inf in +z and 0 straight up
+            etaEvent = eventVector[1] # eta is inf in +z and 0 straight up
+            thetaJet = 2*np.arctan(np.exp(-etaJet)) # theta is 0 in +z and 90 deg straight up
+            thetaEvent = 2*np.arctan(np.exp(-etaEvent)) # theta is 0 in +z and 90 deg straight up
+            # treating local ([x], [y], [z]) as ([Rphi], [z], [r])
+            x1 = (size-1)/2 + np.tan(dPhi) / SliceCellPhiSize
+            x2 = (size-1)/2 + np.tan(dPhi) / SliceCellPhiSize # huh, I guess the nsub algorithm can never capture a slope in x
+            y1 = (size-1)/2 + (Ri/np.tan(thetaJet) - Ri/np.tan(thetaEvent)) / SliceCellZSize
+            y2 = (size-1)/2 + (Rf/np.tan(thetaJet) - Rf/np.tan(thetaEvent)) / SliceCellZSize # or any jet not coming directly from origin
+            ax.plot([x1, x2], [y1, y2], [0, size])
 
-    # plt.show()
-    plt.savefig(saveName, bbox_inches="tight")
+    plt.show()
+    # plt.savefig(saveName, bbox_inches="tight")
 
 #########################
 # CHOOSE EVENTS TO PLOT #

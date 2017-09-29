@@ -32,8 +32,8 @@ def convertFile(fileName):
         eventVector = (60, 0, 0) # CHECKPOINT - change this to match event
         threshold = np.mean(ECALarray)/20 # energy threshold for a calo hit
         nsubFeatures = nsub.nsub(ECALarray, eventVector, threshold)
-        myFeatures.add("N_Subjettiness/bestJet1", nsubFeatures['bestJets1'])
-        myFeatures.add("N_Subjettiness/bestJet2", nsubFeatures['bestJets2'])
+        myFeatures.add("N_Subjettiness/bestJets1", nsubFeatures['bestJets1'])
+        myFeatures.add("N_Subjettiness/bestJets2", nsubFeatures['bestJets2'])
         myFeatures.add("N_Subjettiness/tau1", nsubFeatures['tau1'])
         myFeatures.add("N_Subjettiness/tau2", nsubFeatures['tau2'])
         myFeatures.add("N_Subjettiness/tau3", nsubFeatures['tau3'])
