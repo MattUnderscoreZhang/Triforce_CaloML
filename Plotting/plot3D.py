@@ -66,14 +66,13 @@ def scatter3d(x, y, z, values, jets=None, eventVector=None, size=25, colorsMap='
 # CHOOSE EVENTS TO PLOT #
 #########################
 
-# data = h5py.File("/data/LCD/V3/GammaPi0/Pi0/Pi0Escan_0.h5")
-data = h5py.File("/home/mazhang/CaloSampleGeneration/Converting/littleData/littlerPi0.h5")
+data = h5py.File("/data/LCD/V3/littleData/Pi0/Pi0_0.h5")
 events = [0, 1, 2, 3, 4]
 
-saveDirectory = "Plots/NSub/"
+saveDirectory = "Plots/NSub2/"
 if not os.path.exists(saveDirectory): os.makedirs(saveDirectory)
 
-# plot each event
+# plot nsub jets
 for eventN in events:
 
     eventVector = (60, 0, 0)
