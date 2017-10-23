@@ -31,15 +31,22 @@ def particlesAboveThreshold(caloData, threshold, eventVector):
     SliceCellRSize = 0.00636
     SliceCellZSize = 0.0051
     SliceCellPhiSize = 0.0051 # in radians
+    # Assuming the ECAL has been downsampled from an initial slice of size 25x25x25, we determine the sizes of the new cells
+    sizeX, sizeY, sizeZ = caloData.shape
+    SliceCellRSize *= (25.0/sizeZ)
+    SliceCellZSize *= (25.0/sizeY)
+    SliceCellPhiSize *= (25.0/sizeX)
+    centerZ = (sizeY-1)/2.0
+    centerPhi = (sizeX-1)/2.0
     # Use event vector to determine geometric location of calorimeter slice (center of first layer)
     (px, py, pz) = eventVector
     pr = np.sqrt(px*px + py*py)
     EventPhi = np.arctan(py / px)
     EventZ = EventMinRadius * pz / pr
     # Change from indices to actual measurements in meters
-    scaledZ = [(i-12)*SliceCellZSize+EventZ for i in z]
+    scaledZ = [(i-centerZ)*SliceCellZSize+EventZ for i in z]
     scaledR = [i*SliceCellRSize+EventMinRadius for i in r]
-    scaledPhi = [(i-12)*SliceCellPhiSize/(EventMinRadius+j)+EventPhi for i, j in zip(Rphi, scaledR)]
+    scaledPhi = [(i-centerPhi)*SliceCellPhiSize/(EventMinRadius+j)+EventPhi for i, j in zip(Rphi, scaledR)]
     scaledEta = [eta(i, j) for i, j in zip(scaledR, scaledZ)]
     return zip(scaledEta, scaledPhi, E)
 
