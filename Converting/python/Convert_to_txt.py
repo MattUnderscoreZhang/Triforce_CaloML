@@ -1,6 +1,5 @@
 # Remember that we need to do this beforehand
 # source /afs/cern.ch/eng/clic/work/ilcsoft/HEAD-2016-04-06/init_ilcsoft.sh
-
 import math
 import ROOT
 import sys
@@ -23,62 +22,85 @@ def getEnergies(path_to_file, outfile):
   event_list = []
 
   for event in fil.EVENT:
-
-    # We make an empty list of hits (within this event)
-    hit_list = []
-    hit_listHCAL = []
-
-    iEvt = iEvt + 1
-
-    # Read HCAL
-    for i in range(len(event.HCalBarrelCollection)):
-      idDecoderHCAL.setValue(event.HCalBarrelCollection[i].cellID)
-      
-      z = idDecoderHCAL['layer'].value()
-      x = idDecoderHCAL['x'].value()
-      y = idDecoderHCAL['y'].value()
-      E = event.HCalBarrelCollection[i].energyDeposit
-      pos = event.HCalBarrelCollection[i].position
-      hit_listHCAL.append((int(x), int(y), int(z), E, pos.X(), pos.Y(), pos.Z()))
-
-    # Read ECAL
-    for i in range(len(event.ECalBarrelCollection)):
-
-      #print event.ECalBarrelCollection.getParameters()
-      idDecoder.setValue(event.ECalBarrelCollection[i].cellID)
-
-      z = idDecoder['layer'].value()
-      x = idDecoder['x'].value()
-      y = idDecoder['y'].value()
-      E = event.ECalBarrelCollection[i].energyDeposit
-      pos = event.ECalBarrelCollection[i].position
-      if (z < 25):
-          hit_list.append((int(x), int(y), int(z), E, pos.X(), pos.Y(), pos.Z()))
-
-    # Read energy
-    gunpx = event.MCParticles[0].psx
-    gunpy = event.MCParticles[0].psy
-    gunpz = event.MCParticles[0].psz
-    m = event.MCParticles[0].mass
-    gunE = ROOT.TMath.Sqrt(m*m + gunpx*gunpx + gunpy*gunpy + gunpz*gunpz)
-    pdgID = event.MCParticles[0].pdgID
-
-    # Add opening angle for pi0 -> photons
-    # CHECKPOINT: check this calculation
-    openingAngle = -1
     if (len(event.MCParticles)>=3 and event.MCParticles[0].pdgID==111 and event.MCParticles[1].pdgID==22 and event.MCParticles[2].pdgID==22):
+    #if(True):
       gamma1px = event.MCParticles[1].psx
       gamma1py = event.MCParticles[1].psy
       gamma1pz = event.MCParticles[1].psz
       gamma2px = event.MCParticles[2].psx
       gamma2py = event.MCParticles[2].psy
       gamma2pz = event.MCParticles[2].psz
+  
       cos_theta = (gamma1px*gamma2px+gamma1py*gamma2py+gamma1pz*gamma2pz)/math.sqrt((gamma1px*gamma1px+gamma1py*gamma1py+gamma1pz*gamma1pz)*(gamma2px*gamma2px+gamma2py*gamma2py+gamma2pz*gamma2pz))
-      openingAngle = math.acos(cos_theta) 
-      if openingAngle < 0: print "Oh no, the angle's not supposed to be negative. Fix this bug."
+  
+      #if(True):
+      if(cos_theta<math.cos(0.01)):
+  
+  
+      # We make an empty list of hits (within this event)
+        hit_list = []
+        hit_listHCAL = []
+  
+        iEvt = iEvt + 1
+  
+        # Read HCAL
+        for i in range(len(event.HCalBarrelCollection)):
+          idDecoderHCAL.setValue(event.HCalBarrelCollection[i].cellID)
+    
+          z = idDecoderHCAL['layer'].value()
+          x = idDecoderHCAL['x'].value()
+          y = idDecoderHCAL['y'].value()
+          E = event.HCalBarrelCollection[i].energyDeposit
+          pos = event.HCalBarrelCollection[i].position
+          hit_listHCAL.append((int(x), int(y), int(z), E, pos.X(), pos.Y(), pos.Z()))
+  
+        # Read ECAL
+        for i in range(len(event.ECalBarrelCollection)):
+  
+          #print event.ECalBarrelCollection.getParameters()
+          idDecoder.setValue(event.ECalBarrelCollection[i].cellID)
+  
+          z = idDecoder['layer'].value()
+          x = idDecoder['x'].value()
+          y = idDecoder['y'].value()
+          E = event.ECalBarrelCollection[i].energyDeposit
+          pos = event.ECalBarrelCollection[i].position
+          if (z < 25):
+              hit_list.append((int(x), int(y), int(z), E, pos.X(), pos.Y(), pos.Z()))
+  
+        # Read energy
+        gunpx = event.MCParticles[0].psx
+        gunpy = event.MCParticles[0].psy
+        gunpz = event.MCParticles[0].psz
+        m = event.MCParticles[0].mass
+        gunE = ROOT.TMath.Sqrt(m*m + gunpx*gunpx + gunpy*gunpy + gunpz*gunpz)
+        pdgID = event.MCParticles[0].pdgID
 
-    event_list.append({'pdgID' : pdgID, 'E': gunE, 'px':gunpx, 'py':gunpy, 'pz':gunpz, 'ECAL': hit_list, 'HCAL': hit_listHCAL, 'openingAngle' : openingAngle})
-
+        photon_conversion_num = 0
+        for i in range(len(event.MCParticles)):
+          if (event.MCParticles[i].pdgID == -11):
+            positron_px = event.MCParticles[i].psx
+            positron_py = event.MCParticles[i].psy
+            positron_pz = event.MCParticles[i].psz
+            positron_m = event.MCParticles[i].mass
+            positron_E = ROOT.TMath.Sqrt(positron_m*positron_m + positron_px*positron_px + positron_py*positron_py + positron_pz*positron_pz)
+            for j in range(len(event.MCParticles)):
+              if (event.MCParticles[j].pdgID == 11 and event.MCParticles[j].vsx == event.MCParticles[i].vsx and event.MCParticles[j].vsy == event.MCParticles[i].vsy and event.MCParticles[j].vsz == event.MCParticles[i].vsz):
+                
+                electron_px = event.MCParticles[j].psx
+                electron_py = event.MCParticles[j].psy
+                electron_pz = event.MCParticles[j].psz
+                electron_m = event.MCParticles[j].mass
+                electron_E = ROOT.TMath.Sqrt(electron_m*electron_m + electron_px*electron_px + electron_py*electron_py + electron_pz*electron_pz)
+ 
+                #if((positron_E + electron_E) > (ROOT.TMath.Sqrt(electron_m*electron_m+10)+ROOT.TMath.Sqrt(positron_m*positron_m +10))):
+                if((positron_E + electron_E) > 1000):
+                  photon_conversion_num += 1
+ 
+        event_list.append({'pdgID' : pdgID, 'E': gunE, 'px':gunpx, 'py':gunpy, 'pz':gunpz, 'conversion': photon_conversion_num, 'ECAL': hit_list, 'HCAL': hit_listHCAL})
+  
+        print(len(hit_list), len(hit_listHCAL))
+  
   # Append this event to the event list
   text_file = open(outfile, "w") 
   for evt in event_list:  
