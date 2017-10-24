@@ -39,7 +39,7 @@ def getEnergies(path_to_file, outfile, openingAngleCut):
       cos_theta = (gamma1px*gamma2px+gamma1py*gamma2py+gamma1pz*gamma2pz)/math.sqrt((gamma1px*gamma1px+gamma1py*gamma1py+gamma1pz*gamma1pz)*(gamma2px*gamma2px+gamma2py*gamma2py+gamma2pz*gamma2pz))
       openingAngle = math.acos(cos_theta) 
   
-    if (!openingAngleCut or (openingAngle < 0.01 and openingAngle != -1)): # either require opening angle cut of 0.01 or allow everything
+    if (~openingAngleCut or (openingAngle < 0.01 and openingAngle != -1)): # either require opening angle cut of 0.01 or allow everything
 
       # We make an empty list of hits (within this event)
       hit_list = []
@@ -115,7 +115,7 @@ if __name__ == "__main__":
   
   inFile = sys.argv[1]
   outFile = sys.argv[2]
-  openingAngleCut = sys.argv[3].astype(bool)
+  openingAngleCut = sys.argv[3].lower()=='true'
   getEnergies(inFile, outFile, openingAngleCut)
 
   # # convert the root file to txt file
