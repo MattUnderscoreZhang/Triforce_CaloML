@@ -19,7 +19,7 @@ for fileName in filesToSkim:
     oldFile = h5py.File(oldFilePath + fileName)
     newFile = h5py.File(newFilePath + fileName, "w")
 
-    badIndices = [index for index, ratio in enumerate(oldFile['HCAL_ECAL_Ratios/HCAL_ECAL_ERatio']) if ratio > 0.2 or not np.isfinite(ratio)]
+    badIndices = [index for index, ratio in enumerate(oldFile['HCAL_ECAL_Ratios/HCAL_ECAL_ERatio']) if ratio > 0.025 or not np.isfinite(ratio)]
 
     # recursively list all datasets in the sample
     datasets = []
