@@ -32,7 +32,9 @@ for i in range(len(files1)):
                             ecal_new[k][n][m][l] += ecal_old[k][merge_ecal_size*n+o][merge_ecal_size*m+p][l]
                             #ecal_new[k][n][m][l] = ecal_old[k][merge_ecal_size*n][merge_ecal_size*m][l] + ecal_old[k][merge_ecal_size*n+1][merge_ecal_size*m][l] + ecal_old[k][merge_ecal_size*n][merge_ecal_size*m+1][l] + ecal_old[k][merge_ecal_size*n+1][merge_ecal_size*m+1][l]
 
+    keepFeatures = ['HCAL', 'Event/pdgID', 'Event/energy', 'Event/px', 'Event/py', 'Event/pz', 'Event/openingAngle', 'Event/conversion']
+
     with File(path2+os.path.basename(files1[i]), 'w') as f2:
         f2.create_dataset('ECAL', data=ecal_new)
-        f2.create_dataset('HCAL', data=f1['HCAL'][:])
-
+        for feature in keepFeatures:
+            f2.create_dataset(feature, data=f1[feature][:])

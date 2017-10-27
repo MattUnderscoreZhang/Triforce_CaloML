@@ -203,7 +203,7 @@ def convertFile(inFile, outFile):
             HCAL_momentZ = scipy.stats.moment(HCALprojZ, moment=i+1)
             myFeatures.add("HCAL_Moments/HCALmomentZ" + str(i+1), HCAL_momentZ)
 
-        # Collecting particle ID, energy of hit, and 3-vector of momentum
+        # Collecting event info
         pdgID = my_event['pdgID']
         myFeatures.add("Event/pdgID", pdgID)
         energy = my_event['E']
@@ -214,6 +214,10 @@ def convertFile(inFile, outFile):
         myFeatures.add("Event/px", px)
         myFeatures.add("Event/py", py)
         myFeatures.add("Event/pz", pz)
+        openingAngle = my_event['openingAngle']
+        myFeatures.add("Event/openingAngle", openingAngle)
+        conversion = my_event['conversion']
+        myFeatures.add("Event/conversion", conversion)
 
         # N-subjettiness
         eventVector = (60, 0, 0) # CHECKPOINT - change this to match event
@@ -226,10 +230,6 @@ def convertFile(inFile, outFile):
         myFeatures.add("N_Subjettiness/tau3", nsubFeatures['tau3'])
         myFeatures.add("N_Subjettiness/tau2_over_tau1", nsubFeatures['tau2_over_tau1'])
         myFeatures.add("N_Subjettiness/tau3_over_tau2", nsubFeatures['tau3_over_tau2'])
-
-        # Opening angle
-        openingAngle = my_event['openingAngle']
-        myFeatures.add("OpeningAngle", openingAngle)
 
     # Save features to an h5 file
     f = h5py.File(outFile, "w")
