@@ -17,10 +17,16 @@ def convertFile(inFile, outFile):
     oldFile = h5.File(inFile)
     newFile = h5.File(outFile, "w")
 
-    ECAL = oldFile["ECAL"][()]
-    HCAL = oldFile["HCAL"][()]
-    newFile.create_dataset("ECAL/ECAL", data=ECAL)
-    newFile.create_dataset("HCAL/HCAL", data=HCAL)
+    ECAL = oldFile["ECAL"][()]*50 # Geant is in units of 1/50 GeV for some reason
+    HCAL = oldFile["HCAL"][()]*50
+
+    if 'GAN' in inFile: # match Geant units
+        ECAL = ECAL/100
+        HCAL = HCAL/100
+
+    # Truth info
+    energy = oldFile["target"][()]
+    newFile.create_dataset("Energy", data=energy[:,-1]) # the way energy is saved
 
     # Calorimeter total energy and number of hits
     ECAL_E = np.sum(np.sum(np.sum(ECAL, axis=1), axis=1), axis=1)
