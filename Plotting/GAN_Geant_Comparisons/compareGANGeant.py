@@ -26,9 +26,9 @@ def compare(title, key):
     # GAN_key = GAN_key[GAN_key<maxRange]
     # Geant_key = Geant_key[Geant_key<maxRange]
 
-    # energyBins = [0, 100, 200, 300, 400, 500]
-    energyBins = [400, 420, 440, 460, 480, 500]
-    # energyBins = [0, 500]
+    # energyBins = [100, 200, 300, 400, 500]
+    # energyBins = [400, 420, 440, 460, 480, 500]
+    energyBins = [0, 500]
 
     for i in range(len(energyBins)-1):
 
@@ -37,11 +37,10 @@ def compare(title, key):
 
         GAN_key_bin = GAN_key[np.logical_and(GAN_energy>=energyLow, GAN_energy<energyHigh)]
         Geant_key_bin = Geant_key[np.logical_and(Geant_energy>=energyLow, Geant_energy<energyHigh)]
-        # GAN_key_bin = GAN_key_bin/1000 # correct GAN ECAL_E
+        # GAN_key_bin = GAN_key_bin/(100) # correct GAN ECAL_E
 
         handles = [Rectangle((0,0), 1, 1, edgecolor=c, fill=False) for c in ['b', 'g']]
         labels = ['GAN', 'Geant']
-        plt.legend(handles, labels)
 
         bins = np.histogram(np.hstack((GAN_key_bin, Geant_key_bin)), bins=40)[1]
         GAN_plot = plt.hist(GAN_key_bin, bins=bins, histtype='step', color='b', normed=True)
@@ -76,7 +75,9 @@ def h5_dataset_iterator(g, prefix=''):
 for path in h5_dataset_iterator(GAN):
     features.append(path)
 
-# for feature in features:
-    # compare(feature.split('/')[-1], feature)
-compare('ECAL_ratioFirstLayerToSecondLayerE', 'ECAL_Moments/ECALmomentX3')
-compare('ECAL_ratioFirstLayerToSecondLayerE', 'ECAL_Moments/ECALmomentY3')
+for feature in features:
+    if 'HCAL' not in feature:
+        compare(feature.split('/')[-1], feature)
+# compare('ECAL_E', 'ECAL/ECAL_E')
+# compare('ECALmomentX5', 'ECAL_Moments/ECALmomentX5')
+# compare('ECAL_nHist', 'ECAL/ECAL_nHits')
