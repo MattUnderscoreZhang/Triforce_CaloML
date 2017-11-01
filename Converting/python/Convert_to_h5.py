@@ -141,7 +141,7 @@ def convertFile(inFile, outFile):
         ECAL_barycenter_details = getECALArray(np.array(ECAL_list))
 
         # Append the ECAL array of 25x25x25 cells around the barycenter to the ECAL array list
-        ECALarray = ECAL_barycenter_details[0]/1000.
+        ECALarray = ECAL_barycenter_details[0]/1000.*50 # Geant is in units of 1/50 GeV for some reason
         myFeatures.add("ECAL/ECAL", ECALarray)
 
         # Make a list containing all the cell readouts of HCAL for the event and store it in a single ECAL array
@@ -150,16 +150,16 @@ def convertFile(inFile, outFile):
             HCAL_list.append(np.array(cell_reading))
 
         # Pass the absolute Y and Z cooridnates as input for determining HCAL array around barrycenter and append it to the HCAl array list
-        HCALarray = getHCALArray(np.array(HCAL_list),ECAL_barycenter_details[1],ECAL_barycenter_details[2])/1000.
+        HCALarray = getHCALArray(np.array(HCAL_list),ECAL_barycenter_details[1],ECAL_barycenter_details[2])/1000.*50 # Geant is in units of 1/50 GeV for some reason
         myFeatures.add("HCAL/HCAL", HCALarray)
 
         # Calorimeter total energy and number of hits
         ECAL_E = np.sum(ECALarray)
-        ECAL_hits = np.sum(ECALarray>0)
+        ECAL_hits = np.sum(ECALarray>0.01) # threshold of 0.01 GeV
         myFeatures.add("ECAL/ECAL_E", ECAL_E)
         myFeatures.add("ECAL/ECAL_nHits", ECAL_hits)
         HCAL_E = np.sum(HCALarray)
-        HCAL_hits = np.sum(HCALarray>0)
+        HCAL_hits = np.sum(HCALarray>0.01) # threshold of 0.01 GeV
         myFeatures.add("HCAL/HCAL_E", HCAL_E)
         myFeatures.add("HCAL/HCAL_nHits", HCAL_hits)
 

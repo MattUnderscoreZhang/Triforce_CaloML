@@ -30,12 +30,12 @@ def convertFile(inFile, outFile):
 
     # Calorimeter total energy and number of hits
     ECAL_E = np.sum(np.sum(np.sum(ECAL, axis=1), axis=1), axis=1)
-    ECAL_nHits = np.sum(np.sum(np.sum(ECAL>0, axis=1), axis=1), axis=1)
+    ECAL_nHits = np.sum(np.sum(np.sum(ECAL>0.01, axis=1), axis=1), axis=1)
     newFile.create_dataset("ECAL/ECAL_E", data=ECAL_E)
     newFile.create_dataset("ECAL/ECAL_nHits", data=ECAL_nHits)
 
     HCAL_E = np.sum(np.sum(np.sum(HCAL, axis=1), axis=1), axis=1)
-    HCAL_nHits = np.sum(np.sum(np.sum(HCAL>0, axis=1), axis=1), axis=1)
+    HCAL_nHits = np.sum(np.sum(np.sum(HCAL>0.01, axis=1), axis=1), axis=1)
     newFile.create_dataset("HCAL/HCAL_E", data=HCAL_E)
     newFile.create_dataset("HCAL/HCAL_nHits", data=HCAL_nHits)
 
