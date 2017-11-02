@@ -26,9 +26,9 @@ def compare(title, key):
     # GAN_key = GAN_key[GAN_key<maxRange]
     # Geant_key = Geant_key[Geant_key<maxRange]
 
-    # energyBins = [100, 200, 300, 400, 500]
+    energyBins = [100, 200, 300, 400, 500]
     # energyBins = [400, 420, 440, 460, 480, 500]
-    energyBins = [0, 500]
+    # energyBins = [100, 500]
 
     for i in range(len(energyBins)-1):
 
@@ -44,23 +44,55 @@ def compare(title, key):
 
         bins = np.histogram(np.hstack((GAN_key_bin, Geant_key_bin)), bins=40)[1]
         GAN_plot = plt.hist(GAN_key_bin, bins=bins, histtype='step', color='b', normed=True)
-        Geant_plot = plt.hist(Geant_key_bin, bins=bins, histtype='step', color='g', normed=True)
+        Geant_plot = plt.hist(Geant_key_bin, bins=bins, histtype='step', color='g', linestyle='--', normed=True)
         plt.legend(handles=handles, labels=labels)
-        plt.title(title)
+        plt.xlabel(title)
         ax = plt.gca()
         ax.set_ylim([0,ax.get_ylim()[1]*1.5])
         plt.savefig('Plots/'+str(energyLow)+"to"+str(energyHigh)+"/"+title+'.png')
         plt.cla(); plt.clf()
 
         # GAN = plt.hist(GAN_key_bin, bins=bins, histtype='step', color='b', normed=True)
-        # Geant = plt.hist(Geant_key_bin, bins=bins, histtype='step', color='g', normed=True)
-        # plt.title(title)
+        # Geant = plt.hist(Geant_key_bin, bins=bins, histtype='step', color='g', linestyle='--', normed=True)
+        # plt.xlabel(title)
         # plt.legend([GAN_plot, Geant_plot], ['GAN', 'Geant'])
         # ax = plt.gca()
         # ax.set_ylim([0,ax.get_ylim()[1]*1.5])
         # ax.set_yscale('log')
         # plt.savefig('Plots/'+str(energyLow)+"to"+str(energyHigh)+"/"+title+'_log.png')
         # plt.cla(); plt.clf()
+
+def compareToX2(title, key):
+
+    print key
+    Geant_key = Geant[key][()]
+    Geant_X2 = Geant['ECAL_Moments/ECALmomentX2'][()]
+    Geant_energy = Geant['Energy'][()]
+
+    Geant_energy = Geant_energy[np.isfinite(Geant_key)]
+    Geant_X2 = Geant_X2[np.isfinite(Geant_key)]
+    Geant_key = Geant_key[np.isfinite(Geant_key)]
+
+    # energyBins = [100, 200, 300, 400, 500]
+    energyBins = [100, 500]
+    # energyBins = [400, 420, 440, 460, 480, 500]
+
+    for i in range(len(energyBins)-1):
+
+        energyLow = energyBins[i]
+        energyHigh = energyBins[i+1]
+
+        Geant_key_bin = Geant_key[np.logical_and(Geant_energy>=energyLow, Geant_energy<energyHigh)]
+        Geant_X2_bin = Geant_X2[np.logical_and(Geant_energy>=energyLow, Geant_energy<energyHigh)]
+
+        # plt.scatter(Geant_key_bin, Geant_X2_bin)
+        heatmap, xedges, yedges = np.histogram2d(Geant_key_bin, Geant_X2_bin, bins=50)
+        sn.heatmap(heatmap)
+        plt.xlabel(title)
+        plt.ylabel('X2')
+        ax = plt.gca()
+        plt.savefig('Plots/GeantX2Comparison/'+str(energyLow)+"to"+str(energyHigh)+"/"+title+'.png')
+        plt.cla(); plt.clf()
 
 features = []
 def h5_dataset_iterator(g, prefix=''):
@@ -77,7 +109,8 @@ for path in h5_dataset_iterator(GAN):
 
 for feature in features:
     if 'HCAL' not in feature:
-        compare(feature.split('/')[-1], feature)
+        # compare(feature.split('/')[-1], feature)
+        compareToX2(feature.split('/')[-1], feature)
 # compare('ECAL_E', 'ECAL/ECAL_E')
 # compare('ECALmomentX5', 'ECAL_Moments/ECALmomentX5')
 # compare('ECAL_nHist', 'ECAL/ECAL_nHits')
