@@ -153,109 +153,113 @@ def convertFile(inFile, outFile):
         HCALarray = getHCALArray(np.array(HCAL_list),ECAL_barycenter_details[1],ECAL_barycenter_details[2])/1000.*50 # Geant is in units of 1/50 GeV for some reason
         myFeatures.add("HCAL/HCAL", HCALarray)
 
-        # Calorimeter total energy and number of hits
-        ECAL_E = np.sum(ECALarray)
-        ECAL_hits = np.sum(ECALarray>0.1) # threshold of 0.1 GeV
-        myFeatures.add("ECAL/ECAL_E", ECAL_E)
-        myFeatures.add("ECAL/ECAL_nHits", ECAL_hits)
-        HCAL_E = np.sum(HCALarray)
-        HCAL_hits = np.sum(HCALarray>0.1) # threshold of 0.1 GeV
-        myFeatures.add("HCAL/HCAL_E", HCAL_E)
-        myFeatures.add("HCAL/HCAL_nHits", HCAL_hits)
+        ####################################
+        # SHOULD BE CALLING ADD_FEATURES
+        ####################################
 
-        # Ratio of HCAL/ECAL energy, and other ratios
-        myFeatures.add("HCAL_ECAL_Ratios/HCAL_ECAL_ERatio", HCAL_E/ECAL_E)
-        myFeatures.add("HCAL_ECAL_Ratios/HCAL_ECAL_nHitsRatio", HCAL_hits/ECAL_hits)
-        ECAL_E_firstLayer = np.sum(ECALarray[:,:,0]) # [x, y, z], where z is layer number perpendicular to incidence w/ calo
-        HCAL_E_firstLayer = np.sum(HCALarray[:,:,0])
-        myFeatures.add("ECAL_Ratios/ECAL_ratioFirstLayerToTotalE", ECAL_E_firstLayer/ECAL_E)
-        myFeatures.add("HCAL_Ratios/HCAL_ratioFirstLayerToTotalE", HCAL_E_firstLayer/HCAL_E)
-        ECAL_E_secondLayer = np.sum(ECALarray[:,:,1])
-        HCAL_E_secondLayer = np.sum(HCALarray[:,:,1])
-        myFeatures.add("ECAL_Ratios/ECAL_ratioFirstLayerToSecondLayerE", ECAL_E_firstLayer/ECAL_E_secondLayer)
-        myFeatures.add("HCAL_Ratios/HCAL_ratioFirstLayerToSecondLayerE", HCAL_E_firstLayer/HCAL_E_secondLayer)
+        # # Calorimeter total energy and number of hits
+        # ECAL_E = np.sum(ECALarray)
+        # ECAL_hits = np.sum(ECALarray>0.1) # threshold of 0.1 GeV
+        # myFeatures.add("ECAL/ECAL_E", ECAL_E)
+        # myFeatures.add("ECAL/ECAL_nHits", ECAL_hits)
+        # HCAL_E = np.sum(HCALarray)
+        # HCAL_hits = np.sum(HCALarray>0.1) # threshold of 0.1 GeV
+        # myFeatures.add("HCAL/HCAL_E", HCAL_E)
+        # myFeatures.add("HCAL/HCAL_nHits", HCAL_hits)
 
-        # Used in moment calculation
-        # EventMinRadius = 1.5
-        # SliceCellRSize = 0.00636
-        # SliceCellZSize = 0.0051
-        # SliceCellPhiSize = 0.0051
-        EventMinRadius = 1 # chosen to make moments stay close to 1
-        SliceCellRSize = 0.25
-        SliceCellZSize = 0.25
-        SliceCellPhiSize = 0.25
+        # # Ratio of HCAL/ECAL energy, and other ratios
+        # myFeatures.add("HCAL_ECAL_Ratios/HCAL_ECAL_ERatio", HCAL_E/ECAL_E)
+        # myFeatures.add("HCAL_ECAL_Ratios/HCAL_ECAL_nHitsRatio", HCAL_hits/ECAL_hits)
+        # ECAL_E_firstLayer = np.sum(ECALarray[:,:,0]) # [x, y, z], where z is layer number perpendicular to incidence w/ calo
+        # HCAL_E_firstLayer = np.sum(HCALarray[:,:,0])
+        # myFeatures.add("ECAL_Ratios/ECAL_ratioFirstLayerToTotalE", ECAL_E_firstLayer/ECAL_E)
+        # myFeatures.add("HCAL_Ratios/HCAL_ratioFirstLayerToTotalE", HCAL_E_firstLayer/HCAL_E)
+        # ECAL_E_secondLayer = np.sum(ECALarray[:,:,1])
+        # HCAL_E_secondLayer = np.sum(HCALarray[:,:,1])
+        # myFeatures.add("ECAL_Ratios/ECAL_ratioFirstLayerToSecondLayerE", ECAL_E_firstLayer/ECAL_E_secondLayer)
+        # myFeatures.add("HCAL_Ratios/HCAL_ratioFirstLayerToSecondLayerE", HCAL_E_firstLayer/HCAL_E_secondLayer)
 
-        # ECAL moments
-        ECALprojX = np.sum(np.sum(ECALarray, axis=2), axis=1)
-        ECALprojY = np.sum(np.sum(ECALarray, axis=2), axis=0)
-        ECALprojZ = np.sum(np.sum(ECALarray, axis=0), axis=0) # z = direction into calo
-        totalE = np.sum(ECALprojX)
-        ECAL_sizeX, ECAL_sizeY, ECAL_sizeZ = ECALarray.shape 
-        ECAL_midX = (ECAL_sizeX-1)/2
-        ECAL_midY = (ECAL_sizeY-1)/2
-        ECAL_midZ = (ECAL_sizeZ-1)/2
-        for i in range(6):
-            moments = pow(abs(np.arange(ECAL_sizeX)-ECAL_midX)*EventMinRadius*SliceCellPhiSize, i+1)
-            ECAL_momentX = np.sum(np.multiply(ECALprojX, moments))/totalE
-            myFeatures.add("ECAL_Moments/ECALmomentX" + str(i+1), ECAL_momentX)
-        for i in range(6):
-            moments = pow(abs(np.arange(ECAL_sizeY)-ECAL_midY)*SliceCellZSize, i+1)
-            ECAL_momentY = np.sum(np.multiply(ECALprojY, moments))/totalE
-            myFeatures.add("ECAL_Moments/ECALmomentY" + str(i+1), ECAL_momentY)
-        for i in range(6):
-            moments = pow(abs(np.arange(ECAL_sizeZ)-ECAL_midZ)*SliceCellRSize, i+1)
-            ECAL_momentZ = np.sum(np.multiply(ECALprojZ, moments))/totalE
-            myFeatures.add("ECAL_Moments/ECALmomentZ" + str(i+1), ECAL_momentZ)
+        # # Used in moment calculation
+        # # EventMinRadius = 1.5
+        # # SliceCellRSize = 0.00636
+        # # SliceCellZSize = 0.0051
+        # # SliceCellPhiSize = 0.0051
+        # EventMinRadius = 1 # chosen to make moments stay close to 1
+        # SliceCellRSize = 0.25
+        # SliceCellZSize = 0.25
+        # SliceCellPhiSize = 0.25
 
-        # HCAL moments
-        HCALprojX = np.sum(np.sum(HCALarray, axis=2), axis=1)
-        HCALprojY = np.sum(np.sum(HCALarray, axis=2), axis=0)
-        HCALprojZ = np.sum(np.sum(HCALarray, axis=0), axis=0)
-        totalE = np.sum(HCALprojX)
-        HCAL_sizeX, HCAL_sizeY, HCAL_sizeZ = HCALarray.shape 
-        HCAL_midX = (HCAL_sizeX-1)/2
-        HCAL_midY = (HCAL_sizeY-1)/2
-        HCAL_midZ = (HCAL_sizeZ-1)/2
-        for i in range(6):
-            moments = pow(abs(np.arange(HCAL_sizeX)-HCAL_midX)*EventMinRadius*SliceCellPhiSize, i+1)
-            HCAL_momentX = np.sum(np.multiply(HCALprojX, moments))/totalE
-            myFeatures.add("HCAL_Moments/HCALmomentX" + str(i+1), HCAL_momentX)
-        for i in range(6):
-            moments = pow(abs(np.arange(HCAL_sizeY)-HCAL_midY)*SliceCellZSize, i+1)
-            HCAL_momentY = np.sum(np.multiply(HCALprojY, moments))/totalE
-            myFeatures.add("HCAL_Moments/HCALmomentY" + str(i+1), HCAL_momentY)
-        for i in range(6):
-            moments = pow(abs(np.arange(HCAL_sizeZ)-HCAL_midZ)*SliceCellRSize, i+1)
-            HCAL_momentZ = np.sum(np.multiply(HCALprojZ, moments))/totalE
-            myFeatures.add("HCAL_Moments/HCALmomentZ" + str(i+1), HCAL_momentZ)
+        # # ECAL moments
+        # ECALprojX = np.sum(np.sum(ECALarray, axis=2), axis=1)
+        # ECALprojY = np.sum(np.sum(ECALarray, axis=2), axis=0)
+        # ECALprojZ = np.sum(np.sum(ECALarray, axis=0), axis=0) # z = direction into calo
+        # totalE = np.sum(ECALprojX)
+        # ECAL_sizeX, ECAL_sizeY, ECAL_sizeZ = ECALarray.shape 
+        # ECAL_midX = (ECAL_sizeX-1)/2
+        # ECAL_midY = (ECAL_sizeY-1)/2
+        # ECAL_midZ = (ECAL_sizeZ-1)/2
+        # for i in range(6):
+            # moments = pow(abs(np.arange(ECAL_sizeX)-ECAL_midX)*EventMinRadius*SliceCellPhiSize, i+1)
+            # ECAL_momentX = np.sum(np.multiply(ECALprojX, moments))/totalE
+            # myFeatures.add("ECAL_Moments/ECALmomentX" + str(i+1), ECAL_momentX)
+        # for i in range(6):
+            # moments = pow(abs(np.arange(ECAL_sizeY)-ECAL_midY)*SliceCellZSize, i+1)
+            # ECAL_momentY = np.sum(np.multiply(ECALprojY, moments))/totalE
+            # myFeatures.add("ECAL_Moments/ECALmomentY" + str(i+1), ECAL_momentY)
+        # for i in range(6):
+            # moments = pow(abs(np.arange(ECAL_sizeZ)-ECAL_midZ)*SliceCellRSize, i+1)
+            # ECAL_momentZ = np.sum(np.multiply(ECALprojZ, moments))/totalE
+            # myFeatures.add("ECAL_Moments/ECALmomentZ" + str(i+1), ECAL_momentZ)
 
-        # Collecting event info
-        pdgID = my_event['pdgID']
-        myFeatures.add("Event/pdgID", pdgID)
-        energy = my_event['E']
-        energy = energy/1000.
-        myFeatures.add("Event/energy", energy)
-        (px, py, pz) = (my_event['px'], my_event['py'], my_event['pz'])
-        (px, py, pz) = (px/1000., py/1000., pz/1000.)
-        myFeatures.add("Event/px", px)
-        myFeatures.add("Event/py", py)
-        myFeatures.add("Event/pz", pz)
-        openingAngle = my_event['openingAngle']
-        myFeatures.add("Event/openingAngle", openingAngle)
-        conversion = my_event['conversion']
-        myFeatures.add("Event/conversion", conversion)
+        # # HCAL moments
+        # HCALprojX = np.sum(np.sum(HCALarray, axis=2), axis=1)
+        # HCALprojY = np.sum(np.sum(HCALarray, axis=2), axis=0)
+        # HCALprojZ = np.sum(np.sum(HCALarray, axis=0), axis=0)
+        # totalE = np.sum(HCALprojX)
+        # HCAL_sizeX, HCAL_sizeY, HCAL_sizeZ = HCALarray.shape 
+        # HCAL_midX = (HCAL_sizeX-1)/2
+        # HCAL_midY = (HCAL_sizeY-1)/2
+        # HCAL_midZ = (HCAL_sizeZ-1)/2
+        # for i in range(6):
+            # moments = pow(abs(np.arange(HCAL_sizeX)-HCAL_midX)*EventMinRadius*SliceCellPhiSize, i+1)
+            # HCAL_momentX = np.sum(np.multiply(HCALprojX, moments))/totalE
+            # myFeatures.add("HCAL_Moments/HCALmomentX" + str(i+1), HCAL_momentX)
+        # for i in range(6):
+            # moments = pow(abs(np.arange(HCAL_sizeY)-HCAL_midY)*SliceCellZSize, i+1)
+            # HCAL_momentY = np.sum(np.multiply(HCALprojY, moments))/totalE
+            # myFeatures.add("HCAL_Moments/HCALmomentY" + str(i+1), HCAL_momentY)
+        # for i in range(6):
+            # moments = pow(abs(np.arange(HCAL_sizeZ)-HCAL_midZ)*SliceCellRSize, i+1)
+            # HCAL_momentZ = np.sum(np.multiply(HCALprojZ, moments))/totalE
+            # myFeatures.add("HCAL_Moments/HCALmomentZ" + str(i+1), HCAL_momentZ)
 
-        # N-subjettiness
-        eventVector = (60, 0, 0) # CHECKPOINT - change this to match event
-        threshold = np.mean(ECALarray)/20 # energy threshold for a calo hit
-        nsubFeatures = nsub.nsub(ECALarray, eventVector, threshold)
-        myFeatures.add("N_Subjettiness/bestJets1", nsubFeatures['bestJets1'])
-        myFeatures.add("N_Subjettiness/bestJets2", nsubFeatures['bestJets2'])
-        myFeatures.add("N_Subjettiness/tau1", nsubFeatures['tau1'])
-        myFeatures.add("N_Subjettiness/tau2", nsubFeatures['tau2'])
-        myFeatures.add("N_Subjettiness/tau3", nsubFeatures['tau3'])
-        myFeatures.add("N_Subjettiness/tau2_over_tau1", nsubFeatures['tau2_over_tau1'])
-        myFeatures.add("N_Subjettiness/tau3_over_tau2", nsubFeatures['tau3_over_tau2'])
+        # # Collecting event info
+        # pdgID = my_event['pdgID']
+        # myFeatures.add("Event/pdgID", pdgID)
+        # energy = my_event['E']
+        # energy = energy/1000.
+        # myFeatures.add("Event/energy", energy)
+        # (px, py, pz) = (my_event['px'], my_event['py'], my_event['pz'])
+        # (px, py, pz) = (px/1000., py/1000., pz/1000.)
+        # myFeatures.add("Event/px", px)
+        # myFeatures.add("Event/py", py)
+        # myFeatures.add("Event/pz", pz)
+        # openingAngle = my_event['openingAngle']
+        # myFeatures.add("Event/openingAngle", openingAngle)
+        # conversion = my_event['conversion']
+        # myFeatures.add("Event/conversion", conversion)
+
+        # # N-subjettiness
+        # eventVector = (60, 0, 0) # CHECKPOINT - change this to match event
+        # threshold = np.mean(ECALarray)/20 # energy threshold for a calo hit
+        # nsubFeatures = nsub.nsub(ECALarray, eventVector, threshold)
+        # myFeatures.add("N_Subjettiness/bestJets1", nsubFeatures['bestJets1'])
+        # myFeatures.add("N_Subjettiness/bestJets2", nsubFeatures['bestJets2'])
+        # myFeatures.add("N_Subjettiness/tau1", nsubFeatures['tau1'])
+        # myFeatures.add("N_Subjettiness/tau2", nsubFeatures['tau2'])
+        # myFeatures.add("N_Subjettiness/tau3", nsubFeatures['tau3'])
+        # myFeatures.add("N_Subjettiness/tau2_over_tau1", nsubFeatures['tau2_over_tau1'])
+        # myFeatures.add("N_Subjettiness/tau3_over_tau2", nsubFeatures['tau3_over_tau2'])
 
     # Save features to an h5 file
     f = h5py.File(outFile, "w")
