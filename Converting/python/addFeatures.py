@@ -20,36 +20,36 @@ def convertFile(inFile, outFile):
     ECAL = oldFile["ECAL"][()]*50 # Geant is in units of 1/50 GeV for some reason
     HCAL = oldFile["HCAL"][()]*50
 
-    if 'GAN' in inFile: # match Geant units
-        ECAL = ECAL/100
-        HCAL = HCAL/100
+    # if 'GAN' in inFile: # match Geant units
+        # ECAL = ECAL/100
+        # HCAL = HCAL/100
 
-    # Truth info
-    energy = oldFile["target"][()]
-    newFile.create_dataset("Energy", data=energy[:,-1]) # the way energy is saved
+    # # Truth info
+    # energy = oldFile["target"][()]
+    # newFile.create_dataset("Energy", data=energy[:,-1]) # the way energy is saved
 
     # Calorimeter total energy and number of hits
     ECAL_E = np.sum(np.sum(np.sum(ECAL, axis=1), axis=1), axis=1)
     ECAL_nHits = np.sum(np.sum(np.sum(ECAL>0.1, axis=1), axis=1), axis=1)
-    newFile.create_dataset("ECAL/ECAL_E", data=ECAL_E)
-    newFile.create_dataset("ECAL/ECAL_nHits", data=ECAL_nHits)
+    newFile.create_dataset("ECAL_E", data=ECAL_E)
+    newFile.create_dataset("ECAL_nHits", data=ECAL_nHits)
 
     HCAL_E = np.sum(np.sum(np.sum(HCAL, axis=1), axis=1), axis=1)
     HCAL_nHits = np.sum(np.sum(np.sum(HCAL>0.1, axis=1), axis=1), axis=1)
-    newFile.create_dataset("HCAL/HCAL_E", data=HCAL_E)
-    newFile.create_dataset("HCAL/HCAL_nHits", data=HCAL_nHits)
+    newFile.create_dataset("HCAL_E", data=HCAL_E)
+    newFile.create_dataset("HCAL_nHits", data=HCAL_nHits)
 
     # Ratio of HCAL/ECAL energy, and other ratios
-    newFile.create_dataset("HCAL_ECAL_Ratios/HCAL_ECAL_ERatio", data=HCAL_E/ECAL_E)
-    newFile.create_dataset("HCAL_ECAL_Ratios/HCAL_ECAL_nHitsRatio", data=HCAL_nHits/ECAL_nHits)
+    newFile.create_dataset("HCAL_ECAL_ERatio", data=HCAL_E/ECAL_E)
+    newFile.create_dataset("HCAL_ECAL_nHitsRatio", data=HCAL_nHits/ECAL_nHits)
     ECAL_E_firstLayer = np.sum(np.sum(ECAL[:,:,:,0], axis=1), axis=1)
     HCAL_E_firstLayer = np.sum(np.sum(HCAL[:,:,:,0], axis=1), axis=1)
-    newFile.create_dataset("ECAL_Ratios/ECAL_ratioFirstLayerToTotalE", data=ECAL_E_firstLayer/ECAL_E)
-    newFile.create_dataset("HCAL_Ratios/HCAL_ratioFirstLayerToTotalE", data=HCAL_E_firstLayer/HCAL_E)
+    newFile.create_dataset("ECAL_ratioFirstLayerToTotalE", data=ECAL_E_firstLayer/ECAL_E)
+    newFile.create_dataset("HCAL_ratioFirstLayerToTotalE", data=HCAL_E_firstLayer/HCAL_E)
     ECAL_E_secondLayer = np.sum(np.sum(ECAL[:,:,:,1], axis=1), axis=1)
     HCAL_E_secondLayer = np.sum(np.sum(HCAL[:,:,:,1], axis=1), axis=1)
-    newFile.create_dataset("ECAL_Ratios/ECAL_ratioFirstLayerToSecondLayerE", data=ECAL_E_firstLayer/ECAL_E_secondLayer)
-    newFile.create_dataset("HCAL_Ratios/HCAL_ratioFirstLayerToSecondLayerE", data=HCAL_E_firstLayer/HCAL_E_secondLayer)
+    newFile.create_dataset("ECAL_ratioFirstLayerToSecondLayerE", data=ECAL_E_firstLayer/ECAL_E_secondLayer)
+    newFile.create_dataset("HCAL_ratioFirstLayerToSecondLayerE", data=HCAL_E_firstLayer/HCAL_E_secondLayer)
 
     # Used in moment calculation
     # EventMinRadius = 1.5
@@ -61,7 +61,6 @@ def convertFile(inFile, outFile):
     SliceCellZSize = 0.25
     SliceCellPhiSize = 0.25
 
-    # NEED TO CONVERT TO FULL-ARRAY FORM
     # ECAL moments
     ECALprojX = np.sum(np.sum(ECAL, axis=3), axis=2)
     ECALprojY = np.sum(np.sum(ECAL, axis=3), axis=1)
@@ -71,18 +70,18 @@ def convertFile(inFile, outFile):
     ECAL_midX = (ECAL_sizeX-1)/2
     ECAL_midY = (ECAL_sizeY-1)/2
     ECAL_midZ = (ECAL_sizeZ-1)/2
-    for i in range(1, 6):
-        moments = pow(abs(np.arange(ECAL_sizeX)-ECAL_midX)*EventMinRadius*SliceCellPhiSize, i+i)
+    for i in range(6):
+        moments = pow(abs(np.arange(ECAL_sizeX)-ECAL_midX)*EventMinRadius*SliceCellPhiSize, i+1)
         ECAL_momentX = np.sum(np.multiply(ECALprojX, moments), axis=1)/totalE
-        newFile.create_dataset("ECAL_Moments/ECALmomentX" + str(i+1), data=ECAL_momentX)
-    for i in range(1, 6):
-        moments = pow(abs(np.arange(ECAL_sizeY)-ECAL_midY)*SliceCellZSize, i+i)
+        newFile.create_dataset("ECALmomentX" + str(i+1), data=ECAL_momentX)
+    for i in range(6):
+        moments = pow(abs(np.arange(ECAL_sizeY)-ECAL_midY)*SliceCellZSize, i+1)
         ECAL_momentY = np.sum(np.multiply(ECALprojY, moments), axis=1)/totalE
-        newFile.create_dataset("ECAL_Moments/ECALmomentY" + str(i+1), data=ECAL_momentY)
-    for i in range(1, 6):
-        moments = pow(abs(np.arange(ECAL_sizeZ)-ECAL_midZ)*SliceCellRSize, i+i)
+        newFile.create_dataset("ECALmomentY" + str(i+1), data=ECAL_momentY)
+    for i in range(6):
+        moments = pow(abs(np.arange(ECAL_sizeZ)-ECAL_midZ)*SliceCellRSize, i+1)
         ECAL_momentZ = np.sum(np.multiply(ECALprojZ, moments), axis=1)/totalE
-        newFile.create_dataset("ECAL_Moments/ECALmomentZ" + str(i+1), data=ECAL_momentZ)
+        newFile.create_dataset("ECALmomentZ" + str(i+1), data=ECAL_momentZ)
 
     # HCAL moments
     HCALprojX = np.sum(np.sum(HCAL, axis=3), axis=2)
@@ -93,18 +92,18 @@ def convertFile(inFile, outFile):
     HCAL_midX = (HCAL_sizeX-1)/2
     HCAL_midY = (HCAL_sizeY-1)/2
     HCAL_midZ = (HCAL_sizeZ-1)/2
-    for i in range(1, 6):
-        moments = pow(abs(np.arange(HCAL_sizeX)-HCAL_midX)*EventMinRadius*SliceCellPhiSize, i+i)
+    for i in range(6):
+        moments = pow(abs(np.arange(HCAL_sizeX)-HCAL_midX)*EventMinRadius*SliceCellPhiSize, i+1)
         HCAL_momentX = np.sum(np.multiply(HCALprojX, moments), axis=1)/totalE
-        newFile.create_dataset("HCAL_Moments/HCALmomentX" + str(i+1), data=HCAL_momentX)
-    for i in range(1, 6):
-        moments = pow(abs(np.arange(HCAL_sizeY)-HCAL_midY)*SliceCellZSize, i+i)
+        newFile.create_dataset("HCALmomentX" + str(i+1), data=HCAL_momentX)
+    for i in range(6):
+        moments = pow(abs(np.arange(HCAL_sizeY)-HCAL_midY)*SliceCellZSize, i+1)
         HCAL_momentY = np.sum(np.multiply(HCALprojY, moments), axis=1)/totalE
-        newFile.create_dataset("HCAL_Moments/HCALmomentY" + str(i+1), data=HCAL_momentY)
-    for i in range(1, 6):
-        moments = pow(abs(np.arange(HCAL_sizeZ)-HCAL_midZ)*SliceCellRSize, i+i)
+        newFile.create_dataset("HCALmomentY" + str(i+1), data=HCAL_momentY)
+    for i in range(6):
+        moments = pow(abs(np.arange(HCAL_sizeZ)-HCAL_midZ)*SliceCellRSize, i+1)
         HCAL_momentZ = np.sum(np.multiply(HCALprojZ, moments), axis=1)/totalE
-        newFile.create_dataset("HCAL_Moments/HCALmomentZ" + str(i+1), data=HCAL_momentZ)
+        newFile.create_dataset("HCALmomentZ" + str(i+1), data=HCAL_momentZ)
     
 #################
 # Main function #
