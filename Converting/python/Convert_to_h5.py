@@ -194,16 +194,16 @@ def convertFile(inFile, outFile):
         ECAL_midX = (ECAL_sizeX-1)/2
         ECAL_midY = (ECAL_sizeY-1)/2
         ECAL_midZ = (ECAL_sizeZ-1)/2
-        for i in range(1, 6):
-            moments = pow(abs(np.arange(ECAL_sizeX)-ECAL_midX)*EventMinRadius*SliceCellPhiSize, i+i)
+        for i in range(6):
+            moments = pow(abs(np.arange(ECAL_sizeX)-ECAL_midX)*EventMinRadius*SliceCellPhiSize, i+1)
             ECAL_momentX = np.sum(np.multiply(ECALprojX, moments))/totalE
             myFeatures.add("ECAL_Moments/ECALmomentX" + str(i+1), ECAL_momentX)
-        for i in range(1, 6):
-            moments = pow(abs(np.arange(ECAL_sizeY)-ECAL_midY)*SliceCellZSize, i+i)
+        for i in range(6):
+            moments = pow(abs(np.arange(ECAL_sizeY)-ECAL_midY)*SliceCellZSize, i+1)
             ECAL_momentY = np.sum(np.multiply(ECALprojY, moments))/totalE
             myFeatures.add("ECAL_Moments/ECALmomentY" + str(i+1), ECAL_momentY)
-        for i in range(1, 6):
-            moments = pow(abs(np.arange(ECAL_sizeZ)-ECAL_midZ)*SliceCellRSize, i+i)
+        for i in range(6):
+            moments = pow(abs(np.arange(ECAL_sizeZ)-ECAL_midZ)*SliceCellRSize, i+1)
             ECAL_momentZ = np.sum(np.multiply(ECALprojZ, moments))/totalE
             myFeatures.add("ECAL_Moments/ECALmomentZ" + str(i+1), ECAL_momentZ)
 
@@ -216,16 +216,16 @@ def convertFile(inFile, outFile):
         HCAL_midX = (HCAL_sizeX-1)/2
         HCAL_midY = (HCAL_sizeY-1)/2
         HCAL_midZ = (HCAL_sizeZ-1)/2
-        for i in range(1, 6):
-            moments = pow(abs(np.arange(HCAL_sizeX)-HCAL_midX)*EventMinRadius*SliceCellPhiSize, i+i)
+        for i in range(6):
+            moments = pow(abs(np.arange(HCAL_sizeX)-HCAL_midX)*EventMinRadius*SliceCellPhiSize, i+1)
             HCAL_momentX = np.sum(np.multiply(HCALprojX, moments))/totalE
             myFeatures.add("HCAL_Moments/HCALmomentX" + str(i+1), HCAL_momentX)
-        for i in range(1, 6):
-            moments = pow(abs(np.arange(HCAL_sizeY)-HCAL_midY)*SliceCellZSize, i+i)
+        for i in range(6):
+            moments = pow(abs(np.arange(HCAL_sizeY)-HCAL_midY)*SliceCellZSize, i+1)
             HCAL_momentY = np.sum(np.multiply(HCALprojY, moments))/totalE
             myFeatures.add("HCAL_Moments/HCALmomentY" + str(i+1), HCAL_momentY)
-        for i in range(1, 6):
-            moments = pow(abs(np.arange(HCAL_sizeZ)-HCAL_midZ)*SliceCellRSize, i+i)
+        for i in range(6):
+            moments = pow(abs(np.arange(HCAL_sizeZ)-HCAL_midZ)*SliceCellRSize, i+1)
             HCAL_momentZ = np.sum(np.multiply(HCALprojZ, moments))/totalE
             myFeatures.add("HCAL_Moments/HCALmomentZ" + str(i+1), HCAL_momentZ)
 
