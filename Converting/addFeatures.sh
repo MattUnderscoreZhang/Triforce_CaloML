@@ -1,2 +1,7 @@
-python python/addFeatures.py /data/LCD/V1/EleEscan/EleEscan_1_1.h5 ../Temp/GeantEle_0to50GeV.h5
-python python/addFeatures.py /data/LCD/GAN/V0/EleEscan/EleContinous.hdf5 ../Temp/GANEle_0to50GeV.h5
+for i in {0..29}
+do
+    python python/addFeatures.py /data/LCD/V4/DownsampledEleChPiMergingSize1Float/ChPiEscan/ChPiEscan_$i.h5 /data/LCD/V4/DownsampledEleChPiMergingSize1WithFeatures/ChPiEscan_$i.h5
+    python python/addFeatures.py /data/LCD/V4/DownsampledEleChPiMergingSize1Float/EleEscan/EleEscan_$i.h5 /data/LCD/V4/DownsampledEleChPiMergingSize1WithFeatures/EleEscan_$i.h5
+    python python/addFeatures.py /data/LCD/V4/DownsampledGammaPi0MergingSize1Float/Pi0Escan/Pi0Escan_$i.h5 /data/LCD/V4/DownsampledGammaPi0MergingSize1WithFeatures/Pi0Escan_$i.h5
+    python python/addFeatures.py /data/LCD/V4/DownsampledGammaPi0MergingSize1Float/GammaEscan/GammaEscan_$i.h5 /data/LCD/V4/DownsampledGammaPi0MergingSize1WithFeatures/GammaEscan_$i.h5
+done

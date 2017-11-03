@@ -77,20 +77,20 @@ def convertFile(inFile, outFile):
     for i in range(6):
         relativeIndices = np.tile(np.arange(ECAL_sizeX), (nEvents,1))
         moments = np.power(abs(relativeIndices.transpose()-ECAL_midX).transpose(), i+1)
-        ECAL_momentX = np.sum(umath.inner1d(ECALprojX, moments))/totalE
-        if i==0: ECAL_midX = moments.transpose()
+        ECAL_momentX = umath.inner1d(ECALprojX, moments)/totalE
+        if i==0: ECAL_midX = ECAL_momentX.transpose()
         newFile.create_dataset("ECALmomentX" + str(i+1), data=ECAL_momentX)
     for i in range(6):
         relativeIndices = np.tile(np.arange(ECAL_sizeY), (nEvents,1))
         moments = np.power(abs(relativeIndices.transpose()-ECAL_midY).transpose(), i+1)
-        ECAL_momentY = np.sum(umath.inner1d(ECALprojY, moments))/totalE
-        if i==0: ECAL_midY = moments.transpose()
+        ECAL_momentY = umath.inner1d(ECALprojY, moments)/totalE
+        if i==0: ECAL_midY = ECAL_momentY.transpose()
         newFile.create_dataset("ECALmomentY" + str(i+1), data=ECAL_momentY)
     for i in range(6):
         relativeIndices = np.tile(np.arange(ECAL_sizeX), (nEvents,1))
         moments = np.power(abs(relativeIndices.transpose()-ECAL_midZ).transpose(), i+1)
-        ECAL_momentZ = np.sum(umath.inner1d(ECALprojZ, moments))/totalE
-        if i==0: ECAL_midZ = moments.transpose()
+        ECAL_momentZ = umath.inner1d(ECALprojZ, moments)/totalE
+        if i==0: ECAL_midZ = ECAL_momentZ.transpose()
         newFile.create_dataset("ECALmomentZ" + str(i+1), data=ECAL_momentZ)
 
     # HCAL moments
@@ -108,20 +108,20 @@ def convertFile(inFile, outFile):
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeX), (nEvents,1))
         moments = np.power(abs(relativeIndices.transpose()-HCAL_midX).transpose(), i+1)
-        HCAL_momentX = np.sum(umath.inner1d(HCALprojX, moments))/totalE
-        if i==0: HCAL_midX = moments.transpose()
+        HCAL_momentX = umath.inner1d(HCALprojX, moments)/totalE
+        if i==0: HCAL_midX = HCAL_momentX.transpose()
         newFile.create_dataset("HCALmomentX" + str(i+1), data=HCAL_momentX)
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeY), (nEvents,1))
         moments = np.power(abs(relativeIndices.transpose()-HCAL_midY).transpose(), i+1)
-        HCAL_momentY = np.sum(umath.inner1d(HCALprojY, moments))/totalE
-        if i==0: HCAL_midY = moments.transpose()
+        HCAL_momentY = umath.inner1d(HCALprojY, moments)/totalE
+        if i==0: HCAL_midY = HCAL_momentY.transpose()
         newFile.create_dataset("HCALmomentY" + str(i+1), data=HCAL_momentY)
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeZ), (nEvents,1))
         moments = np.power(abs(relativeIndices.transpose()-HCAL_midZ).transpose(), i+1)
-        HCAL_momentZ = np.sum(umath.inner1d(HCALprojZ, moments))/totalE
-        if i==0: HCAL_midZ = moments.transpose()
+        HCAL_momentZ = umath.inner1d(HCALprojZ, moments)/totalE
+        if i==0: HCAL_midZ = HCAL_momentZ.transpose()
         newFile.create_dataset("HCALmomentZ" + str(i+1), data=HCAL_momentZ)
     
 #################
