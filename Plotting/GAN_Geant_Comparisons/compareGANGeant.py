@@ -4,8 +4,10 @@ import seaborn as sn
 import numpy as np
 from matplotlib.patches import Rectangle
 
-GAN = h5.File("Data/GANEle_0to50GeV.h5")
-Geant = h5.File("Data/GeantEle_0to50GeV.h5")
+# GAN = h5.File("Data/GANEle_0to500GeV.h5")
+# Geant = h5.File("Data/GeantEle_0to500GeV.h5")
+GAN = h5.File("Data/GANPiPlus_0to500GeV.h5")
+Geant = h5.File("Data/GeantPiPlus_0to500GeV.h5")
 
 def compare(title, key):
 
@@ -48,50 +50,9 @@ def compare(title, key):
         plt.legend(handles=handles, labels=labels)
         plt.xlabel(title)
         ax = plt.gca()
-        ax.set_ylim([0,ax.get_ylim()[1]*1.5])
-        plt.savefig('Plots/'+str(energyLow)+"to"+str(energyHigh)+"/"+title+'.png')
-        plt.cla(); plt.clf()
-
-        # GAN = plt.hist(GAN_key_bin, bins=bins, histtype='step', color='b', normed=True)
-        # Geant = plt.hist(Geant_key_bin, bins=bins, histtype='step', color='g', linestyle='--', normed=True)
-        # plt.xlabel(title)
-        # plt.legend([GAN_plot, Geant_plot], ['GAN', 'Geant'])
-        # ax = plt.gca()
-        # ax.set_ylim([0,ax.get_ylim()[1]*1.5])
         # ax.set_yscale('log')
-        # plt.savefig('Plots/'+str(energyLow)+"to"+str(energyHigh)+"/"+title+'_log.png')
-        # plt.cla(); plt.clf()
-
-def compareToX2(title, key):
-
-    print key
-    Geant_key = Geant[key][()]
-    Geant_X2 = Geant['ECAL_Moments/ECALmomentX2'][()]
-    Geant_energy = Geant['Energy'][()]
-
-    Geant_energy = Geant_energy[np.isfinite(Geant_key)]
-    Geant_X2 = Geant_X2[np.isfinite(Geant_key)]
-    Geant_key = Geant_key[np.isfinite(Geant_key)]
-
-    # energyBins = [100, 200, 300, 400, 500]
-    energyBins = [100, 500]
-    # energyBins = [400, 420, 440, 460, 480, 500]
-
-    for i in range(len(energyBins)-1):
-
-        energyLow = energyBins[i]
-        energyHigh = energyBins[i+1]
-
-        Geant_key_bin = Geant_key[np.logical_and(Geant_energy>=energyLow, Geant_energy<energyHigh)]
-        Geant_X2_bin = Geant_X2[np.logical_and(Geant_energy>=energyLow, Geant_energy<energyHigh)]
-
-        # plt.scatter(Geant_key_bin, Geant_X2_bin)
-        heatmap, xedges, yedges = np.histogram2d(Geant_key_bin, Geant_X2_bin, bins=50)
-        sn.heatmap(heatmap)
-        plt.xlabel(title)
-        plt.ylabel('X2')
-        ax = plt.gca()
-        plt.savefig('Plots/GeantX2Comparison/'+str(energyLow)+"to"+str(energyHigh)+"/"+title+'.png')
+        ax.set_ylim([0,ax.get_ylim()[1]*1.5])
+        plt.savefig('Plots/PiPlus/'+str(energyLow)+"to"+str(energyHigh)+"/"+title+'.png')
         plt.cla(); plt.clf()
 
 features = []
@@ -109,8 +70,7 @@ for path in h5_dataset_iterator(GAN):
 
 for feature in features:
     if 'HCAL' not in feature:
-        # compare(feature.split('/')[-1], feature)
-        compareToX2(feature.split('/')[-1], feature)
+        compare(feature.split('/')[-1], feature)
 # compare('ECAL_E', 'ECAL/ECAL_E')
 # compare('ECALmomentX5', 'ECAL_Moments/ECALmomentX5')
 # compare('ECAL_nHist', 'ECAL/ECAL_nHits')
