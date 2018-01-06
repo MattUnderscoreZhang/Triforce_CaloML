@@ -25,9 +25,9 @@ def convertFile(inFile, outFile):
         # ECAL = ECAL/100
         # HCAL = HCAL/100
 
-    # # Truth info
-    # energy = oldFile["target"][()]
-    # newFile.create_dataset("Energy", data=energy[:,-1]) # the way energy is saved
+    # Truth info
+    newFile.create_dataset("energy", data=oldFile["energy"][()])
+    newFile.create_dataset("pdgID", data=oldFile["pdgID"][()])
 
     # Calorimeter total energy and number of hits
     ECAL_E = np.sum(np.sum(np.sum(ECAL, axis=1), axis=1), axis=1)

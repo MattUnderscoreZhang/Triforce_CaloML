@@ -1,4 +1,0 @@
-Converting ROOT to h5 takes two steps. First we call Convert_to_txt.py, then Convert_to_h5.py.
-The h5 conversion script also calculates features, and uses the featureList class in featuresList.py. n-subjettiness is calculated using nsub.py.
-add_nSubJettiness.py adds n-subjettiness features only.
-axis_fix.py recalculates several features where in early versions of the code x and y axes were switched around.

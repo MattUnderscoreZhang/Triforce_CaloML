@@ -117,7 +117,3 @@ if __name__ == "__main__":
   outFile = sys.argv[2]
   openingAngleCut = sys.argv[3].lower()=='true'
   getEnergies(inFile, outFile, openingAngleCut)
-
-  # # convert the root file to txt file
-  # out = sys.argv[1].replace(".root",".txt")
-  # getEnergies(sys.argv[1], out)

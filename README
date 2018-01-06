@@ -14,15 +14,24 @@ From the HEPEvt file, DD4Sim does simulation and reconstruction, creating a ROOT
 
 Converting:
 
-Convert this ROOT file to H5 format, giving us the ECAL and HCAL arrays we want to use.
-Edit convertROOTToH5 scripts to point to the right files.
-Run convertROOTToH5_Part1.sh and convertROOTToH5_Part2.sh in different sessions. This is because the ILCSoft version of Python doesn't have numpy installed, so you'll want to use the default lxplus environment to run part 2.
+Convert this ROOT file to H5 format, in the process giving us the energy arrays and calculated features we want to use.
 
-convertROOTToH5_Part1 just takes the x, y, z, and E data for ECAL and HCAL, along with metadata such as gun pT and pdgID, and writes them to a text file.
-convertROOTToH5_Part2 does the calculations of barycenters in order to cut out chunks of calorimeter. Features are also calculated in this script.
-The txt and h5 files save in TxtFiles/ and H5Files/.
+convertROOTToH5_Part1.sh and convertROOTToH5_Part2.sh call python/Convert_to_txt.py and python/Convert_to_h5.py respectively.
+convertROOTToH5_Part1 extracts the x, y, z, and E data for ECAL and HCAL, along with truth data such as gun pT, pdgID, and opening angle for pi0 -> gamma+gamma, and writes them to a text file.
+convertROOTToH5_Part2 reads the text file and does the calculations of barycenters in order to cut out windows from calorimeter. Features are also calculated in this script. An H5 file is output. This uses python/addFeatures.py.
 
-Convert_to_txt_OpeningAngleCut requires a cut of 0.01 rad on passing events.
+addFeatures.sh calls the equivalent script in the python folder.
+python/addFeatures.py takes an H5 file, calculates features, and writes to another H5 file.
+The difference between addFeatures.py and Convert_to_h5.py is that one starts with an H5 file and the other starts with a txt file. After creating an H5 file, Convert_to_h5.py simply calls addFeatures.py.
+python/add_nSubJettiness.py takes an H5 file and writes n-subjettiness variables to it using python/nsub.py.
+python/nsub.py contains a function nsub() which calculates n-subjettiness variables in the ECAL.
+python/axis_fix.py recalculates several features where in early versions of the code x and y axes were switched around.
+python/featuresList.py is a helper class.
+python/Normalize.py takes an H5 file, normalizes each feature by converting to z-scores, and writes back out to another H5 file. 
+
+Pass input and output file paths as arguments to convertROOTToH5 scripts.
+Source /afs/cern.ch/eng/clic/work/ilcsoft/HEAD-2016-04-06/init_ilcsoft.sh before runing convertROOTToH5_Part1.sh.
+Run convertROOTToH5_Part2.sh in a new session. This is because the ILCSoft version of Python doesn't have numpy installed, so you'll want to use the default lxplus environment to run part 2.
 
 -----
 
