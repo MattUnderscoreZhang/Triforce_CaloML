@@ -12,6 +12,15 @@ import ast
 import h5py as h5
 import nsub
 
+# takes numpy arrays num, denom and returns num/denom. division by 0 yields 0 in the output
+def safeDivide(num, denom):
+    result = None
+    # suppresses warnings from division by 0
+    with np.errstate(divide='ignore'):
+        result = num / denom
+    result[denom == 0] = 0
+    return result
+
 def convertFile(inFile, outFile):
 
     # Open file and extract events
@@ -39,18 +48,20 @@ def convertFile(inFile, outFile):
     HCAL_nHits = np.sum(np.sum(np.sum(HCAL>0.1, axis=1), axis=1), axis=1)
     newFile.create_dataset("HCAL_E", data=HCAL_E)
     newFile.create_dataset("HCAL_nHits", data=HCAL_nHits)
+    
+    print ECAL_E.shape, HCAL_E.shape
 
     # Ratio of HCAL/ECAL energy, and other ratios
-    newFile.create_dataset("HCAL_ECAL_ERatio", data=HCAL_E/ECAL_E)
-    newFile.create_dataset("HCAL_ECAL_nHitsRatio", data=HCAL_nHits/ECAL_nHits)
+    newFile.create_dataset("HCAL_ECAL_ERatio", data=safeDivide(HCAL_E, ECAL_E))
+    newFile.create_dataset("HCAL_ECAL_nHitsRatio", data=safeDivide(HCAL_nHits, ECAL_nHits))
     ECAL_E_firstLayer = np.sum(np.sum(ECAL[:,:,:,0], axis=1), axis=1)
     HCAL_E_firstLayer = np.sum(np.sum(HCAL[:,:,:,0], axis=1), axis=1)
-    newFile.create_dataset("ECAL_ratioFirstLayerToTotalE", data=ECAL_E_firstLayer/ECAL_E)
-    newFile.create_dataset("HCAL_ratioFirstLayerToTotalE", data=HCAL_E_firstLayer/HCAL_E)
+    newFile.create_dataset("ECAL_ratioFirstLayerToTotalE", data=safeDivide(ECAL_E_firstLayer, ECAL_E))
+    newFile.create_dataset("HCAL_ratioFirstLayerToTotalE", data=safeDivide(HCAL_E_firstLayer, HCAL_E))
     ECAL_E_secondLayer = np.sum(np.sum(ECAL[:,:,:,1], axis=1), axis=1)
     HCAL_E_secondLayer = np.sum(np.sum(HCAL[:,:,:,1], axis=1), axis=1)
-    newFile.create_dataset("ECAL_ratioFirstLayerToSecondLayerE", data=ECAL_E_firstLayer/ECAL_E_secondLayer)
-    newFile.create_dataset("HCAL_ratioFirstLayerToSecondLayerE", data=HCAL_E_firstLayer/HCAL_E_secondLayer)
+    newFile.create_dataset("ECAL_ratioFirstLayerToSecondLayerE", data=safeDivide(ECAL_E_firstLayer, ECAL_E_secondLayer))
+    newFile.create_dataset("HCAL_ratioFirstLayerToSecondLayerE", data=safeDivide(HCAL_E_firstLayer, HCAL_E_secondLayer))
 
     # ECAL moments
     ECALprojX = np.sum(np.sum(ECAL, axis=3), axis=2)
@@ -67,19 +78,19 @@ def convertFile(inFile, outFile):
     for i in range(6):
         relativeIndices = np.tile(np.arange(ECAL_sizeX), (nEvents,1))
         moments = np.power((relativeIndices.transpose()-ECAL_midX).transpose(), i+1)
-        ECAL_momentX = umath.inner1d(ECALprojX, moments)/totalE
+        ECAL_momentX = safeDivide(umath.inner1d(ECALprojX, moments), totalE)
         if i==0: ECAL_midX = ECAL_momentX.transpose()
         newFile.create_dataset("ECALmomentX" + str(i+1), data=ECAL_momentX)
     for i in range(6):
         relativeIndices = np.tile(np.arange(ECAL_sizeY), (nEvents,1))
         moments = np.power((relativeIndices.transpose()-ECAL_midY).transpose(), i+1)
-        ECAL_momentY = umath.inner1d(ECALprojY, moments)/totalE
+        ECAL_momentY = safeDivide(umath.inner1d(ECALprojY, moments), totalE)
         if i==0: ECAL_midY = ECAL_momentY.transpose()
         newFile.create_dataset("ECALmomentY" + str(i+1), data=ECAL_momentY)
     for i in range(6):
         relativeIndices = np.tile(np.arange(ECAL_sizeZ), (nEvents,1))
         moments = np.power((relativeIndices.transpose()-ECAL_midZ).transpose(), i+1)
-        ECAL_momentZ = umath.inner1d(ECALprojZ, moments)/totalE
+        ECAL_momentZ = safeDivide(umath.inner1d(ECALprojZ, moments), totalE)
         if i==0: ECAL_midZ = ECAL_momentZ.transpose()
         newFile.create_dataset("ECALmomentZ" + str(i+1), data=ECAL_momentZ)
 
@@ -98,19 +109,19 @@ def convertFile(inFile, outFile):
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeX), (nEvents,1))
         moments = np.power((relativeIndices.transpose()-HCAL_midX).transpose(), i+1)
-        HCAL_momentX = umath.inner1d(HCALprojX, moments)/totalE
+        HCAL_momentX = safeDivide(umath.inner1d(HCALprojX, moments), totalE)
         if i==0: HCAL_midX = HCAL_momentX.transpose()
         newFile.create_dataset("HCALmomentX" + str(i+1), data=HCAL_momentX)
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeY), (nEvents,1))
         moments = np.power((relativeIndices.transpose()-HCAL_midY).transpose(), i+1)
-        HCAL_momentY = umath.inner1d(HCALprojY, moments)/totalE
+        HCAL_momentY = safeDivide(umath.inner1d(HCALprojY, moments), totalE)
         if i==0: HCAL_midY = HCAL_momentY.transpose()
         newFile.create_dataset("HCALmomentY" + str(i+1), data=HCAL_momentY)
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeZ), (nEvents,1))
         moments = np.power((relativeIndices.transpose()-HCAL_midZ).transpose(), i+1)
-        HCAL_momentZ = umath.inner1d(HCALprojZ, moments)/totalE
+        HCAL_momentZ = safeDivide(umath.inner1d(HCALprojZ, moments), totalE)
         if i==0: HCAL_midZ = HCAL_momentZ.transpose()
         newFile.create_dataset("HCALmomentZ" + str(i+1), data=HCAL_momentZ)
     
