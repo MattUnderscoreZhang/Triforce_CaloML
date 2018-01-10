@@ -27,8 +27,12 @@ def convertFile(inFile, outFile):
     oldFile = h5.File(inFile)
     newFile = h5.File(outFile, "w")
 
-    ECAL = oldFile["ECAL"][()]*50 # Geant is in units of 1/50 GeV for some reason
-    HCAL = oldFile["HCAL"][()]*50
+    ECAL = oldFile["ECAL"][()]
+    HCAL = oldFile["HCAL"][()]
+
+    # copy ECAL and HCAL cell info to new file
+    newFile.create_dataset("ECAL", data=ECAL)
+    newFile.create_dataset("HCAL", data=HCAL)
 
     # if 'GAN' in inFile: # match Geant units
         # ECAL = ECAL/100
