@@ -52,8 +52,6 @@ def convertFile(inFile, outFile):
     HCAL_nHits = np.sum(np.sum(np.sum(HCAL>0.1, axis=1), axis=1), axis=1)
     newFile.create_dataset("HCAL_E", data=HCAL_E)
     newFile.create_dataset("HCAL_nHits", data=HCAL_nHits)
-    
-    print ECAL_E.shape, HCAL_E.shape
 
     # Ratio of HCAL/ECAL energy, and other ratios
     newFile.create_dataset("HCAL_ECAL_ERatio", data=safeDivide(HCAL_E, ECAL_E))
