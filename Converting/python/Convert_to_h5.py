@@ -44,17 +44,15 @@ def withinHcal(value, mymin, mymax):
 # Implementation of calorimeter window #
 ########################################
 
-# Given an event, get the 25x25x25 array of energies around its barycentre
-def getECALArray(event):
-    
-    # Get the event midpoint (returns absolute Y,Z weighted average at index 0,1 respectively)
-    midpoint = findEventMidpoint(event)
+# Given an event and Absolute global Y and Z coordinates of the calo barycenter
+# get the 25x25x25 array of ECAL energies around its barycentre
+def getECALArray(event,midpointY,midpointZ):
     
     #Map absolute Y  and Z weighted average to ix and iy respectively
     #Rounding the mapping to get barycenter ix,iy values as integer (in order to select a particular cell as barycenter)
     # CHECKPOINT - this function may need updating - why is pixel [x, y] obtained by just dividing position [x, y] by 5?
-    barycenter_ix = round(midpoint[0]/5)
-    barycenter_iy = round(midpoint[1]/5)
+    barycenter_ix = round(midpointY/5)
+    barycenter_iy = round(midpointZ/5)
     
     # Get the limit points for our grid
     # CHECKPOINT - what about wraparound?
@@ -70,15 +68,13 @@ def getECALArray(event):
     # Fill the array with energy values, if they exist
     for ix, iy, iz, E, x, y, z in event:
         if withinEcal(ix, xmin, xmax) and withinEcal(iy, ymin, ymax):
-            final_array[ix-xmin,iy-ymin,iz] = E
-    return final_array,midpoint[0],midpoint[1]
+            final_array[int(ix-xmin),int(iy-ymin),int(iz)] = E
+    return final_array
 
-# Given an event and Absolute Y and Z coordinates of the ECAL centroid
-# get the 4x4x60 array of energies around the same coordinates of HCAL
+# Given an event and Absolute global Y and Z coordinates of the calo barycenter
+# get the 5x5x60 array of energies around the same coordinates of HCAL
 def getHCALArray(event,midpointY,midpointZ):
     
-    # Use the Y and Z of ECAL centroid
-   
     #Map absolute Y and Z weighted average to ix and iy respectively
     #Rounding the mapping to get barycenter ix,iy values as integer (in order to select a particular cell as barycenter)
     # CHECKPOINT - same issue as above
@@ -103,7 +99,7 @@ def getHCALArray(event,midpointY,midpointZ):
     # Fill the array with energy values, if they exist
     for ix, iy, iz, E, x, y, z in event:
         if withinHcal(ix, xmin, xmax) and withinHcal(iy, ymin, ymax):
-            final_array[ix-xmin,iy-ymin,iz] = E
+            final_array[int(ix-xmin),int(iy-ymin),int(iz)] = E
     return final_array
 
 ############################
@@ -137,22 +133,29 @@ def convertFile(inFile, outFile):
         ECAL_list = []
         for cell_readout in my_event['ECAL']:
             ECAL_list.append(np.array(cell_readout))
-        if len(ECAL_list)<= 0: continue
 
-        # Get the barycenter details (The ECAL array around barycenter, Absolute Y and Z coordinates of ECAL centroid at index 0,1,2 respectively)
-        ECAL_barycenter_details = getECALArray(np.array(ECAL_list))
-
-        # Append the ECAL array of 25x25x25 cells around the barycenter to the ECAL array list
-        ECALarray = ECAL_barycenter_details[0]/1000.*50 # Geant is in units of 1/50 GeV for some reason
-        myFeatures.add("ECAL", ECALarray)
-
-        # Make a list containing all the cell readouts of HCAL for the event and store it in a single ECAL array
+        # Make a list containing all the cell readouts of HCAL for the event and store it in a single HCAL array
         HCAL_list = []
         for cell_reading in my_event['HCAL']:
             HCAL_list.append(np.array(cell_reading))
 
-        # Pass the absolute Y and Z cooridnates as input for determining HCAL array around barrycenter and append it to the HCAl array list
-        HCALarray = getHCALArray(np.array(HCAL_list),ECAL_barycenter_details[1],ECAL_barycenter_details[2])/1000.*50 # Geant is in units of 1/50 GeV for some reason
+        # check that either ECAL or HCAL has at least one hit
+        if len(ECAL_list) <= 0 and len(HCAL_list) <= 0: continue
+
+        # get barycenter taking into account ECAL and HCAL
+        # FIXME: should be done using local coordinates instead of global
+        # FIXME: in local coordinates, need to convert either HCAL or ECAL to account for different cell sizes
+        # FIXME: in local coordinates, need to account for wrap-around
+        fullcalo_array = np.array(ECAL_list+HCAL_list)
+        # returns the midpoint in global Y,Z coordinates
+        midpoint_global = findEventMidpoint(fullcalo_array)
+
+        # returns ECAL 25x25x25 array around barrycenter based on absolute global Y and Z coordinates
+        ECALarray = getECALArray(np.array(ECAL_list),midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
+        myFeatures.add("ECAL", ECALarray)
+
+        # returns HCAL 5x5x60 array around barrycenter based on absolute global Y and Z coordinates
+        HCALarray = getHCALArray(np.array(HCAL_list),midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
         myFeatures.add("HCAL", HCALarray)
 
         # Truth info from txt file
