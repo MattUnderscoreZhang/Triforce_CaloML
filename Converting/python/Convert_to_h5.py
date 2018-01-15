@@ -157,7 +157,7 @@ def convertFile(inFile, outFile):
             myFeatures.add("HCAL", HCALarray)
 
             # Truth info from txt file
-            myFeatures.add("energy", my_event['E'])
+            myFeatures.add("energy", my_event['E']/1000.) # convert MeV to GeV
             myFeatures.add("pdgID", my_event['pdgID'])
 
     # Save features to an h5 file
