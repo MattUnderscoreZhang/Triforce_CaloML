@@ -108,59 +108,57 @@ def getHCALArray(event,midpointY,midpointZ):
 
 def convertFile(inFile, outFile):
 
-    # Open file and extract events
-    with open(inFile) as myfile:
-        my_events_string = myfile.read().replace('\n', '')
-    my_events_string = my_events_string.replace(' ', '')
-    my_events_string = my_events_string.replace('}{','} {')
-    my_events_string = my_events_string.split()
-
-    ########################
-    # Calculating features #
-    ########################
-
     myFeatures = FeaturesList()
 
-    # Loop through all the events
-    for index, string in enumerate(my_events_string):
+    # Open file and extract events
+    with open(inFile) as myfile:
+        # loop line by line to limit memory usage
+        for index,line in enumerate(myfile):
+            my_event_string = line.replace('\n', '')
+            my_event_string = my_event_string.replace(' ', '')
+            my_event_string = my_event_string.replace('}{','} {')
 
-        my_event = ast.literal_eval(string)
+            ########################
+            # Calculating features #
+            ########################
 
-        if index%200 == 0:
-            print "Event", index, "out of", len(my_events_string)
+            my_event = ast.literal_eval(my_event_string)
 
-        # Make a list containing all the cell readouts of ECAL for the event and store it in a single ECAL array
-        ECAL_list = []
-        for cell_readout in my_event['ECAL']:
-            ECAL_list.append(np.array(cell_readout))
+            if index%200 == 0:
+                print "Event", index
 
-        # Make a list containing all the cell readouts of HCAL for the event and store it in a single HCAL array
-        HCAL_list = []
-        for cell_reading in my_event['HCAL']:
-            HCAL_list.append(np.array(cell_reading))
+            # Make a list containing all the cell readouts of ECAL for the event and store it in a single ECAL array
+            ECAL_list = []
+            for cell_readout in my_event['ECAL']:
+                ECAL_list.append(np.array(cell_readout))
 
-        # check that either ECAL or HCAL has at least one hit
-        if len(ECAL_list) <= 0 and len(HCAL_list) <= 0: continue
+            # Make a list containing all the cell readouts of HCAL for the event and store it in a single HCAL array
+            HCAL_list = []
+            for cell_reading in my_event['HCAL']:
+                HCAL_list.append(np.array(cell_reading))
 
-        # get barycenter taking into account ECAL and HCAL
-        # FIXME: should be done using local coordinates instead of global
-        # FIXME: in local coordinates, need to convert either HCAL or ECAL to account for different cell sizes
-        # FIXME: in local coordinates, need to account for wrap-around
-        fullcalo_array = np.array(ECAL_list+HCAL_list)
-        # returns the midpoint in global Y,Z coordinates
-        midpoint_global = findEventMidpoint(fullcalo_array)
+            # check that either ECAL or HCAL has at least one hit
+            if len(ECAL_list) <= 0 and len(HCAL_list) <= 0: continue
 
-        # returns ECAL 25x25x25 array around barrycenter based on absolute global Y and Z coordinates
-        ECALarray = getECALArray(np.array(ECAL_list),midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
-        myFeatures.add("ECAL", ECALarray)
+            # get barycenter taking into account ECAL and HCAL
+            # FIXME: should be done using local coordinates instead of global
+            # FIXME: in local coordinates, need to convert either HCAL or ECAL to account for different cell sizes
+            # FIXME: in local coordinates, need to account for wrap-around
+            fullcalo_array = np.array(ECAL_list+HCAL_list)
+            # returns the midpoint in global Y,Z coordinates
+            midpoint_global = findEventMidpoint(fullcalo_array)
 
-        # returns HCAL 5x5x60 array around barrycenter based on absolute global Y and Z coordinates
-        HCALarray = getHCALArray(np.array(HCAL_list),midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
-        myFeatures.add("HCAL", HCALarray)
+            # returns ECAL 25x25x25 array around barrycenter based on absolute global Y and Z coordinates
+            ECALarray = getECALArray(np.array(ECAL_list),midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
+            myFeatures.add("ECAL", ECALarray)
 
-        # Truth info from txt file
-        myFeatures.add("energy", my_event['E'])
-        myFeatures.add("pdgID", my_event['pdgID'])
+            # returns HCAL 5x5x60 array around barrycenter based on absolute global Y and Z coordinates
+            HCALarray = getHCALArray(np.array(HCAL_list),midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
+            myFeatures.add("HCAL", HCALarray)
+
+            # Truth info from txt file
+            myFeatures.add("energy", my_event['E'])
+            myFeatures.add("pdgID", my_event['pdgID'])
 
     # Save features to an h5 file
     f = h5py.File(outFile, "w")
