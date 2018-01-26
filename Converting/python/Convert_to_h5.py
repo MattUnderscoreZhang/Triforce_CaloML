@@ -14,6 +14,198 @@ import os
 from featuresList import FeaturesList
 import addFeatures
 
+#####################################
+# Maximum abs(ix) for each iz layer #
+#####################################
+
+## should be complete
+max_ix_perlayer_ECAL = {
+    0 : 79,
+    1 : 79,
+    2 : 79,
+    3 : 80,
+    4 : 80,
+    5 : 80,
+    6 : 80,
+    7 : 80,
+    8 : 81,
+    9 : 81,
+    10 : 81,
+    11 : 81,
+    12 : 82,
+    13 : 82,
+    14 : 82,
+    15 : 82,
+    16 : 83,
+    17 : 83,
+    18 : 83,
+    19 : 83,
+    20 : 84,
+    21 : 84,
+    22 : 85,
+    23 : 85,
+    24 : 85,
+}
+
+## should be complete, based on charged pion samples
+max_ix_perlayer_HCAL = {
+    0 : 15,
+    1 : 15,
+    2 : 16,
+    3 : 16,
+    4 : 16,
+    5 : 16,
+    6 : 17,
+    7 : 17,
+    8 : 17,
+    9 : 17,
+    10 : 18,
+    11 : 18,
+    12 : 18,
+    13 : 18,
+    14 : 18,
+    15 : 19,
+    16 : 19,
+    17 : 19,
+    18 : 19,
+    19 : 20,
+    20 : 20,
+    21 : 20,
+    22 : 20,
+    23 : 21,
+    24 : 21,
+    25 : 21,
+    26 : 21,
+    27 : 22,
+    28 : 22,
+    29 : 22,
+    30 : 22,
+    31 : 22,
+    32 : 23,
+    33 : 23,
+    34 : 23,
+    35 : 23,
+    36 : 24,
+    37 : 24,
+    38 : 24,
+    39 : 24,
+    40 : 25,
+    41 : 25,
+    42 : 25,
+    43 : 25,
+    44 : 26,
+    45 : 26,
+    46 : 26,
+    47 : 26,
+    48 : 27,
+    49 : 27,
+    50 : 27,
+    51 : 27,
+    52 : 27,
+    53 : 28,
+    54 : 28,
+    55 : 28,
+    56 : 28,
+    57 : 29,
+    58 : 29,
+    59 : 29,
+}
+
+# returns new array using dictionaries above
+# based on: https://stackoverflow.com/a/16992881
+def getMaxIX(d,iz):
+    output = np.ndarray(iz.shape)
+    for k in d:
+        output[iz == k] = d[k]
+    return output
+
+##############################################
+#          ix shifting transformations       #
+# to account for wrap around in ix numbering #
+##############################################
+
+# since most events in our samples are in modules 0,1,11, apply an offset to center range on module 0
+# module number counting is also in the opposite direction as ix.. 
+# use -module instead so neighboring cells remain continuous
+def getModuleShifted(module):
+    return np.remainder(18 - module, np.ones_like(module)*12)
+
+# absoluteIX index, taking into account module number
+# shifted to always be non-negative
+def getAbsoluteIXECAL(ix,iz,module):
+    module_shifted = getModuleShifted(module)
+    max_ix = getMaxIX(max_ix_perlayer_ECAL,iz)
+    ncells_module = 1 + (2 * max_ix)
+    return ix + max_ix + module_shifted*ncells_module
+
+# absoluteIX index, taking into account module number
+# shifted to always be non-negative
+def getAbsoluteIXHCAL(ix,iz,module):
+    module_shifted = getModuleShifted(module)
+    max_ix = getMaxIX(max_ix_perlayer_HCAL,iz)
+    ncells_module = 1 + (2 * max_ix)
+    return ix + max_ix + module_shifted*ncells_module
+
+# inverse transformation of getAbsoluteIXECAL
+def invertAbsoluteIXECAL(absoluteIX,iz,module):
+    module_shifted = getModuleShifted(module)
+    max_ix = getMaxIX(max_ix_perlayer_ECAL,iz)
+    ncells_module = 1 + (2 * max_ix)
+    return absoluteIX - max_ix - module_shifted*ncells_module
+
+# inverse transformation of getAbsoluteIXHCAL
+def invertAbsoluteIXHCAL(absoluteIX,iz,module):
+    module_shifted = getModuleShifted(module)
+    max_ix = getMaxIX(max_ix_perlayer_HCAL,iz)
+    ncells_module = 1 + (2 * max_ix)
+    return absoluteIX - max_ix - module_shifted*ncells_module
+
+####################################################################################
+#                          ix rescaling transformations                            #
+# to account for different granularity in different depth layers, and ECAL vs HCAL #
+####################################################################################
+
+# convert ECAL ix for later layers to look like innermost layer
+def getTransformedIXECAL(absoluteIX,iz):
+    max_ix = getMaxIX(max_ix_perlayer_ECAL,iz)
+    ncells_module = 1 + (2 * max_ix)
+    ncells_innerECAL = 1 + (2 * max_ix_perlayer_ECAL[0])
+    return np.rint(ncells_innerECAL/ncells_module*absoluteIX)
+    
+# convert HCAL ix roughly to ECAL ix for barycenter calculation
+def getTransformedIXHCAL(absoluteIX,iz):
+    max_ix = getMaxIX(max_ix_perlayer_HCAL,iz)
+    ncells_module = 1 + (2 * max_ix)
+    ncells_innerECAL = 1 + (2 * max_ix_perlayer_ECAL[0])
+    return np.rint(ncells_innerECAL/ncells_module*absoluteIX)
+
+# convert ECAL innermost layer ix roughly to later layers for cell selection
+def invertTransformedIXECAL(transformedIX,iz):
+    max_ix = getMaxIX(max_ix_perlayer_ECAL,iz)
+    ncells_module = 1 + (2 * max_ix)
+    ncells_innerECAL = 1 + (2 * max_ix_perlayer_ECAL[0])
+    return np.rint(ncells_module/ncells_innerECAL*transformedIX)
+
+# ECAL ix roughly back to HCAL for cell selection
+def invertTransformedIXHCAL(transformedIX,iz):
+    max_ix = getMaxIX(max_ix_perlayer_HCAL,iz)
+    ncells_module = 1 + (2 * max_ix)
+    ncells_innerECAL = 1 + (2 * max_ix_perlayer_ECAL[0])
+    return np.rint(ncells_module/ncells_innerECAL*transformedIX)
+
+############################################
+#      iy rescaling transformations        #
+# to account for wider cells in iy in HCAL #
+############################################
+
+# cells are 6x larger in iy in HCAL compared to ECAL
+def getTransformedIYHCAL(iy):
+    return iy*6
+
+# cells are 6x larger in iy in HCAL compared to ECAL
+def invertTransformedIYHCAL(iy):
+    return iy/6
+
 ##################################
 # Functions for finding centroid #
 ##################################
@@ -22,84 +214,77 @@ import addFeatures
 def findMidpoint(distance, energy):
     return np.average(distance, weights = energy)
     
-# Given an array of interactions (ix,iy,iz,E,X,Y,Z), returns the weighted average (aveY, aveZ)
+# Given an array of cell hits (ix,iy,iz,E,X,Y,Z,module,absoluteIX,transformedIX,transformedIY), 
+# returns the weighted average (transformed ix, transformed iy)
 def findEventMidpoint(event):
-    Yave = findMidpoint(event[:,5], event[:,3]) 
-    Zave = findMidpoint(event[:,6], event[:,3]) 
-    return (Yave, Zave)
+    ix_avg = findMidpoint(event[:,9], event[:,3]) 
+    iy_avg = findMidpoint(event[:,10], event[:,3]) 
+    # don't round yet, to better center each layer and ECAL vs HCAL
+    return (ix_avg,iy_avg)
 
 ##################################################
 # Check if between bounds for calorimeter window #
 ##################################################
 
-#Checking range for ECAL (including min and max as the total number of cells is odd)
-def withinEcal(value, mymin, mymax):
-    return (value >= mymin and value <= mymax)
-
-#Checking range for HCAL (including min and max as the total number of cells is odd)     
-def withinHcal(value, mymin, mymax):
+#Checking range for calo window (including min and max as the total number of cells is odd)
+# FIXME: this assumes that wrap-around isn't a problem, after shifting to absoluteIX
+def withinWindow(value, mymin, mymax):
     return (value >= mymin and value <= mymax)
 
 ########################################
 # Implementation of calorimeter window #
 ########################################
 
-# Given an event and Absolute global Y and Z coordinates of the calo barycenter
+# Given an event and local (transformedIX, transformedIY) coordinates of the calo barycenter
 # get the 25x25x25 array of ECAL energies around its barycentre
-def getECALArray(event,midpointY,midpointZ):
-    
-    #Map absolute Y  and Z weighted average to ix and iy respectively
-    #Rounding the mapping to get barycenter ix,iy values as integer (in order to select a particular cell as barycenter)
-    # CHECKPOINT - this function may need updating - why is pixel [x, y] obtained by just dividing position [x, y] by 5?
-    barycenter_ix = round(midpointY/5)
-    barycenter_iy = round(midpointZ/5)
-    
-    # Get the limit points for our grid
-    # CHECKPOINT - what about wraparound?
-    xmin = barycenter_ix - 12
-    xmax = barycenter_ix + 12
-    ymin = barycenter_iy - 12
-    ymax = barycenter_iy + 12
+def getECALArray(event,ix_avg,iy_avg):
+
+    # get equivalent of average absolute ix in each depth layer
+    ix_avg_layers = invertTransformedIXECAL(ix_avg,event[:,2])
+
+    event_avgs = np.concatenate((event,np.reshape(ix_avg_layers,(-1,1))),axis=1)
+
+    # Get the limit points for our grid in iy. ix depends on the layer
+    iy_min = round(iy_avg) - 12
+    iy_max = round(iy_avg) + 12
     
     # Create the empty array to put the energies in
     # CHECKPOINT - cells are non-uniform in z after 16 layers (last layers are twice as thick, according to https://www.dropbox.com/s/ktu1ly0ge9n4jyd/CaloImagingDataset.pdf?dl=0)
     final_array = np.zeros((25, 25, 25))
     
     # Fill the array with energy values, if they exist
-    for ix, iy, iz, E, x, y, z in event:
-        if withinEcal(ix, xmin, xmax) and withinEcal(iy, ymin, ymax):
-            final_array[int(ix-xmin),int(iy-ymin),int(iz)] = E
+    for ix, iy, iz, E, x, y, z, module, absIX, transIX, transIY, avgIX in event_avgs:
+        ix_min = avgIX - 12
+        ix_max = avgIX + 12
+        # FIXME: this assumes that wrap-around isn't a problem, after shifting to absoluteIX
+        if withinWindow(absIX, ix_min, ix_max) and withinWindow(iy, iy_min, iy_max):
+            final_array[int(absIX-ix_min),int(iy-iy_min),int(iz)] = E
     return final_array
 
-# Given an event and Absolute global Y and Z coordinates of the calo barycenter
+# Given an event and local (transformedIX, transformedIY) coordinates of the calo barycenter
 # get the 5x5x60 array of energies around the same coordinates of HCAL
-def getHCALArray(event,midpointY,midpointZ):
+def getHCALArray(event,ix_avg,iy_avg):
     
-    #Map absolute Y and Z weighted average to ix and iy respectively
-    #Rounding the mapping to get barycenter ix,iy values as integer (in order to select a particular cell as barycenter)
-    # CHECKPOINT - same issue as above
-    barycenter_ix = round(midpointY/30)
-    barycenter_iy = round(midpointZ/30)
-    
-    # Get the limit points for our grid
-    # CHECKPOINT - same issue as above
-    xmin = barycenter_ix - 2
-    xmax = barycenter_ix + 2
-    ymin = barycenter_iy - 2
-    ymax = barycenter_iy + 2
+    # get equivalent of average absolute ix in each depth layer
+    ix_avg_layers = invertTransformedIXHCAL(ix_avg,event[:,2])
+
+    event_avgs = np.concatenate((event,np.reshape(ix_avg_layers,(-1,1))),axis=1)
+
+    # Get the limit points for our grid in iy. ix depends on the layer
+    iy_avg_HCAL = round(invertTransformedIYHCAL(iy_avg))
+    iy_min = iy_avg_HCAL - 2
+    iy_max = iy_avg_HCAL + 2
     
     # Create the empty array to put the energies in
     final_array = np.zeros((5, 5, 60))
     
     # Fill the array with energy values, if they exist
-    #for element in event:
-    #    if within(element[0], xmin, xmax) and within(element[1], ymin, ymax) and within(element[2], zmin, zmax):
-    #        final_array[element[0], element[1], element[2]] = element[3]
-  
-    # Fill the array with energy values, if they exist
-    for ix, iy, iz, E, x, y, z in event:
-        if withinHcal(ix, xmin, xmax) and withinHcal(iy, ymin, ymax):
-            final_array[int(ix-xmin),int(iy-ymin),int(iz)] = E
+    for ix, iy, iz, E, x, y, z, module, absIX, transIX, transIY, avgIX in event_avgs:
+        ix_min = avgIX - 2
+        ix_max = avgIX + 2
+        # FIXME: this assumes that wrap-around isn't a problem, after shifting to absoluteIX
+        if withinWindow(absIX, ix_min, ix_max) and withinWindow(iy, iy_min, iy_max):
+            final_array[int(absIX-ix_min),int(iy-iy_min),int(iz)] = E
     return final_array
 
 ############################
@@ -140,21 +325,51 @@ def convertFile(inFile, outFile):
             # check that either ECAL or HCAL has at least one hit
             if len(ECAL_list) <= 0 and len(HCAL_list) <= 0: continue
 
+            # create dummy array if empty
+            if len(ECAL_list) == 0:
+                ECAL_list.append(np.zeros(8))
+            if len(HCAL_list) == 0:
+                HCAL_list.append(np.zeros(8))
+
+            # convert lists to arrays
+            ECAL_array = np.array(ECAL_list)
+            HCAL_array = np.array(HCAL_list)
+
+            # compute absolute and transformed ix coordinates for window centering and selection
+            # "absolute" ix accounts for the wrap-around in phi in each of 12 phi modules
+            absoluteIX_ECAL = getAbsoluteIXECAL(ECAL_array[:,0],ECAL_array[:,2],ECAL_array[:,7])
+            absoluteIX_HCAL = getAbsoluteIXHCAL(HCAL_array[:,0],HCAL_array[:,2],HCAL_array[:,7])
+            # "transformed" ix further accounts for different cell size in phi as a function of layer depth, and ECAL vs HCAL
+            transformedIX_ECAL = getTransformedIXECAL(absoluteIX_ECAL,ECAL_array[:,2])
+            transformedIX_HCAL = getTransformedIXHCAL(absoluteIX_HCAL,HCAL_array[:,2])
+            # "transformed" iy accounts for different cell size iy for ECAL vs HCAL
+            transformedIY_ECAL = ECAL_array[:,1] # no tranformation applied to ECAL
+            transformedIY_HCAL = getTransformedIYHCAL(HCAL_array[:,1])
+
+            # add extra info to arrays
+            ECAL_array_extra = np.concatenate( (ECAL_array,
+                                                np.reshape(absoluteIX_ECAL,(-1,1)),
+                                                np.reshape(transformedIX_ECAL,(-1,1)),
+                                                np.reshape(transformedIY_ECAL,(-1,1)) ), 
+                                               axis=1 )
+            HCAL_array_extra = np.concatenate( (HCAL_array,
+                                                np.reshape(absoluteIX_HCAL,(-1,1)),
+                                                np.reshape(transformedIX_HCAL,(-1,1)),
+                                                np.reshape(transformedIY_HCAL,(-1,1)) ), 
+                                               axis=1 )
+
             # get barycenter taking into account ECAL and HCAL
-            # FIXME: should be done using local coordinates instead of global
-            # FIXME: in local coordinates, need to convert either HCAL or ECAL to account for different cell sizes
-            # FIXME: in local coordinates, need to account for wrap-around
-            fullcalo_array = np.array(ECAL_list+HCAL_list)
-            # returns the midpoint in global Y,Z coordinates
+            fullcalo_array = np.concatenate((ECAL_array_extra,HCAL_array_extra),axis=0)
+            # returns the midpoint in (transformed ix, transformed iy) local coordinates
             midpoint_global = findEventMidpoint(fullcalo_array)
 
-            # returns ECAL 25x25x25 array around barrycenter based on absolute global Y and Z coordinates
-            ECALarray = getECALArray(np.array(ECAL_list),midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
-            myFeatures.add("ECAL", ECALarray)
+            # returns ECAL 25x25x25 array around barycenter based on midpoint in (transformed ix, transformed iy) local coordinates
+            ECAL_window = getECALArray(ECAL_array_extra,midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
+            myFeatures.add("ECAL", ECAL_window)
 
-            # returns HCAL 5x5x60 array around barrycenter based on absolute global Y and Z coordinates
-            HCALarray = getHCALArray(np.array(HCAL_list),midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
-            myFeatures.add("HCAL", HCALarray)
+            # returns HCAL 5x5x60 array around barycenter based on midpoint in (transformed ix, transformed iy) local coordinates
+            HCAL_window = getHCALArray(HCAL_array_extra,midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
+            myFeatures.add("HCAL", HCAL_window)
 
             # Truth info from txt file
             myFeatures.add("energy", my_event['E']/1000.) # convert MeV to GeV

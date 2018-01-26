@@ -56,7 +56,8 @@ def getEnergies(path_to_file, outfile, openingAngleCut):
         y = idDecoderHCAL['y'].value()
         E = event.HCalBarrelCollection[i].energyDeposit
         pos = event.HCalBarrelCollection[i].position
-        hit_listHCAL.append((int(x), int(y), int(z), E, pos.X(), pos.Y(), pos.Z()))
+        module = idDecoderHCAL['module'].value()
+        hit_listHCAL.append((int(x), int(y), int(z), E, pos.X(), pos.Y(), pos.Z(), int(module)))
 
       # Read ECAL
       for i in range(len(event.ECalBarrelCollection)):
@@ -69,8 +70,9 @@ def getEnergies(path_to_file, outfile, openingAngleCut):
         y = idDecoder['y'].value()
         E = event.ECalBarrelCollection[i].energyDeposit
         pos = event.ECalBarrelCollection[i].position
+        module = idDecoder['module'].value()
         if (z < 25):
-            hit_list.append((int(x), int(y), int(z), E, pos.X(), pos.Y(), pos.Z()))
+            hit_list.append((int(x), int(y), int(z), E, pos.X(), pos.Y(), pos.Z(), int(module)))
 
       # Read energy
       gunpx = event.MCParticles[0].psx
