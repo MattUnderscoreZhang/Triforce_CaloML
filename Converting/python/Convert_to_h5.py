@@ -159,6 +159,8 @@ def convertFile(inFile, outFile):
             # Truth info from txt file
             myFeatures.add("energy", my_event['E']/1000.) # convert MeV to GeV
             myFeatures.add("pdgID", my_event['pdgID'])
+            myFeatures.add("conversion", my_event['conversion'])
+            myFeatures.add("openingAngle", my_event['openingAngle'])
 
     # Save features to an h5 file
     f = h5py.File(outFile, "w")

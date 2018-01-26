@@ -41,6 +41,8 @@ def convertFile(inFile, outFile):
     # Truth info
     newFile.create_dataset("energy", data=oldFile["energy"][()])
     newFile.create_dataset("pdgID", data=oldFile["pdgID"][()])
+    newFile.create_dataset("conversion", data=oldFile["conversion"][()])
+    newFile.create_dataset("openingAngle", data=oldFile["openingAngle"][()])
 
     # Calorimeter total energy and number of hits
     ECAL_E = np.sum(np.sum(np.sum(ECAL, axis=1), axis=1), axis=1)
