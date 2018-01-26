@@ -2,6 +2,7 @@
 # Kaustuv Datta and Jayesh Mahaptra (July 2016)
 # Maurizio Pierni (April 2017)
 # Matt Zhang (May 2017)
+# Dominick Olivito (Jan 2018)
 
 from __future__ import division
 import numpy as np
@@ -236,7 +237,7 @@ def withinWindow(value, mymin, mymax):
 ########################################
 
 # Given an event and local (transformedIX, transformedIY) coordinates of the calo barycenter
-# get the 25x25x25 array of ECAL energies around its barycentre
+# get the 51x51x25 array of ECAL energies around its barycentre
 def getECALArray(event,ix_avg,iy_avg):
 
     # get equivalent of average absolute ix in each depth layer
@@ -245,24 +246,24 @@ def getECALArray(event,ix_avg,iy_avg):
     event_avgs = np.concatenate((event,np.reshape(ix_avg_layers,(-1,1))),axis=1)
 
     # Get the limit points for our grid in iy. ix depends on the layer
-    iy_min = round(iy_avg) - 12
-    iy_max = round(iy_avg) + 12
+    iy_min = round(iy_avg) - 25
+    iy_max = round(iy_avg) + 25
     
     # Create the empty array to put the energies in
     # CHECKPOINT - cells are non-uniform in z after 16 layers (last layers are twice as thick, according to https://www.dropbox.com/s/ktu1ly0ge9n4jyd/CaloImagingDataset.pdf?dl=0)
-    final_array = np.zeros((25, 25, 25))
+    final_array = np.zeros((51, 51, 25))
     
     # Fill the array with energy values, if they exist
     for ix, iy, iz, E, x, y, z, module, absIX, transIX, transIY, avgIX in event_avgs:
-        ix_min = avgIX - 12
-        ix_max = avgIX + 12
+        ix_min = avgIX - 25
+        ix_max = avgIX + 25
         # FIXME: this assumes that wrap-around isn't a problem, after shifting to absoluteIX
         if withinWindow(absIX, ix_min, ix_max) and withinWindow(iy, iy_min, iy_max):
             final_array[int(absIX-ix_min),int(iy-iy_min),int(iz)] = E
     return final_array
 
 # Given an event and local (transformedIX, transformedIY) coordinates of the calo barycenter
-# get the 5x5x60 array of energies around the same coordinates of HCAL
+# get the 11x11x60 array of energies around the same coordinates of HCAL
 def getHCALArray(event,ix_avg,iy_avg):
     
     # get equivalent of average absolute ix in each depth layer
@@ -272,16 +273,16 @@ def getHCALArray(event,ix_avg,iy_avg):
 
     # Get the limit points for our grid in iy. ix depends on the layer
     iy_avg_HCAL = round(invertTransformedIYHCAL(iy_avg))
-    iy_min = iy_avg_HCAL - 2
-    iy_max = iy_avg_HCAL + 2
+    iy_min = iy_avg_HCAL - 5
+    iy_max = iy_avg_HCAL + 5
     
     # Create the empty array to put the energies in
-    final_array = np.zeros((5, 5, 60))
+    final_array = np.zeros((11, 11, 60))
     
     # Fill the array with energy values, if they exist
     for ix, iy, iz, E, x, y, z, module, absIX, transIX, transIY, avgIX in event_avgs:
-        ix_min = avgIX - 2
-        ix_max = avgIX + 2
+        ix_min = avgIX - 5
+        ix_max = avgIX + 5
         # FIXME: this assumes that wrap-around isn't a problem, after shifting to absoluteIX
         if withinWindow(absIX, ix_min, ix_max) and withinWindow(iy, iy_min, iy_max):
             final_array[int(absIX-ix_min),int(iy-iy_min),int(iz)] = E
@@ -363,11 +364,11 @@ def convertFile(inFile, outFile):
             # returns the midpoint in (transformed ix, transformed iy) local coordinates
             midpoint_global = findEventMidpoint(fullcalo_array)
 
-            # returns ECAL 25x25x25 array around barycenter based on midpoint in (transformed ix, transformed iy) local coordinates
+            # returns ECAL 51x51x25 array around barycenter based on midpoint in (transformed ix, transformed iy) local coordinates
             ECAL_window = getECALArray(ECAL_array_extra,midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
             myFeatures.add("ECAL", ECAL_window)
 
-            # returns HCAL 5x5x60 array around barycenter based on midpoint in (transformed ix, transformed iy) local coordinates
+            # returns HCAL 11x11x60 array around barycenter based on midpoint in (transformed ix, transformed iy) local coordinates
             HCAL_window = getHCALArray(HCAL_array_extra,midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
             myFeatures.add("HCAL", HCAL_window)
 
