@@ -1,51 +1,32 @@
-##################################################
-#   ▲   TRIFORCE PARTICLE IDENTIFICATION SYSTEM  #
-#  ▲ ▲  classification, energy regression & GAN  #
-##################################################
+################################################################
+#  ##########################################################  #
+#  #                                                        #  #
+#  #      /\\     TRIFORCE PARTICLE IDENTIFICATION SYSTEM   #  #
+#  #     /__\\    Classification, Energy Regression & GAN   #  #
+#  #    /\\ /\\                                             #  #
+#  #   /__\/__\\                       Run using Python 3   #  #
+#  #                                                        #  #
+#  ##########################################################  #
+################################################################
 
-import sys
 import torch
-from torch.autograd import Variable
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 import torch.utils.data as data
-import loader
+from torch.autograd import Variable
 import glob
 import os
 import numpy as np
 import h5py as h5
+import loader
 
-###############
-# Set options #
-###############
+#########################
+# Set tools and options #
+#########################
 
-# basePath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/V3/Downsampled/EleChPi/"
-# samplePath = [basePath + "ChPiEscan/ChPiEscan_*.h5", basePath + "EleEscan/EleEscan_*.h5"]
-# classPdgID = [211, 11] # absolute IDs corresponding to paths above
-basePath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/V3/Downsampled/GammaPi0/"
-samplePath = [basePath + "Pi0Escan/Pi0Escan_*.h5", basePath + "GammaEscan/GammaEscan_*.h5"]
-classPdgID = [111, 22] # absolute IDs corresponding to paths above
-eventsPerFile = 10000
+from Options.default_options import *
 
-trainRatio = 0.66
-nEpochs = 5 # break after this number of epochs
-relativeDeltaLossThreshold = 0.001 # break if change in loss falls below this threshold over an entire epoch, or...
-relativeDeltaLossNumber = 5 # ...for this number of test losses in a row
-batchSize = 1000
-nworkers = 0
-
-OutPath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/SubmissionScripts/PyTorchNN/"+sys.argv[1]
-
-learningRate = float(sys.argv[2])
-decayRate = float(sys.argv[3])
-dropoutProb = float(sys.argv[4])
-hiddenLayerNeurons = int(sys.argv[5])
-nHiddenLayers = int(sys.argv[6])
-
-##############
-# Load files #
-##############
+####################################
+# Load files and set up generators #
+####################################
 
 nParticles = len(samplePath)
 particleFiles = [[]] * nParticles
@@ -72,70 +53,35 @@ testSet = loader.HDF5Dataset(testFiles, eventsPerFile, classPdgID)
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=batchSize,sampler=loader.OrderedRandomSampler(trainSet),num_workers=nworkers)
 testLoader = data.DataLoader(dataset=testSet,batch_size=batchSize,sampler=loader.OrderedRandomSampler(testSet),num_workers=nworkers)
 
-##################
-# Classification #
-##################
-
-class Classifier(nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.input = nn.Linear(5 * 5 * 25 + 5 * 5 * 60, hiddenLayerNeurons)
-        self.hidden = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
-        self.dropout = nn.Dropout(p = dropoutProb)
-        self.output = nn.Linear(hiddenLayerNeurons, 2)
-    def forward(self, x1, x2):
-        x1 = x1.view(-1, 5 * 5 * 25)
-        x2 = x2.view(-1, 5 * 5 * 60)
-        x = torch.cat([x1,x2], 1)
-        x = self.input(x)
-        for i in range(nHiddenLayers-1):
-            x = F.relu(self.hidden(x))
-            x = self.dropout(x)
-        x = F.softmax(self.output(x))
-        return x
-
-classifier = Classification()
-classifier.cuda()
-
-# optimizer = optim.Adadelta(classifier.parameters(), lr=learningRate, weight_decay=decayRate)
-optimizer = optim.Adam(classifier.parameters(), lr=learningRate, weight_decay=decayRate)
-lossFunction = nn.CrossEntropyLoss()
-
-###############
-# Train model #
-###############
+################
+# Train models #
+################
 
 loss_history = []
-classifier.train() # set to training mode
 avg_training_loss = 0.0
 test_loss = 0.0
 epoch_test_loss = 0.0
 endTraining = False
 over_break_count = 0
+
 for epoch in range(nEpochs):
-    for i, data in enumerate(trainLoader, 0):
+    for i, data in enumerate(trainLoader):
         ECALs, HCALs, ys = data
         ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-        optimizer.zero_grad()
-        outputs = classifier(ECALs, HCALs)
-        loss = lossFunction(outputs, ys)
-        loss.backward()
-        optimizer.step()
-        avg_training_loss += loss.data[0]
+        avg_training_loss += classifier.train(ECALs, ys)
         if i % 20 == 19:
             avg_training_loss /= 20 # average of loss over last 5 batches
             print('[%d, %5d] train loss: %.10f' % (epoch+1, i+1, avg_training_loss)),
             previous_test_loss = test_loss
             test_loss = 0.0
-            classifier.eval() # set to evaluation mode (turns off dropout)
-            for data in testLoader:
+            # for data in testLoader:
+            nTestBatches = 10
+            for i in range(nTestBatches):
                 ECALs, HCALs, ys = data
                 ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-                outputs = classifier(ECALs, HCALs)
-                loss = lossFunction(outputs, ys)
-                test_loss += loss.data[0]
+                test_loss += classifier.eval(ECALs, ys)
+            test_loss = test_loss / nTestBatches
             print(', test loss: %.10f' % (test_loss)),
-            classifier.train() # set to training mode
             loss_history.append([epoch + 1, i, avg_training_loss, test_loss])
             avg_training_loss = 0.0
             # decide whether or not to end training
@@ -156,9 +102,8 @@ for epoch in range(nEpochs):
     if endTraining: break
 
 if not os.path.exists(OutPath): os.makedirs(OutPath)
-file = h5.File(OutPath+"Results.h5", 'w')
-file.create_dataset("loss_history", data=np.array(loss_history))
-
+out_file = h5.File(OutPath+"Results.h5", 'w')
+out_file.create_dataset("loss_history", data=np.array(loss_history))
 torch.save(classifier.state_dict(), OutPath+"SavedModel")
 
 print('Finished Training')
@@ -167,18 +112,4 @@ print('Finished Training')
 # Analysis and plots #
 ######################
 
-correct = 0
-total = 0
-classifier.eval() # set to evaluation mode (turns off dropout)
-for data in testLoader:
-    ECALs, HCALs, ys = data
-    ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-    outputs = classifier(ECALs, HCALs)
-    _, predicted = torch.max(outputs.data, 1)
-    total += ys.size(0)
-    correct += (predicted == ys.data).sum()
-
-file.create_dataset("outputs", data=np.array(outputs.data))
-
-print('Accuracy of the network on test samples: %f %%' % (100 * float(correct) / total))
-file.create_dataset("test_accuracy", data=np.array([100*float(correct)/total]))
+analyzer.analyze(classifier, testLoader, out_file)

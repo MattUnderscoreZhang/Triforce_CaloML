@@ -1,7 +1,6 @@
 # HDF5Dataset is of class torch.utils.data.Dataset, and is initialized with a set of data files and the number of events per file.
 # __len__ returns the number of items in the dataset, which is simply the number of files times the number of events per file.
 # __getitem__ takes an index and returns that event. First it sees which file the indexed event would be in, and loads that file if it is not already in memory. It reads the entire ECAL, HCAL, and target information of that file into memory. Then it returns info for the requested event.
-
 # OrderedRandomSampler is used to pass indices to HDF5Dataset, but the indices are created in such a way that the first file is completely read first, and then the second file, then the third etc.
 
 import torch.utils.data as data
@@ -51,7 +50,7 @@ class HDF5Dataset(data.Dataset):
             self.classPdgID[ID] = i
 
     def __getitem__(self, index):
-        fileN = index/self.num_per_file
+        fileN = index//self.num_per_file
         indexInFile = index%self.num_per_file
         if(fileN != self.fileInMemory):
             self.ECAL = []
