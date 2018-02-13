@@ -32,7 +32,8 @@ to use.
 
 On L25 of triforce.py, choose which options file you want to load.
 
-Then, simply do "python triforce.py" to run your script.
+Then, simply do "python3 triforce.py <args>" to run your script, passing
+whatever arguments are specified in your options file. Run with Python 3.
 
                       ---------------------------
         --------------- How To Create a New Tool ----------------

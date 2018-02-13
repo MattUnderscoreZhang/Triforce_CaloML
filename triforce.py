@@ -16,7 +16,10 @@ import glob
 import os
 import numpy as np
 import h5py as h5
-import loader
+import Loader.loader as loader
+import sys
+
+sys.dont_write_bytecode = True # prevent the creation of .pyc files
 
 #########################
 # Set tools and options #
@@ -59,7 +62,7 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=batchSize,sampler=loader
 
 loss_history = []
 avg_training_loss = 0.0
-test_loss = 0.0
+# test_loss = 0.0
 epoch_test_loss = 0.0
 endTraining = False
 over_break_count = 0
@@ -68,34 +71,40 @@ for epoch in range(nEpochs):
     for i, data in enumerate(trainLoader):
         ECALs, HCALs, ys = data
         ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-        avg_training_loss += classifier.train(ECALs, ys)
-        if i % 20 == 19:
-            avg_training_loss /= 20 # average of loss over last 5 batches
-            print('[%d, %5d] train loss: %.10f' % (epoch+1, i+1, avg_training_loss)),
-            previous_test_loss = test_loss
-            test_loss = 0.0
-            # for data in testLoader:
-            nTestBatches = 10
-            for i in range(nTestBatches):
-                ECALs, HCALs, ys = data
-                ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-                test_loss += classifier.eval(ECALs, ys)
-            test_loss = test_loss / nTestBatches
-            print(', test loss: %.10f' % (test_loss)),
-            loss_history.append([epoch + 1, i, avg_training_loss, test_loss])
-            avg_training_loss = 0.0
-            # decide whether or not to end training
-            relativeDeltaLoss = 1 if previous_test_loss==0 else (previous_test_loss - test_loss)/float(previous_test_loss)
-            print(', relative error: %.10f' % relativeDeltaLoss)
-            if (relativeDeltaLoss < relativeDeltaLossThreshold):
-                over_break_count+=1
-            else:
-                over_break_count=0
-            if (over_break_count >= relativeDeltaLossNumber):
-                endTraining = True
-                break
+        classifier.train(ECALs, HCALs, ys)
+        regressor.train(ECALs, HCALs, ys)
+        GAN.train(ECALs, HCALs, ys)
+        # avg_training_loss += classifier.train(ECALs, ys)
+        # if i % 20 == 19:
+            # avg_training_loss /= 20 # average of loss over last 5 batches
+            # print('[%d, %5d] train loss: %.10f' % (epoch+1, i+1, avg_training_loss)),
+            # previous_test_loss = test_loss
+            # test_loss = 0.0
+            # # for data in testLoader:
+            # nTestBatches = 10
+            # for i in range(nTestBatches):
+                # ECALs, HCALs, ys = data
+                # ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
+                # test_loss += classifier.eval(ECALs, ys)
+            # test_loss = test_loss / nTestBatches
+            # print(', test loss: %.10f' % (test_loss)),
+            # loss_history.append([epoch + 1, i, avg_training_loss, test_loss])
+            # avg_training_loss = 0.0
+            # # decide whether or not to end training
+            # relativeDeltaLoss = 1 if previous_test_loss==0 else (previous_test_loss - test_loss)/float(previous_test_loss)
+            # print(', relative error: %.10f' % relativeDeltaLoss)
+            # if (relativeDeltaLoss < relativeDeltaLossThreshold):
+                # over_break_count+=1
+            # else:
+                # over_break_count=0
+            # if (over_break_count >= relativeDeltaLossNumber):
+                # endTraining = True
+                # break
     previous_epoch_test_loss = epoch_test_loss
-    epoch_test_loss = test_loss
+    classifier_test_loss = classifier.eval(ECALs, HCALs, ys)
+    regressor_test_loss = regressor.eval(ECALs, HCALs, ys)
+    GAN_test_loss = GAN.eval(ECALs, HCALs, ys)
+    epoch_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
     relativeEpochDeltaLoss = 1 if previous_epoch_test_loss==0 else (previous_epoch_test_loss - epoch_test_loss)/float(previous_epoch_test_loss)
     if (relativeEpochDeltaLoss < relativeDeltaLossThreshold):
         endTraining = True

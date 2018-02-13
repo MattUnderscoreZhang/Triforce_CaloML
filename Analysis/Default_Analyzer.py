@@ -4,7 +4,7 @@ import torch
 # Analysis #
 ############
 
-class Default_Analyzer():
+class Analyzer():
     def analyze(self, classifier, testLoader, out_file):
         correct = 0
         total = 0

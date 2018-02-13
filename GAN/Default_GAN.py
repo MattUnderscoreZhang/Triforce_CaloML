@@ -3,11 +3,11 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
-##################
-# Classification #
-##################
+#######
+# GAN #
+#######
 
-class Default_Classifier_Net(nn.Module):
+class Truth_Identification_Net(nn.Module):
     def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb):
         super().__init__()
         self.input = nn.Linear(25 * 25 * 25, hiddenLayerNeurons)
@@ -24,23 +24,9 @@ class Default_Classifier_Net(nn.Module):
         x = F.softmax(self.output(x), dim=1)
         return x
 
-class Default_Classifier():
+class GAN():
     def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb, learningRate, decayRate):
-        self.net = Default_Classifier_Net(hiddenLayerNeurons, nHiddenLayers, dropoutProb)
+        self.net = Truth_Identification_Net(hiddenLayerNeurons, nHiddenLayers, dropoutProb)
         self.net.cuda()
-        # optimizer = optim.Adadelta(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
         self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
         self.lossFunction = nn.CrossEntropyLoss()
-    def train(self, event, truth):
-        self.net.train()
-        self.optimizer.zero_grad()
-        outputs = self.net(event)
-        loss = self.lossFunction(outputs, truth)
-        loss.backward()
-        self.optimizer.step()
-        return loss.data[0]
-    def eval(self, event, truth):
-        self.net.eval()
-        outputs = self.net(event)
-        loss = self.lossFunction(outputs, truth)
-        return loss.data[0]
