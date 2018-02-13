@@ -32,6 +32,9 @@ to use.
 
 On L25 of triforce.py, choose which options file you want to load.
 
+<span style="color:red">PLEASE DO NOT PUSH YOUR LOCAL OPTIONS FILES TO
+GIT.</span>
+
 Then, simply do "python3 triforce.py <args>" to run your script, passing
 whatever arguments are specified in your options file. Run with Python 3.
 
