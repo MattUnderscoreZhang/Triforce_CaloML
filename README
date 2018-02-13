@@ -1,0 +1,50 @@
+                     -------------------------------
+        -------------- TriForce Particle ID System --------------
+                     -------------------------------
+
+                                    ▄
+                                  ▄▀░▀▄
+                                ▄▀░░░░░▀▄
+                              ▄▀░░░░░░░░░▀▄
+                            ▄█▄▄▄▄▄▄▄▄▄▄▄▄▄█▄
+                           ▄▀▄             ▄▀▄
+                         ▄▀░░░▀▄         ▄▀░░░▀▄
+                       ▄▀░░░░░░░▀▄     ▄▀░░░░░░░▀▄
+                     ▄▀░░░░░░░░░░░▀▄ ▄▀░░░░░░░░░░░▀▄
+                    ▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀▀
+
+Triforce performs particle ID and energy regression, and produces GAN images
+using calorimeter data.
+
+                               -----------
+        ------------------------ Contact ------------------------
+                               -----------
+
+                    Matt Zhang - set.stun@gmail.com
+
+                             --------------
+        ---------------------- How To Use -----------------------
+                             --------------
+
+Create an options file in the Options/ folder. default_options.py is a
+template. In the file, set training options and initialize the tools you want
+to use.
+
+On L25 of triforce.py, choose which options file you want to load.
+
+Then, simply do "python triforce.py" to run your script.
+
+                      ---------------------------
+        --------------- How To Create a New Tool ----------------
+                      ---------------------------
+
+There are four tools in this package:
+
+    classification.py - for particle classification (electron/gamma/pion)
+    regression.py - for determination of particle energy
+    GAN.py - for generating new particle shower images
+    analyzer.py - for data analysis and plotting
+
+If you want to alter a tool (e.g. use a different neural net architecture for
+regression), open the tool file and create a new class with the configuration
+you want. Then initialize it in your options file.
