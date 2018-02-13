@@ -54,3 +54,10 @@ There are four tools in this package:
 If you want to alter a tool (e.g. use a different neural net architecture for
 regression), open the tool file and create a new class with the configuration
 you want. Then initialize it in your options file.
+
+                          --------------------
+        ------------------- Bugs and Features -------------------
+                          --------------------
+
+If you find a bug, or want a feature added, please email Matt and add your
+request to the TODO file.
