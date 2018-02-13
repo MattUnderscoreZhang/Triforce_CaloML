@@ -24,7 +24,7 @@ relativeDeltaLossThreshold = 0.001 # break if change in loss falls below this th
 relativeDeltaLossNumber = 5 # ...for this number of test losses in a row
 batchSize = 1000
 
-OutPath = os.getcwd()+"/Output/"+sys.argv[1]
+OutPath = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
 ################
 # Choose tools #

@@ -37,16 +37,19 @@ On L25 of triforce.py, choose which options file you want to load.
 Then, simply do "python3 triforce.py <args>" to run your script, passing
 whatever arguments are specified in your options file. Run with Python 3.
 
+E.g. with the default settings you can do "python3 triforce.py Output_001 0.01
+0 0.5 256 4".
+
                       ---------------------------
         --------------- How To Create a New Tool ----------------
                       ---------------------------
 
 There are four tools in this package:
 
-    classification.py - for particle classification (electron/gamma/pion)
-    regression.py - for determination of particle energy
-    GAN.py - for generating new particle shower images
-    analyzer.py - for data analysis and plotting
+    Classification - for particle classification (electron/gamma/pion)
+    Regression - for determination of particle energy
+    GAN - for generating new particle shower images
+    Analysis - for data analysis and plotting
 
 If you want to alter a tool (e.g. use a different neural net architecture for
 regression), open the tool file and create a new class with the configuration

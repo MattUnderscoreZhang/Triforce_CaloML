@@ -31,6 +31,8 @@ from Options.default_options import *
 # Load files and set up generators #
 ####################################
 
+print('Loading Files')
+
 nParticles = len(samplePath)
 particleFiles = [[]] * nParticles
 for i, particlePath in enumerate(samplePath):
@@ -60,60 +62,98 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=batchSize,sampler=loader
 # Train models #
 ################
 
-loss_history = []
-avg_training_loss = 0.0
-# test_loss = 0.0
-epoch_test_loss = 0.0
-endTraining = False
+classifier_loss_history_train = []
+regressor_loss_history_train = []
+GAN_loss_history_train = []
+classifier_loss_history_test = []
+regressor_loss_history_test = []
+GAN_loss_history_test = []
+
+calculate_loss_per = 20
+max_n_test_batches = 10 # stop evaluating test loss after this many batches
+previous_total_test_loss = 0 # stop training when loss stops decreasing
+previous_epoch_total_test_loss = 0
+
+end_training = False
 over_break_count = 0
 
+# see what the current test loss is, and whether we should keep training
+def update_test_loss(epoch_end):
+    global previous_total_test_loss, previous_epoch_total_test_loss, over_break_count, end_training
+    classifier_test_loss = 0
+    regressor_test_loss = 0
+    GAN_test_loss = 0
+    n_test_batches = 0
+    for data in testLoader:
+        ECALs, HCALs, ys = data
+        ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
+        classifier_test_loss += classifier.eval(ECALs, HCALs, ys)[0]
+        regressor_test_loss += regressor.eval(ECALs, HCALs, ys)[0]
+        GAN_test_loss += GAN.eval(ECALs, HCALs, ys)[0]
+        n_test_batches += 1
+        if (n_test_batches >= max_n_test_batches):
+            break
+    classifier_test_loss /= n_test_batches
+    regressor_test_loss /= n_test_batches
+    GAN_test_loss /= n_test_batches
+    if (not epoch_end):
+        print(' - test loss - (C) %.4f, (R) %.4f, (G) %.4f' % (classifier_test_loss, regressor_test_loss, GAN_test_loss))
+    else:
+        print('epoch test loss - (C) %.4f, (R) %.4f, (G) %.4f' % (classifier_test_loss, regressor_test_loss, GAN_test_loss))
+    classifier_loss_history_train.append(classifier_test_loss)
+    regressor_loss_history_train.append(regressor_test_loss)
+    GAN_loss_history_train.append(GAN_test_loss)
+    # decide whether or not to end training when this epoch finishes
+    if (not epoch_end):
+        total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
+        relativeDeltaLoss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
+        previous_total_test_loss = total_test_loss
+        if (relativeDeltaLoss < relativeDeltaLossThreshold):
+            over_break_count += 1
+        else:
+            over_break_count = 0
+        if (over_break_count >= relativeDeltaLossNumber):
+            end_training = True
+    else:
+        epoch_total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
+        relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
+        previous_epoch_total_test_loss = epoch_total_test_loss
+        if (relativeDeltaLoss < relativeDeltaLossThreshold):
+            end_training = True
+
+# perform training
+print('Training')
 for epoch in range(nEpochs):
+    classifier_training_loss = 0
+    regressor_training_loss = 0
+    GAN_training_loss = 0
     for i, data in enumerate(trainLoader):
         ECALs, HCALs, ys = data
         ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-        classifier.train(ECALs, HCALs, ys)
-        regressor.train(ECALs, HCALs, ys)
-        GAN.train(ECALs, HCALs, ys)
-        # avg_training_loss += classifier.train(ECALs, ys)
-        # if i % 20 == 19:
-            # avg_training_loss /= 20 # average of loss over last 5 batches
-            # print('[%d, %5d] train loss: %.10f' % (epoch+1, i+1, avg_training_loss)),
-            # previous_test_loss = test_loss
-            # test_loss = 0.0
-            # # for data in testLoader:
-            # nTestBatches = 10
-            # for i in range(nTestBatches):
-                # ECALs, HCALs, ys = data
-                # ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-                # test_loss += classifier.eval(ECALs, ys)
-            # test_loss = test_loss / nTestBatches
-            # print(', test loss: %.10f' % (test_loss)),
-            # loss_history.append([epoch + 1, i, avg_training_loss, test_loss])
-            # avg_training_loss = 0.0
-            # # decide whether or not to end training
-            # relativeDeltaLoss = 1 if previous_test_loss==0 else (previous_test_loss - test_loss)/float(previous_test_loss)
-            # print(', relative error: %.10f' % relativeDeltaLoss)
-            # if (relativeDeltaLoss < relativeDeltaLossThreshold):
-                # over_break_count+=1
-            # else:
-                # over_break_count=0
-            # if (over_break_count >= relativeDeltaLossNumber):
-                # endTraining = True
-                # break
-    previous_epoch_test_loss = epoch_test_loss
-    classifier_test_loss = classifier.eval(ECALs, HCALs, ys)
-    regressor_test_loss = regressor.eval(ECALs, HCALs, ys)
-    GAN_test_loss = GAN.eval(ECALs, HCALs, ys)
-    epoch_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
-    relativeEpochDeltaLoss = 1 if previous_epoch_test_loss==0 else (previous_epoch_test_loss - epoch_test_loss)/float(previous_epoch_test_loss)
-    if (relativeEpochDeltaLoss < relativeDeltaLossThreshold):
-        endTraining = True
-    if endTraining: break
+        classifier_training_loss += classifier.train(ECALs, HCALs, ys)[0]
+        regressor_training_loss += regressor.train(ECALs, HCALs, ys)[0]
+        GAN_training_loss += GAN.train(ECALs, HCALs, ys)[0]
+        if i % calculate_loss_per == calculate_loss_per - 1:
+            classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
+            regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
+            GAN_loss_history_train.append(GAN_training_loss / calculate_loss_per)
+            print('epoch %d, batch %d - train loss - (C) %.4f, (R) %.4f, (G) %.4f' % (epoch+1, i+1, classifier_loss_history_train[-1], regressor_loss_history_train[-1], GAN_loss_history_train[-1]), end="")
+            update_test_loss(epoch_end=False)
+    update_test_loss(epoch_end=True)
+    if end_training: break
 
+# save results
 if not os.path.exists(OutPath): os.makedirs(OutPath)
-out_file = h5.File(OutPath+"Results.h5", 'w')
-out_file.create_dataset("loss_history", data=np.array(loss_history))
-torch.save(classifier.state_dict(), OutPath+"SavedModel")
+out_file = h5.File(OutPath+"results.h5", 'w')
+out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
+out_file.create_dataset("regressor_loss_history_train", data=np.array(regressor_loss_history_train))
+out_file.create_dataset("GAN_loss_history_train", data=np.array(GAN_loss_history_train))
+out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
+out_file.create_dataset("regressor_loss_history_test", data=np.array(regressor_loss_history_test))
+out_file.create_dataset("GAN_loss_history_test", data=np.array(GAN_loss_history_test))
+classifier.save(OutPath+"saved_classifier.pt")
+regressor.save(OutPath+"saved_regressor.pt")
+GAN.save(OutPath+"saved_GAN.pt")
 
 print('Finished Training')
 
@@ -121,4 +161,6 @@ print('Finished Training')
 # Analysis and plots #
 ######################
 
-analyzer.analyze(classifier, testLoader, out_file)
+print('Performing Analysis')
+analyzer.analyze([classifier, regressor, GAN], testLoader, out_file)
+print('Finished - Have a Nice Day!')
