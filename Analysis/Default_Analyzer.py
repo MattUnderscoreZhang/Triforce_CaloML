@@ -18,9 +18,12 @@ class Analyzer():
         for data in testLoader:
             ECALs, HCALs, ys = data
             ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-            classifier_outputs = classifier.eval(ECALs, HCALs, ys)
-            regressor_outputs = regressor.eval(ECALs, HCALs, ys)
-            GAN_outputs = GAN.eval(ECALs, HCALs, ys)
+            if (classifier != None): classifier_outputs = classifier.eval(ECALs, HCALs, ys)
+            else: classifier_outputs = (0, 0)
+            if (regressor != None): regressor_outputs = regressor.eval(ECALs, HCALs, ys)
+            else: regressor_outputs = (0, 0)
+            if (GAN != None): GAN_outputs = GAN.eval(ECALs, HCALs, ys)
+            else: GAN_outputs = (0, 0)
             classifier_test_loss += classifier_outputs[0]
             regressor_test_loss += regressor_outputs[0]
             GAN_test_loss += GAN_outputs[0]

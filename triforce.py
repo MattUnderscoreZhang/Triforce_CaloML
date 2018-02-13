@@ -87,9 +87,9 @@ def update_test_loss(epoch_end):
     for data in testLoader:
         ECALs, HCALs, ys = data
         ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-        classifier_test_loss += classifier.eval(ECALs, HCALs, ys)[0]
-        regressor_test_loss += regressor.eval(ECALs, HCALs, ys)[0]
-        GAN_test_loss += GAN.eval(ECALs, HCALs, ys)[0]
+        if (classifier != None): classifier_test_loss += classifier.eval(ECALs, HCALs, ys)[0]
+        if (regressor != None): regressor_test_loss += regressor.eval(ECALs, HCALs, ys)[0]
+        if (GAN != None): GAN_test_loss += GAN.eval(ECALs, HCALs, ys)[0]
         n_test_batches += 1
         if (n_test_batches >= max_n_test_batches):
             break
@@ -105,7 +105,10 @@ def update_test_loss(epoch_end):
     GAN_loss_history_train.append(GAN_test_loss)
     # decide whether or not to end training when this epoch finishes
     if (not epoch_end):
-        total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
+        total_test_loss = 0
+        if (classifier != None): total_test_loss += classifier_test_loss
+        if (regressor != None): total_test_loss += regressor_test_loss
+        if (GAN != None): total_test_loss += GAN_test_loss
         relativeDeltaLoss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
         previous_total_test_loss = total_test_loss
         if (relativeDeltaLoss < relativeDeltaLossThreshold):
@@ -130,9 +133,9 @@ for epoch in range(nEpochs):
     for i, data in enumerate(trainLoader):
         ECALs, HCALs, ys = data
         ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-        classifier_training_loss += classifier.train(ECALs, HCALs, ys)[0]
-        regressor_training_loss += regressor.train(ECALs, HCALs, ys)[0]
-        GAN_training_loss += GAN.train(ECALs, HCALs, ys)[0]
+        if (classifier != None): classifier_training_loss += classifier.train(ECALs, HCALs, ys)[0]
+        if (regressor != None): regressor_training_loss += regressor.train(ECALs, HCALs, ys)[0]
+        if (GAN != None): GAN_training_loss += GAN.train(ECALs, HCALs, ys)[0]
         if i % calculate_loss_per == calculate_loss_per - 1:
             classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
             regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
