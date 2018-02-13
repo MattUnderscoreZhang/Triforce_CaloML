@@ -52,8 +52,8 @@ There are four tools in this package:
     Analysis - for data analysis and plotting
 
 If you want to alter a tool (e.g. use a different neural net architecture for
-regression), open the tool file and create a new class with the configuration
-you want. Then initialize it in your options file.
+regression), open the tool folder and create a new file with the
+configuration you want. Then initialize it in your options file.
 
                           --------------------
         ------------------- Bugs and Features -------------------

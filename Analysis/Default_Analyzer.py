@@ -38,6 +38,6 @@ class Analyzer():
         regressor_test_accuracy /= n_test_batches
         GAN_test_accuracy /= n_test_batches
         print('test accuracy: (C) %.4f, (R) %.4f, (G) %.4f' % (classifier_test_accuracy, regressor_test_accuracy, GAN_test_accuracy))
-        out_file.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy)
-        out_file.create_dataset("regressor_test_accuracy", data=regressor_test_accuracy)
-        out_file.create_dataset("GAN_test_accuracy", data=GAN_test_accuracy)
+        if (classifier != None): out_file.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy)
+        if (regressor != None): out_file.create_dataset("regressor_test_accuracy", data=regressor_test_accuracy)
+        if (GAN != None): out_file.create_dataset("GAN_test_accuracy", data=GAN_test_accuracy)

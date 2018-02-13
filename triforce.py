@@ -151,15 +151,18 @@ for epoch in range(nEpochs):
 # save results
 if not os.path.exists(OutPath): os.makedirs(OutPath)
 out_file = h5.File(OutPath+"results.h5", 'w')
-out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
-out_file.create_dataset("regressor_loss_history_train", data=np.array(regressor_loss_history_train))
-out_file.create_dataset("GAN_loss_history_train", data=np.array(GAN_loss_history_train))
-out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
-out_file.create_dataset("regressor_loss_history_test", data=np.array(regressor_loss_history_test))
-out_file.create_dataset("GAN_loss_history_test", data=np.array(GAN_loss_history_test))
-classifier.save(OutPath+"saved_classifier.pt")
-regressor.save(OutPath+"saved_regressor.pt")
-GAN.save(OutPath+"saved_GAN.pt")
+if (classifier != None): 
+    out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
+    out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
+    classifier.save(OutPath+"saved_classifier.pt")
+if (regressor != None): 
+    out_file.create_dataset("regressor_loss_history_train", data=np.array(regressor_loss_history_train))
+    out_file.create_dataset("regressor_loss_history_test", data=np.array(regressor_loss_history_test))
+    regressor.save(OutPath+"saved_regressor.pt")
+if (GAN != None): 
+    out_file.create_dataset("GAN_loss_history_train", data=np.array(GAN_loss_history_train))
+    out_file.create_dataset("GAN_loss_history_test", data=np.array(GAN_loss_history_test))
+    GAN.save(OutPath+"saved_GAN.pt")
 
 print('Finished Training')
 
