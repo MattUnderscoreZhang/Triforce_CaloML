@@ -142,6 +142,9 @@ for epoch in range(nEpochs):
             GAN_loss_history_train.append(GAN_training_loss / calculate_loss_per)
             print('epoch %d, batch %d - train loss - (C) %.4f, (R) %.4f, (G) %.4f' % (epoch+1, i+1, classifier_loss_history_train[-1], regressor_loss_history_train[-1], GAN_loss_history_train[-1]), end="")
             update_test_loss(epoch_end=False)
+            classifier_training_loss = 0
+            regressor_training_loss = 0
+            GAN_training_loss = 0
     update_test_loss(epoch_end=True)
     if end_training: break
 

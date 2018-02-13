@@ -30,7 +30,6 @@ class Classifier():
     def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb, learningRate, decayRate):
         self.net = Classifier_Net(hiddenLayerNeurons, nHiddenLayers, dropoutProb)
         self.net.cuda()
-        # optimizer = optim.Adadelta(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
         self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
         self.lossFunction = nn.CrossEntropyLoss()
     def train(self, ECALs, HCALs, truth):
@@ -42,7 +41,6 @@ class Classifier():
         self.optimizer.step()
         _, predicted = torch.max(outputs.data, 1)
         accuracy = (predicted == truth.data).sum()/truth.shape[0]
-        print(accuracy)
         return (loss.data[0], accuracy)
     def eval(self, ECALs, HCALs, truth):
         self.net.eval()

@@ -40,7 +40,6 @@ class Classifier():
         self.optimizer.step()
         _, predicted = torch.max(outputs.data, 1)
         accuracy = (predicted == truth.data).sum()/truth.shape[0]
-        print(accuracy)
         return (loss.data[0], accuracy)
     def eval(self, ECALs, HCALs, truth):
         self.net.eval()
