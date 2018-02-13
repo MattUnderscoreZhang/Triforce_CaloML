@@ -1,3 +1,4 @@
 *.pyc
 */*.pyc
 Output/
+Options/
