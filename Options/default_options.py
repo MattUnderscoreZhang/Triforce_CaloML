@@ -42,6 +42,7 @@ _hiddenLayerNeurons = int(sys.argv[5])
 _nHiddenLayers = int(sys.argv[6])
 
 classifier = Default_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+# classifier = None # set a tool to None to ignore it
 regressor = Default_Regressor.Regressor(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 GAN = Default_GAN.GAN(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 analyzer = Default_Analyzer.Analyzer()
