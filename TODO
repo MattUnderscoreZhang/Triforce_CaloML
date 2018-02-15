@@ -1,3 +1,5 @@
 Add ROC-curve plotting capabilities to analysis script.
 
 Add training and test accuracies to results (and save the history). Also make terminal output look nicer.
+
+Move train(), eval(), and save() functions out of tools and into the main triforce code.

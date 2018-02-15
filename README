@@ -56,6 +56,9 @@ regression), open the tool folder and create a new file with the
 configuration you want. Then initialize it in your options file. You can use
 the default tools as templates.
 
+Critically, you need to implement a net with an __init__() and forward()
+function, and you need to set a loss function and an optimizer.
+
                           --------------------
         ------------------- Bugs and Features -------------------
                           --------------------
