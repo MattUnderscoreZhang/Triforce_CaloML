@@ -30,9 +30,9 @@ OutPath = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 # Choose tools #
 ################
 
-from Classification import Default_Classifier
-from Regression import Default_Regressor
-from GAN import Default_GAN
+from Classification import NIPS_Classifier
+from Regression import NIPS_Regressor
+from GAN import NIPS_GAN
 from Analysis import Default_Analyzer
 
 _learningRate = float(sys.argv[2])
@@ -41,8 +41,8 @@ _dropoutProb = float(sys.argv[4])
 _hiddenLayerNeurons = int(sys.argv[5])
 _nHiddenLayers = int(sys.argv[6])
 
-classifier = Default_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+classifier = NIPS_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 # classifier = None # set a tool to None to ignore it
-regressor = Default_Regressor.Regressor(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
-GAN = Default_GAN.GAN(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+regressor = NIPS_Regressor.Regressor(_learningRate, _decayRate)
+GAN = NIPS_GAN.GAN(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 analyzer = Default_Analyzer.Analyzer()
