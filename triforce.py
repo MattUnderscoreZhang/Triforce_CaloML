@@ -18,6 +18,7 @@ import numpy as np
 import h5py as h5
 import Loader.loader as loader
 import sys
+from triforce_helper_functions import *
 
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
 
@@ -25,7 +26,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 # Set tools and options #
 #########################
 
-from Options.default_options import *
+from Options.classification_only_NIPS_ECAL_only_ResNet import *
 
 ####################################
 # Load files and set up generators #
@@ -87,9 +88,9 @@ def update_test_loss(epoch_end):
     for data in testLoader:
         ECALs, HCALs, ys = data
         ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-        if (classifier != None): classifier_test_loss += classifier.eval(ECALs, HCALs, ys)[0]
-        if (regressor != None): regressor_test_loss += regressor.eval(ECALs, HCALs, ys)[0]
-        if (GAN != None): GAN_test_loss += GAN.eval(ECALs, HCALs, ys)[0]
+        if (classifier != None): classifier_test_loss += eval(classifier, ECALs, HCALs, ys)[0]
+        if (regressor != None): regressor_test_loss += eval(regressor, ECALs, HCALs, ys)[0]
+        if (GAN != None): GAN_test_loss += eval(GAN, ECALs, HCALs, ys)[0]
         n_test_batches += 1
         if (n_test_batches >= max_n_test_batches):
             break
@@ -133,9 +134,9 @@ for epoch in range(nEpochs):
     for i, data in enumerate(trainLoader):
         ECALs, HCALs, ys = data
         ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-        if (classifier != None): classifier_training_loss += classifier.train(ECALs, HCALs, ys)[0]
-        if (regressor != None): regressor_training_loss += regressor.train(ECALs, HCALs, ys)[0]
-        if (GAN != None): GAN_training_loss += GAN.train(ECALs, HCALs, ys)[0]
+        if (classifier != None): classifier_training_loss += train(classifier, ECALs, HCALs, ys)[0]
+        if (regressor != None): regressor_training_loss += train(regressor, ECALs, HCALs, ys)[0]
+        if (GAN != None): GAN_training_loss += train(GAN, ECALs, HCALs, ys)[0]
         if i % calculate_loss_per == calculate_loss_per - 1:
             classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
             regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
@@ -154,15 +155,15 @@ out_file = h5.File(OutPath+"results.h5", 'w')
 if (classifier != None): 
     out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
     out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
-    classifier.save(OutPath+"saved_classifier.pt")
+    torch.save(classifier.net, OutPath+"saved_classifier.pt")
 if (regressor != None): 
     out_file.create_dataset("regressor_loss_history_train", data=np.array(regressor_loss_history_train))
     out_file.create_dataset("regressor_loss_history_test", data=np.array(regressor_loss_history_test))
-    regressor.save(OutPath+"saved_regressor.pt")
+    torch.save(regressor.net, OutPath+"saved_regressor.pt")
 if (GAN != None): 
     out_file.create_dataset("GAN_loss_history_train", data=np.array(GAN_loss_history_train))
     out_file.create_dataset("GAN_loss_history_test", data=np.array(GAN_loss_history_test))
-    GAN.save(OutPath+"saved_GAN.pt")
+    torch.save(GAN.net, OutPath+"saved_GAN.pt")
 
 print('Finished Training')
 

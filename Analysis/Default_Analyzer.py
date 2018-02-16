@@ -1,5 +1,6 @@
 import torch
 from torch.autograd import Variable
+from triforce_helper_functions import eval
 
 ############
 # Analysis #
@@ -18,11 +19,11 @@ class Analyzer():
         for data in testLoader:
             ECALs, HCALs, ys = data
             ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
-            if (classifier != None): classifier_outputs = classifier.eval(ECALs, HCALs, ys)
+            if (classifier != None): classifier_outputs = eval(classifier, ECALs, HCALs, ys)
             else: classifier_outputs = (0, 0)
-            if (regressor != None): regressor_outputs = regressor.eval(ECALs, HCALs, ys)
+            if (regressor != None): regressor_outputs = eval(regressor, ECALs, HCALs, ys)
             else: regressor_outputs = (0, 0)
-            if (GAN != None): GAN_outputs = GAN.eval(ECALs, HCALs, ys)
+            if (GAN != None): GAN_outputs = eval(GAN, ECALs, HCALs, ys)
             else: GAN_outputs = (0, 0)
             classifier_test_loss += classifier_outputs[0]
             regressor_test_loss += regressor_outputs[0]

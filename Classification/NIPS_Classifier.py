@@ -32,22 +32,3 @@ class Classifier():
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
         self.lossFunction = nn.CrossEntropyLoss()
-    def train(self, ECALs, HCALs, truth):
-        self.net.train()
-        self.optimizer.zero_grad()
-        outputs = self.net(ECALs, HCALs)
-        loss = self.lossFunction(outputs, truth)
-        loss.backward()
-        self.optimizer.step()
-        _, predicted = torch.max(outputs.data, 1)
-        accuracy = (predicted == truth.data).sum()/truth.shape[0]
-        return (loss.data[0], accuracy)
-    def eval(self, ECALs, HCALs, truth):
-        self.net.eval()
-        outputs = self.net(ECALs, HCALs)
-        loss = self.lossFunction(outputs, truth)
-        _, predicted = torch.max(outputs.data, 1)
-        accuracy = (predicted == truth.data).sum()/truth.shape[0]
-        return (loss.data[0], accuracy)
-    def save(self, path):
-        torch.save(self.net, path)
