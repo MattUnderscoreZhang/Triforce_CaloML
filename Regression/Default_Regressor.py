@@ -15,7 +15,7 @@ class Regressor_Net(nn.Module):
         self.nHiddenLayers = nHiddenLayers
         self.dropout = nn.Dropout(p = dropoutProb)
         self.output = nn.Linear(hiddenLayerNeurons, 2)
-    def forward(self, x):
+    def forward(self, x, _):
         x = x.view(-1, 25 * 25 * 25)
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):

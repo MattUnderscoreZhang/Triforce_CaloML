@@ -26,7 +26,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 # Set tools and options #
 #########################
 
-from Options.classification_only_NIPS_ECAL_only_ResNet import *
+from Options.default_options import *
 
 ####################################
 # Load files and set up generators #
@@ -86,10 +86,10 @@ def update_test_loss(epoch_end):
     GAN_test_loss = 0
     n_test_batches = 0
     for data in testLoader:
-        ECALs, HCALs, ys = data
-        ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
+        ECALs, HCALs, ys, energies = data
+        ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
         if (classifier != None): classifier_test_loss += eval(classifier, ECALs, HCALs, ys)[0]
-        if (regressor != None): regressor_test_loss += eval(regressor, ECALs, HCALs, ys)[0]
+        if (regressor != None): regressor_test_loss += eval(regressor, ECALs, HCALs, energies)[0]
         if (GAN != None): GAN_test_loss += eval(GAN, ECALs, HCALs, ys)[0]
         n_test_batches += 1
         if (n_test_batches >= max_n_test_batches):
@@ -132,10 +132,10 @@ for epoch in range(nEpochs):
     regressor_training_loss = 0
     GAN_training_loss = 0
     for i, data in enumerate(trainLoader):
-        ECALs, HCALs, ys = data
-        ECALs, HCALs, ys = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda())
+        ECALs, HCALs, ys, energies = data
+        ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
         if (classifier != None): classifier_training_loss += train(classifier, ECALs, HCALs, ys)[0]
-        if (regressor != None): regressor_training_loss += train(regressor, ECALs, HCALs, ys)[0]
+        if (regressor != None): regressor_training_loss += train(regressor, ECALs, HCALs, energies)[0]
         if (GAN != None): GAN_training_loss += train(GAN, ECALs, HCALs, ys)[0]
         if i % calculate_loss_per == calculate_loss_per - 1:
             classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)

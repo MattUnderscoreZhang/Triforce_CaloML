@@ -45,7 +45,7 @@ class ResNet(nn.Module):
         self.block0 = self.build_layer(4, 32)
         self.block1 = self.build_layer(4, 64)
         self.block2 = self.build_layer(4, 96)
-    def forward(self, x):
+    def forward(self, x, _):
         x = x.view(-1, 1, 25, 25, 25)
         x = self.selu0(x)
         x = self.conv0(x)
