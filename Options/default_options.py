@@ -22,7 +22,7 @@ trainRatio = 0.66
 nEpochs = 5 # break after this number of epochs
 relativeDeltaLossThreshold = 0.001 # break if change in loss falls below this threshold over an entire epoch, or...
 relativeDeltaLossNumber = 5 # ...for this number of test losses in a row
-batchSize = 1000
+batchSize = 200 # 1000
 
 OutPath = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
@@ -30,19 +30,27 @@ OutPath = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 # Choose tools #
 ################
 
-from Classification import NIPS_Classifier
+from Classification import GoogLeNet # NIPS_Classifier
 from Regression import NIPS_Regressor
 from GAN import NIPS_GAN
 from Analysis import Default_Analyzer
 
-_learningRate = float(sys.argv[2])
-_decayRate = float(sys.argv[3])
-_dropoutProb = float(sys.argv[4])
-_hiddenLayerNeurons = int(sys.argv[5])
-_nHiddenLayers = int(sys.argv[6])
+# _learningRate = float(sys.argv[2])
+# _decayRate = float(sys.argv[3])
+# _dropoutProb = float(sys.argv[4])
+# _hiddenLayerNeurons = int(sys.argv[5])
+# _nHiddenLayers = int(sys.argv[6])
+_learningRate = 0.00001
+_decayRate = 0
+_dropoutProb = 0
+_hiddenLayerNeurons = None
+_nHiddenLayers = None
 
-classifier = NIPS_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+classifier = 
+# classifier = NIPS_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 # classifier = None # set a tool to None to ignore it
-regressor = NIPS_Regressor.Regressor(_learningRate, _decayRate)
-GAN = NIPS_GAN.GAN(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+regressor = None
+# regressor = NIPS_Regressor.Regressor(_learningRate, _decayRate)
+GAN = None
+# GAN = NIPS_GAN.GAN(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 analyzer = Default_Analyzer.Analyzer()
