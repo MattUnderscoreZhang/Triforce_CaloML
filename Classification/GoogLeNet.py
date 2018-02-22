@@ -104,7 +104,7 @@ class GoogLeNet(nn.Module):
 
 class Classifier():
     def __init__(self, learningRate, decayRate):
-        self.net = ResNet()
+        self.net = GoogLeNet()
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
         self.lossFunction = nn.CrossEntropyLoss()
