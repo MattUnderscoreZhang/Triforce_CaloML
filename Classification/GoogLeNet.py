@@ -7,6 +7,8 @@ import torch.optim as optim
 # Classification #
 ##################
 
+epsilon = 1e-05
+
 class Inception(nn.Module):
     def __init__(self, in_planes, n1x1, n3x3red, n3x3, n5x5red, n5x5, pool_planes):
         super(Inception, self).__init__()
