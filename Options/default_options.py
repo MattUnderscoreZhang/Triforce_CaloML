@@ -46,7 +46,7 @@ _dropoutProb = 0
 _hiddenLayerNeurons = None
 _nHiddenLayers = None
 
-classifier = GoogLeNet.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+classifier = GoogLeNet.Classifier(_learningRate, _decayRate)
 # classifier = NIPS_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 # classifier = None # set a tool to None to ignore it
 regressor = None
