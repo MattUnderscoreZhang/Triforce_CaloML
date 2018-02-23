@@ -47,10 +47,8 @@ _hiddenLayerNeurons = None
 _nHiddenLayers = None
 
 classifier = GoogLeNet.Classifier(_learningRate, _decayRate)
-# classifier = NIPS_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+classifier = NIPS_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 # classifier = None # set a tool to None to ignore it
-regressor = None
-# regressor = NIPS_Regressor.Regressor(_learningRate, _decayRate)
-GAN = None
-# GAN = NIPS_GAN.GAN(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+regressor = NIPS_Regressor.Regressor(_learningRate, _decayRate)
+GAN = NIPS_GAN.GAN(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
 analyzer = Default_Analyzer.Analyzer()
