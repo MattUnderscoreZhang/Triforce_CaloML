@@ -6,7 +6,7 @@ import torch
 def train(model, ECALs, HCALs, truth):
     model.net.train()
     model.optimizer.zero_grad()
-    outputs = model.net(ECALs, HCALs)
+    outputs = model.net(ECALs)# , HCALs)
     loss = model.lossFunction(outputs, truth)
     loss.backward()
     model.optimizer.step()
