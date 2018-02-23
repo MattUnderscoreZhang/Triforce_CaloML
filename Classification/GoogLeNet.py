@@ -107,7 +107,8 @@ class GoogLeNet(nn.Module):
 
 class Classifier():
     def __init__(self, learningRate, decayRate):
-        self.net = GoogLeNet()
+        # self.net = GoogLeNet()
+        self.net = torch.nn.DataParallel(GoogLeNet(), device_ids=[0,1,2,3,4,5,6,7,8,9]).cuda()
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
         self.lossFunction = nn.CrossEntropyLoss()
