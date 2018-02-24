@@ -20,7 +20,7 @@ nworkers = 0 # number of workers in PyTorch DataLoader
 
 trainRatio = 0.66
 nEpochs = 5 # break after this number of epochs
-relativeDeltaLossThreshold = 0.0001 # break if change in loss falls below this threshold over an entire epoch, or...
+relativeDeltaLossThreshold = 0.01 # break if change in loss falls below this threshold over an entire epoch, or...
 relativeDeltaLossNumber = 5 # ...for this number of test losses in a row
 batchSize = 200 # 1000
 
@@ -40,7 +40,7 @@ from Analysis import Default_Analyzer
 # _dropoutProb = float(sys.argv[4])
 # _hiddenLayerNeurons = int(sys.argv[5])
 # _nHiddenLayers = int(sys.argv[6])
-_learningRate = 0.00001
+_learningRate = 0.000001
 _decayRate = 0
 _dropoutProb = 0
 _hiddenLayerNeurons = None
