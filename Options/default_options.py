@@ -20,7 +20,7 @@ nworkers = 0 # number of workers in PyTorch DataLoader
 
 trainRatio = 0.66
 nEpochs = 5 # break after this number of epochs
-relativeDeltaLossThreshold = 0.01 # break if change in loss falls below this threshold over an entire epoch, or...
+relativeDeltaLossThreshold = 0.1 # break if change in loss falls below this threshold over an entire epoch, or...
 relativeDeltaLossNumber = 5 # ...for this number of test losses in a row
 batchSize = 200 # 1000
 
