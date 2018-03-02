@@ -86,7 +86,8 @@ class GoogLeNet(nn.Module):
 
     def forward(self, x, _):
         x = x.view(-1, 1, 25, 25, 25)
-        out = self.pre_layers(x)
+        out = nn.InstanceNorm3d(1)
+        out = self.pre_layers(out)
         out = self.a3(out)
         out = self.b3(out)
         out = self.maxpool(out)
