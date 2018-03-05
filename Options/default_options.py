@@ -25,6 +25,7 @@ nEpochs = 5 # break after this number of epochs
 relativeDeltaLossThreshold = 0.001 # break if change in loss falls below this threshold over an entire epoch, or...
 relativeDeltaLossNumber = 5 # ...for this number of test losses in a row
 batchSize = 200 # 1000
+saveModelEveryNEpochs = 0 # 0 to only save at end
 
 OutPath = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
