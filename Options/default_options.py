@@ -59,7 +59,7 @@ for category in cfgs['TRAIN'].keys():
             print("Missing Param: No parameter in yaml file named 'batchSize'. ")
 
 
-        OutPath = os.path.join(os.getcwd(), "/Output/", sys.argv[1], "/")
+        OutPath = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
 
         ################
