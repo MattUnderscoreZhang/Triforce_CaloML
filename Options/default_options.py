@@ -1,6 +1,5 @@
 import os, sys
 import yaml
-from Tools import cfg_reader
 
 with open('../cfgs/GoogLenet.yaml') as f: 
     cfgs = yaml.load(f)
