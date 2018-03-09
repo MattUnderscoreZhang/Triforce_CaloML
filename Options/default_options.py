@@ -1,7 +1,7 @@
 import os, sys
 import yaml
 
-with open(os.path.join(os.getcwd(),'/cfgs/GoogLeNet.yaml')) as f: 
+with open(os.path.join(os.getcwd(),'cfgs/GoogLeNet.yaml')) as f: 
     cfgs = yaml.load(f)
 
 ##################
