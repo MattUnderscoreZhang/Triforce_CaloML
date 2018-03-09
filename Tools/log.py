@@ -1,8 +1,9 @@
 import yaml
 
-def log(yaml_file): 
+def log(): 
     """
     """
-    
+    pass
 
 if __name__ == '__main__': 
+    pass
