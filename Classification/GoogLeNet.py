@@ -69,7 +69,7 @@ class GoogLeNet(nn.Module):
         )
 
         # self.norm = nn.InstanceNorm3d(1)
-        self.norm = nn.BatchNorm3d(200)
+        self.norm = nn.BatchNorm3d(20)
 
         self.a3 = Inception(192,  64,  96, 128, 16, 32, 32)
         self.b3 = Inception(256, 128, 128, 192, 32, 96, 64)
