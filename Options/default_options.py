@@ -1,7 +1,7 @@
 import os, sys
 import yaml
 
-with open('../cfgs/GoogLeNet.yaml') as f: 
+with open(os.path.join(os.getcwd(),'/cfgs/GoogLeNet.yaml')) as f: 
     cfgs = yaml.load(f)
 
 ##################
@@ -60,7 +60,7 @@ for category in cfgs['TRAIN'].keys():
             print("Missing Param: No parameter in yaml file named 'batchSize'. ")
 
 
-        OutPath = os.getcwd()+"/Output/"+sys.argv[1]+"/"
+        OutPath = os.path.join(os.getcwd(), "/Output/", sys.argv[1], "/")
 
 
         ################
