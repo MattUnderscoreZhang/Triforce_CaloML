@@ -39,23 +39,23 @@ except:
 for category in cfgs['TRAIN'].keys(): 
     for module in cfgs['TRAIN'][category].keys(): 
         try: 
-            trainRatio = cfgs['TRAIN']['trainRatio']
+            trainRatio = cfgs['TRAIN'][category][module]['trainRatio']
         except: 
             print("Missing Param: No parameter in yaml file named 'trainRatio'. ")
         try: 
-            nEpochs = cfgs['TRAIN']['nEpochs'] # break after this number of epochs
+            nEpochs = cfgs['TRAIN'][category][module]['nEpochs'] # break after this number of epochs
         except: 
             print("Missing Param: No parameter in yaml file named 'nEpochs'. ")
         try: 
-            relativeDeltaLossThreshold = cfgs['TRAIN']['relativeDeltaLossThreshold'] # break if change in loss falls below this threshold over an entire epoch, or...
+            relativeDeltaLossThreshold = cfgs['TRAIN'][category][module]['relativeDeltaLossThreshold'] # break if change in loss falls below this threshold over an entire epoch, or...
         except:
             print("Missing Param: No parameter in yaml file named 'relativeDeltaLossThreshold'. ")
         try: 
-            relativeDeltaLossNumber = cfgs['TRAIN']['relativeDeltaLossNumber'] # ...for this number of test losses in a row
+            relativeDeltaLossNumber = cfgs['TRAIN'][category][module]['relativeDeltaLossNumber'] # ...for this number of test losses in a row
         except: 
             print("Missing Param: No parameter in yaml file named 'relativeDeltaLossNumber'. ")
         try: 
-            batchSize = cfgs['TRAIN']['batchSize'] # 1000
+            batchSize = cfgs['TRAIN'][category][module]['batchSize'] # 1000
         except: 
             print("Missing Param: No parameter in yaml file named 'batchSize'. ")
 
