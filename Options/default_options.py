@@ -1,5 +1,4 @@
-import os, sys
-import yaml, pdb
+import os, sys, yaml
 
 with open(os.path.join(os.getcwd(),'cfgs/GoogLeNet.yaml')) as f: 
     cfgs = yaml.load(f)
@@ -7,7 +6,7 @@ with open(os.path.join(os.getcwd(),'cfgs/GoogLeNet.yaml')) as f:
 ##################
 # Choose samples #
 ##################
-pdb.set_trace()
+
 # basePath = "/data/LCD/V3/Original/EleChPi/"
 # samplePath = [basePath + "ChPi/ChPiEscan_*.h5", basePath + "Ele/EleEscan_*.h5"]
 # classPdgID = [211, 11] # absolute IDs corresponding to paths above
