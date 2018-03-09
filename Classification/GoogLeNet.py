@@ -7,7 +7,7 @@ import torch.optim as optim
 # Classification #
 ##################
 
-epsilon = 1e-05
+epsilon = 1e-07
 
 class Inception(nn.Module):
     def __init__(self, in_planes, n1x1, n3x3red, n3x3, n5x5red, n5x5, pool_planes):
@@ -88,8 +88,8 @@ class GoogLeNet(nn.Module):
 
     def forward(self, x, _):
         x = x.view(-1, 1, 25, 25, 25)
-        out = self.norm(x)
-        out = self.pre_layers(out)
+        # out = self.norm(x)
+        out = self.pre_layers(x)
         out = self.a3(out)
         out = self.b3(out)
         out = self.maxpool(out)
