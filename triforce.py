@@ -26,7 +26,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 # Set tools and options #
 #########################
 
-from Options.default_options import *
+from Options.classification_GoogLeNet import *
 
 ####################################
 # Load files and set up generators #
@@ -203,6 +203,15 @@ for epoch in range(nEpochs):
             classifier_training_accuracy = 0
             GAN_training_accuracy = 0
     update_test_loss(epoch_end=True)
+    # save results
+    if ((saveModelEveryNEpochs > 0) and ((epoch+1) % saveModelEveryNEpochs == 0)):
+        if not os.path.exists(OutPath): os.makedirs(OutPath)
+        if (classifier != None): 
+            torch.save(classifier.net, OutPath+"saved_classifier_epoch_"+str(epoch)+".pt")
+        if (regressor != None): 
+            torch.save(regressor.net, OutPath+"saved_regressor_epoch_"+str(epoch)+".pt")
+        if (GAN != None): 
+            torch.save(GAN.net, OutPath+"saved_GAN_epoch_"+str(epoch)+".pt")
     if end_training: break
 
 # save results
