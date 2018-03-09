@@ -69,7 +69,7 @@ class GoogLeNet(nn.Module):
         )
 
         # self.norm = nn.InstanceNorm3d(1)
-        self.norm = nn.BatchNorm3d(20)
+        self.norm = nn.BatchNorm3d(1)
 
         self.a3 = Inception(192,  64,  96, 128, 16, 32, 32)
         self.b3 = Inception(256, 128, 128, 192, 32, 96, 64)
@@ -90,7 +90,7 @@ class GoogLeNet(nn.Module):
 
     def forward(self, x, _):
         x = x.view(-1, 1, 25, 25, 25)
-        pdb.set_trace()
+        # pdb.set_trace()
         out = self.norm(x)
         out = self.pre_layers(out)
         out = self.a3(out)
