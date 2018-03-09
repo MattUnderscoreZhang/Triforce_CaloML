@@ -16,3 +16,4 @@ TRAIN:
       relativeDeltaLossNumber: 5
       relativeDeltaLossThreshold: 0.0
       trainRatio: 0.66
+# Comments: GoogLeNet using BN as pre-processing layer
