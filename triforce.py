@@ -230,4 +230,3 @@ print('Finished Training')
 
 print('Performing Analysis')
 analyzer.analyze([classifier, regressor, GAN], testLoader, out_file)
-print('Finished - Have a Nice Day!')
