@@ -1,2 +1,19 @@
+DATA:
+  basePath: /data/LCD/V3/Original/GammaPi0/
+  classPdgID:
+  - 111
+  - 22
+  eventsPerFile: 10000
+  nworkers: 0
+  samplePath:
+  - /data/LCD/V3/Original/GammaPi0/Pi0/Pi0Escan_*.h5
+  - /data/LCD/V3/Original/GammaPi0/Gamma/GammaEscan_*.h5
 TRAIN:
-TEST:
+  Classification:
+    GoogLeNet:
+      batchSize: 200
+      nEpochs: 5
+      relativeDeltaLossNumber: 5
+      relativeDeltaLossThreshold: 0.0
+      trainRatio: 0.66
+# Comments: GoogLeNet using BN as pre-processing layer

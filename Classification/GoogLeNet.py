@@ -2,12 +2,13 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import pdb
 
 ##################
 # Classification #
 ##################
 
-epsilon = 1e-05
+epsilon = 1e-07
 
 class Inception(nn.Module):
     def __init__(self, in_planes, n1x1, n3x3red, n3x3, n5x5red, n5x5, pool_planes):
@@ -67,7 +68,8 @@ class GoogLeNet(nn.Module):
             nn.ReLU(True),
         )
 
-        self.norm = nn.InstanceNorm3d(1)
+        # self.norm = nn.InstanceNorm3d(1)
+        self.norm = nn.BatchNorm3d(1)
 
         self.a3 = Inception(192,  64,  96, 128, 16, 32, 32)
         self.b3 = Inception(256, 128, 128, 192, 32, 96, 64)
@@ -88,6 +90,7 @@ class GoogLeNet(nn.Module):
 
     def forward(self, x, _):
         x = x.view(-1, 1, 25, 25, 25)
+        # pdb.set_trace()
         out = self.norm(x)
         out = self.pre_layers(out)
         out = self.a3(out)
