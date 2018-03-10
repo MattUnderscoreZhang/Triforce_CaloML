@@ -1,4 +1,5 @@
 import torch
+import pdb
 
 # This module has to be here for dependency reasons
 
@@ -6,6 +7,7 @@ import torch
 def train(model, ECALs, HCALs, truth):
     model.net.train()
     model.optimizer.zero_grad()
+    # pdb.set_trace()
     outputs = model.net(ECALs, HCALs)
     loss = model.lossFunction(outputs, truth)
     loss.backward()
