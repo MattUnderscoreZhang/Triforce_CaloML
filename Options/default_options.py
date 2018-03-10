@@ -57,6 +57,10 @@ for category in cfgs['TRAIN'].keys():
             batchSize = cfgs['TRAIN'][category][module]['batchSize'] # 1000
         except: 
             print("Missing Param: No parameter in yaml file named 'batchSize'. ")
+        try: 
+            saveModelEveryNEpochs = cfgs['TRAIN'][category][module]['saveModelEveryNEpochs'] # 0 to only save at end
+        except: 
+            print("Missing Param: No parameter in yaml file named 'saveModelEveryNEpochs'. ")
 
 
         OutPath = os.getcwd()+"/Output/"+sys.argv[1]+"/"
