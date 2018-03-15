@@ -16,8 +16,9 @@ import glob, os, sys
 import numpy as np
 import h5py as h5
 import Loader.loader as loader
-from shutil import copyfile
+import shutil
 from triforce_helper_functions import *
+import Options
 
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
 
@@ -33,7 +34,7 @@ optionsFileName = "default_options"
 
 exec("from Options." + optionsFileName + " import *")
 
-optionNames = ['basePath', 'samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+optionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
 
 for optionName in optionNames:
     if optionName not in options.keys():
@@ -46,19 +47,20 @@ else:
     print("WARNING: Output directory already exists. Overwrite (y/n)?")
     valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
     while True:
-        choice = raw_input().lower()
+        choice = input().lower()
         if choice in valid:
             overwrite = valid[choice]
+            break
         else:
             print("Please respond with 'yes' or 'no'")
     if overwrite:
-        os.rmdir(options['outPath'])
+        shutil.rmtree(options['outPath'])
         os.makedirs(options['outPath'])
     else:
         sys.exit()
 
 optionsFilePath = Options.__file__[:Options.__file__.rfind('/')]
-copyfile(optionsFilePath + "/" + optionsFileName, options['outPath']+"/options.h5")
+shutil.copyfile(optionsFilePath + "/" + optionsFileName + ".py", options['outPath']+"/options.h5")
 
 ####################################
 # Load files and set up generators #

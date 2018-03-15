@@ -59,6 +59,8 @@ class HDF5Dataset(data.Dataset):
             self.y = []
             for dataname in self.dataname_tuples[fileN]:
                 file_ECAL, file_HCAL, file_pdgID, energy = load_hdf5(dataname)
+                if len(file_pdgID.shape) == 2: # in case this has the wrong dimensions
+                    file_pdgID = file_pdgID[:,0]
                 if (self.ECAL != []):
                     self.ECAL = np.append(self.ECAL, file_ECAL, axis=0)
                     self.HCAL = np.append(self.HCAL, file_HCAL, axis=0)

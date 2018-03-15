@@ -33,11 +33,6 @@ from Regression import NIPS_Regressor
 from GAN import NIPS_GAN
 from Analysis import Default_Analyzer
 
-# _learningRate = float(sys.argv[2])
-# _decayRate = float(sys.argv[3])
-# _dropoutProb = float(sys.argv[4])
-# _hiddenLayerNeurons = int(sys.argv[5])
-# _nHiddenLayers = int(sys.argv[6])
 _learningRate = 0.000001
 _decayRate = 0
 _dropoutProb = 0
@@ -45,7 +40,6 @@ _hiddenLayerNeurons = None
 _nHiddenLayers = None
 
 classifier = GoogLeNet.Classifier(_learningRate, _decayRate)
-# classifier = None # set a tool to None to ignore it
 regressor = NIPS_Regressor.Regressor(_learningRate, _decayRate)
-GAN = NIPS_GAN.GAN(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate)
+GAN = None
 analyzer = Default_Analyzer.Analyzer()

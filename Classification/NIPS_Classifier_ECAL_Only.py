@@ -10,13 +10,13 @@ import torch.optim as optim
 class Classifier_Net(nn.Module):
     def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb):
         super().__init__()
-        self.input = nn.Linear(25 * 25 * 25, hiddenLayerNeurons)
+        self.input = nn.Linear(51 * 51 * 25, hiddenLayerNeurons)
         self.hidden = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
         self.nHiddenLayers = nHiddenLayers
         self.dropout = nn.Dropout(p = dropoutProb)
         self.output = nn.Linear(hiddenLayerNeurons, 2)
     def forward(self, x, _):
-        x = x.view(-1, 25 * 25 * 25)
+        x = x.view(-1, 51 * 51 * 25)
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):
             x = F.relu(self.hidden(x))
