@@ -12,21 +12,53 @@
 import torch
 import torch.utils.data as data
 from torch.autograd import Variable
-import glob
-import os
+import glob, os, sys
 import numpy as np
 import h5py as h5
 import Loader.loader as loader
-import sys
+from shutil import copyfile
 from triforce_helper_functions import *
 
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
+
+#####################
+# Load options file #
+#####################
+
+optionsFileName = "default_options"
 
 #########################
 # Set tools and options #
 #########################
 
-from Options.classification_GoogLeNet import *
+exec("from Options." + optionsFileName + " import *")
+
+optionNames = ['basePath', 'samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+
+for optionName in optionNames:
+    if optionName not in options.keys():
+        print("ERROR: Please set", optionName, "in options file.")
+        sys.exit()
+
+if not os.path.exists(options['outPath']):
+    os.makedirs(options['outPath'])
+else:
+    print("WARNING: Output directory already exists. Overwrite (y/n)?")
+    valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+    while True:
+        choice = raw_input().lower()
+        if choice in valid:
+            overwrite = valid[choice]
+        else:
+            print("Please respond with 'yes' or 'no'")
+    if overwrite:
+        os.rmdir(options['outPath'])
+        os.makedirs(options['outPath'])
+    else:
+        sys.exit()
+
+optionsFilePath = Options.__file__[:Options.__file__.rfind('/')]
+copyfile(optionsFilePath + "/" + optionsFileName, options['outPath']+"/options.h5")
 
 ####################################
 # Load files and set up generators #
@@ -35,13 +67,13 @@ from Options.classification_GoogLeNet import *
 print('-------------------------------')
 print('Loading Files')
 
-nParticles = len(samplePath)
+nParticles = len(options['samplePath'])
 particleFiles = [[]] * nParticles
-for i, particlePath in enumerate(samplePath):
+for i, particlePath in enumerate(options['samplePath']):
     particleFiles[i] = glob.glob(particlePath)
 
 filesPerParticle = len(particleFiles[0])
-nTrain = int(filesPerParticle * trainRatio)
+nTrain = int(filesPerParticle * options['trainRatio'])
 nTest = filesPerParticle - nTrain
 trainFiles = []
 testFiles = []
@@ -53,12 +85,12 @@ for i in range(filesPerParticle):
         trainFiles.append(newFiles)
     else:
         testFiles.append(newFiles)
-eventsPerFile *= nParticles
+options['eventsPerFile'] *= nParticles
 
-trainSet = loader.HDF5Dataset(trainFiles, eventsPerFile, classPdgID)
-testSet = loader.HDF5Dataset(testFiles, eventsPerFile, classPdgID)
-trainLoader = data.DataLoader(dataset=trainSet,batch_size=batchSize,sampler=loader.OrderedRandomSampler(trainSet),num_workers=nworkers)
-testLoader = data.DataLoader(dataset=testSet,batch_size=batchSize,sampler=loader.OrderedRandomSampler(testSet),num_workers=nworkers)
+trainSet = loader.HDF5Dataset(trainFiles, options['eventsPerFile'], options['classPdgID'])
+testSet = loader.HDF5Dataset(testFiles, options['eventsPerFile'], options['classPdgID'])
+trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
+testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
 
 ################
 # Train models #
@@ -146,22 +178,22 @@ def update_test_loss(epoch_end):
         if (GAN != None): total_test_loss += GAN_test_loss
         relativeDeltaLoss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
         previous_total_test_loss = total_test_loss
-        if (relativeDeltaLoss < relativeDeltaLossThreshold):
+        if (relativeDeltaLoss < options['relativeDeltaLossThreshold']):
             over_break_count += 1
         else:
             over_break_count = 0
-        if (over_break_count >= relativeDeltaLossNumber):
+        if (over_break_count >= options['relativeDeltaLossNumber']):
             end_training = True
     else:
         epoch_total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
         relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
-        if (relativeDeltaLoss < relativeDeltaLossThreshold):
+        if (relativeDeltaLoss < options['relativeDeltaLossThreshold']):
             end_training = True
 
 # perform training
 print('Training')
-for epoch in range(nEpochs):
+for epoch in range(options['nEpochs']):
     classifier_training_loss = 0
     regressor_training_loss = 0
     GAN_training_loss = 0
@@ -204,31 +236,30 @@ for epoch in range(nEpochs):
             GAN_training_accuracy = 0
     update_test_loss(epoch_end=True)
     # save results
-    if ((saveModelEveryNEpochs > 0) and ((epoch+1) % saveModelEveryNEpochs == 0)):
-        if not os.path.exists(OutPath): os.makedirs(OutPath)
+    if ((options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0)):
+        if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
         if (classifier != None): 
-            torch.save(classifier.net, OutPath+"saved_classifier_epoch_"+str(epoch)+".pt")
+            torch.save(classifier.net, options['outPath']+"saved_classifier_epoch_"+str(epoch)+".pt")
         if (regressor != None): 
-            torch.save(regressor.net, OutPath+"saved_regressor_epoch_"+str(epoch)+".pt")
+            torch.save(regressor.net, options['outPath']+"saved_regressor_epoch_"+str(epoch)+".pt")
         if (GAN != None): 
-            torch.save(GAN.net, OutPath+"saved_GAN_epoch_"+str(epoch)+".pt")
+            torch.save(GAN.net, options['outPath']+"saved_GAN_epoch_"+str(epoch)+".pt")
     if end_training: break
 
 # save results
-if not os.path.exists(OutPath): os.makedirs(OutPath)
-out_file = h5.File(OutPath+"results.h5", 'w')
+out_file = h5.File(options['outPath']+"results.h5", 'w')
 if (classifier != None): 
     out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
     out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
-    torch.save(classifier.net, OutPath+"saved_classifier.pt")
+    torch.save(classifier.net, options['outPath']+"saved_classifier.pt")
 if (regressor != None): 
     out_file.create_dataset("regressor_loss_history_train", data=np.array(regressor_loss_history_train))
     out_file.create_dataset("regressor_loss_history_test", data=np.array(regressor_loss_history_test))
-    torch.save(regressor.net, OutPath+"saved_regressor.pt")
+    torch.save(regressor.net, options['outPath']+"saved_regressor.pt")
 if (GAN != None): 
     out_file.create_dataset("GAN_loss_history_train", data=np.array(GAN_loss_history_train))
     out_file.create_dataset("GAN_loss_history_test", data=np.array(GAN_loss_history_test))
-    torch.save(GAN.net, OutPath+"saved_GAN.pt")
+    torch.save(GAN.net, options['outPath']+"saved_GAN.pt")
 
 print('-------------------------------')
 print('Finished Training')
