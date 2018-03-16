@@ -1,0 +1,2 @@
+python notebook --no-browser --port=8889 --NotebookApp.token=''
+ssh -N -f -L localhost:8888:localhost:8889 <user>@orodruin.uta.edu

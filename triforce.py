@@ -38,13 +38,13 @@ optionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRa
 
 for optionName in optionNames:
     if optionName not in options.keys():
-        print("ERROR: Please set", optionName, "in options file.")
+        print("ERROR: Please set", optionName, "in options file")
         sys.exit()
 
 if not os.path.exists(options['outPath']):
     os.makedirs(options['outPath'])
 else:
-    print("WARNING: Output directory already exists. Overwrite (y/n)?")
+    print("WARNING: Output directory already exists - overwrite (y/n)?")
     valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
     while True:
         choice = input().lower()
@@ -77,6 +77,8 @@ for i, particlePath in enumerate(options['samplePath']):
 filesPerParticle = len(particleFiles[0])
 nTrain = int(filesPerParticle * options['trainRatio'])
 nTest = filesPerParticle - nTrain
+if (nTest==0 || nTrain==0):
+    print("Not enough files found - check sample paths")
 trainFiles = []
 testFiles = []
 for i in range(filesPerParticle):
