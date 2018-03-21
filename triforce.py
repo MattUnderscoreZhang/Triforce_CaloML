@@ -97,7 +97,6 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 ################
 # Train models #
 ################
-
 classifier_loss_history_train = []
 regressor_loss_history_train = []
 GAN_loss_history_train = []
@@ -251,6 +250,7 @@ for epoch in range(options['nEpochs']):
 # save results
 out_file = h5.File(options['outPath']+"results.h5", 'w')
 if (classifier != None): 
+    out_file.create_dataset("classifier_accuracy_history_train", data=np.array(classifier_accuracy_history_train))
     out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
     out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
     torch.save(classifier.net, options['outPath']+"saved_classifier.pt")
