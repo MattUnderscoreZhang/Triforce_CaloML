@@ -19,10 +19,14 @@ def train(model, ECALs, HCALs, truth):
 
 # evaluate model
 def eval(model, ECALs, HCALs, truth):
-    model.net.eval()
-    outputs = model.net(ECALs, HCALs)
-    loss = model.lossFunction(outputs, truth)
-    _, predicted = torch.max(outputs.data, 1)
+    try:
+       model.net.eval()
+       outputs = model.net(ECALs, HCALs)
+       loss = model.lossFunction(outputs, truth)
+       _, predicted = torch.max(outputs.data, 1)
+    except:
+       model.eval()
+       outputs = model(ECALs, HCALs)
     try:
         accuracy = (predicted == truth.data).sum()/truth.shape[0]
     except:
@@ -36,4 +40,9 @@ def eval(model, ECALs, HCALs, truth):
     except:
         mean = 0
         sigma = 0
-    return (loss.data[0], accuracy, outputs.data, truth.data, mean, sigma)
+    try:
+       returndata = (loss.data[0], accuracy, outputs.data, truth.data, mean, sigma)
+    except:
+       returndata = (0, accuracy, outputs.data, truth.data, mean, sigma)
+    return returndata
+#(loss.data[0], accuracy, outputs.data, truth.data, mean, sigma)

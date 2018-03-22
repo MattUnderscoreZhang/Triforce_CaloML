@@ -52,7 +52,7 @@ class HDF5Dataset(data.Dataset):
 
     def __getitem__(self, index):
         fileN = index//self.num_per_file
-        indexInFile = index%self.num_per_file
+        indexInFile = index%self.num_per_file-1
         if(fileN != self.fileInMemory):
             self.ECAL = []
             self.HCAL = []
