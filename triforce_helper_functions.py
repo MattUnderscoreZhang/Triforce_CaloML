@@ -36,7 +36,6 @@ def eval(model, ECALs, HCALs, truth):
         reldiff = 100.0*(truth.data - outputs.data)/truth.data
         mean = torch.mean(reldiff)
         sigma = torch.std(reldiff)
-        #print(reldiff[:10],mean,sigma)
     except:
         mean = 0
         sigma = 0
@@ -45,4 +44,3 @@ def eval(model, ECALs, HCALs, truth):
     except:
        returndata = (0, accuracy, outputs.data, truth.data, mean, sigma)
     return returndata
-#(loss.data[0], accuracy, outputs.data, truth.data, mean, sigma)

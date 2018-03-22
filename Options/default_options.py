@@ -21,7 +21,8 @@ options['relativeDeltaLossThreshold'] = 0.0 # break if change in loss falls belo
 options['relativeDeltaLossNumber'] = 5 # ...for this number of test losses in a row
 options['batchSize'] = 200 # 1000
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
-
+options['nTrainMax'] = -1
+options['nTestMax'] = -1
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
 ################

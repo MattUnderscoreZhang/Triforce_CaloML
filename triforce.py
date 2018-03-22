@@ -34,7 +34,7 @@ optionsFileName = "default_options"
 
 exec("from Options." + optionsFileName + " import *")
 
-optionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+optionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath', 'nTrainMax',"nTestMax"]
 
 for optionName in optionNames:
     if optionName not in options.keys():
@@ -79,6 +79,8 @@ nTrain = int(filesPerParticle * options['trainRatio'])
 nTest = filesPerParticle - nTrain
 if (nTest==0 || nTrain==0):
     print("Not enough files found - check sample paths")
+nTrain = max(nTrain,options['nTrainMax'])
+nTest = max(nTest,options['nTestMax'])
 trainFiles = []
 testFiles = []
 for i in range(filesPerParticle):
