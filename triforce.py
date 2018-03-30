@@ -286,3 +286,7 @@ print('Finished Training')
 
 print('Performing Analysis')
 analyzer.analyze([classifier, regressor, GAN], testLoader, out_file)
+
+import Tools.Classification_Plotter as Classification_Plotter
+
+Classification_Plotter.make_all(options['outPath']+'results.h5')
