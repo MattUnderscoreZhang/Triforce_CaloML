@@ -77,7 +77,7 @@ for i, particlePath in enumerate(options['samplePath']):
 filesPerParticle = len(particleFiles[0])
 nTrain = int(filesPerParticle * options['trainRatio'])
 nTest = filesPerParticle - nTrain
-if (nTest==0 || nTrain==0):
+if (nTest==0 or nTrain==0):
     print("Not enough files found - check sample paths")
 nTrain = max(nTrain,options['nTrainMax'])
 nTest = max(nTest,options['nTestMax'])
