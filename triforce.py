@@ -102,6 +102,7 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 # Train models #
 ################
 classifier_accuracy_epoch_train = []
+classifier_loss_epoch_train = []
 classifier_loss_history_train = []
 regressor_loss_history_train = []
 GAN_loss_history_train = []
@@ -200,6 +201,8 @@ def update_test_loss(epoch_end):
 # perform training
 print('Training')
 for epoch in range(options['nEpochs']):
+    reserve_for_accuracy_epoch_train = []
+    reserve_for_loss_epoch_train = []
     classifier_training_loss = 0
     regressor_training_loss = 0
     GAN_training_loss = 0
@@ -217,6 +220,8 @@ for epoch in range(options['nEpochs']):
             GAN_training_loss += train(GAN, ECALs, HCALs, ys)[0]
             GAN_training_accuracy += train(GAN, ECALs, HCALs, ys)[1]
         if i % calculate_loss_per == calculate_loss_per - 1:
+            reserve_for_accuracy_epoch_train.append(classifier_training_accuracy / calculate_loss_per)
+            reserve_for_loss_epoch_train.append(classifier_training_loss / calculate_loss_per)
             classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
             regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
             GAN_loss_history_train.append(GAN_training_loss / calculate_loss_per)
@@ -240,7 +245,8 @@ for epoch in range(options['nEpochs']):
             GAN_training_loss = 0
             classifier_training_accuracy = 0
             GAN_training_accuracy = 0
-    classifier_accuracy_epoch_train.append(classifier_accuracy_history_train[-1])
+    classifier_accuracy_epoch_train.append(float(sum(reserve_for_accuracy_epoch_train)) / max(len(reserve_for_accuracy_epoch_train), 1))
+    classifier_loss_epoch_train.append(float(sum(reserve_for_loss_epoch_train)) / max(len(reserve_for_loss_epoch_train), 1))
     update_test_loss(epoch_end=True)
     # save results
     if ((options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0)):
@@ -257,6 +263,7 @@ for epoch in range(options['nEpochs']):
 out_file = h5.File(options['outPath']+"results.h5", 'w')
 if (classifier != None): 
     out_file.create_dataset("classifier_accuracy_epoch_train", data=np.array(classifier_accuracy_epoch_train))
+    out_file.create_dataset("classifier_accuracy_epoch_train", data=np.array(classifier_loss_epoch_train))
     out_file.create_dataset("classifier_accuracy_history_train", data=np.array(classifier_accuracy_history_train))
     out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
     out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))

@@ -107,7 +107,15 @@ def loss_vs_epochs(results):
 
     plt.savefig(output_path)
 
+def make_all(results, accuracy_interval=20, loss_interval=20): 
+    """
+    Making all possible plots for classification
+    """
+    accuracy_vs_batches(f, accuracy_interval)
+    accuracy_vs_epochs(f)
+    loss_vs_batches(f, loss_interval)
+    loss_vs_epochs(f)
+
 if __name__ == '__main__': 
     f = '../results.h5'
-    accuracy_vs_batches(f, 20)
-    accuracy_vs_epochs(f)
+    make_all(f)
