@@ -26,10 +26,8 @@ def accuracy_vs_batches(results, interval):
     fig, ax = plt.subplots()
     sample_points = [(i + 1) * interval for i in range(len(data))]
     # plt.style.use('ggplot')
-    l = ax.fill_between(sample_points, data)
-    l.set_facecolors([[.5,.5,.8,.3]])
     ax.plot(sample_points, data, color='b')
-    ax.grid('on')
+    ax.grid()
     ax.set_xlabel('Batches of training')
     ax.set_ylabel('Accuracy')
     ax.set_title('Trends of Accuracy along Batches')
@@ -53,11 +51,8 @@ def accuracy_vs_epochs(results):
 
     fig, ax = plt.subplots()
     sample_points = [(i + 1) for i in range(len(data))]
-    l = ax.fill_between(sample_points, data)
-    l.set_facecolors([[.5,.5,.8,.3]])
-    ax.plot(sample_points, data, 'bo', sample_points, data, 'k')
-    ax.grid('on')
-    ax.set_ylim(0.9, 1.0)
+    ax.plot(sample_points, data, 'ro', sample_points, data, 'b')
+    ax.grid()
     ax.set_xlabel('Epochs of training')
     ax.xaxis.set_major_locator(mpl.ticker.MultipleLocator(1))
     ax.set_ylabel('Accuracy')
@@ -78,10 +73,8 @@ def loss_vs_batches(results, interval):
     fig, ax = plt.subplots()
     sample_points = [(i + 1) * interval for i in range(len(data))]
     # plt.style.use('ggplot')
-    l = ax.fill_between(sample_points, data)
-    l.set_facecolors([[.5,.8,.5,.3]])
-    ax.plot(sample_points, data, color='g')
-    ax.grid('on')
+    ax.plot(sample_points, data, color='b')
+    ax.grid()
     ax.set_xlabel('Batches of training')
     ax.set_ylabel('Loss')
     ax.set_title('Trends of Loss along Batches')
@@ -105,10 +98,8 @@ def loss_vs_epochs(results):
 
     fig, ax = plt.subplots()
     sample_points = [(i + 1) for i in range(len(data))]
-    l = ax.fill_between(sample_points, data)
-    l.set_facecolors([[.5,.8,.5,.3]])
-    ax.plot(sample_points, data, 'go', sample_points, data, 'k')
-    ax.grid('on')
+    ax.plot(sample_points, data, 'ro', sample_points, data, 'b')
+    ax.grid()
     ax.set_xlabel('Epochs of training')
     ax.xaxis.set_major_locator(mpl.ticker.MultipleLocator(1))
     ax.set_ylabel('Loss')
@@ -128,6 +119,3 @@ def make_all(results, accuracy_interval=20, loss_interval=20):
 if __name__ == '__main__': 
     f = '../results.h5'
     make_all(f)
-    # accuracy_vs_batches(f, 20)
-    # accuracy_vs_epochs(f)
-    # loss_vs_batches(f, 20)
