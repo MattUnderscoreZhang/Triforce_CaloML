@@ -120,10 +120,10 @@ def make_all(results, accuracy_interval=20, loss_interval=20):
     """
     Making all possible plots for classification
     """
-    accuracy_vs_batches(f, accuracy_interval)
-    accuracy_vs_epochs(f)
-    loss_vs_batches(f, loss_interval)
-    loss_vs_epochs(f)
+    accuracy_vs_batches(results, accuracy_interval)
+    accuracy_vs_epochs(results)
+    loss_vs_batches(results, loss_interval)
+    loss_vs_epochs(results)
 
 if __name__ == '__main__': 
     f = '../results.h5'
