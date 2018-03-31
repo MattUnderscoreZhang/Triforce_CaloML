@@ -19,9 +19,9 @@ def accuracy_vs_batches(results, interval):
 
     data = f['classifier_accuracy_history_train']
 
-    if not os.path.exists(os.path.join(results.split('/')[0], 'Plots')): 
-        os.makedirs(os.path.join(results.split('/')[0], 'Plots'))
-    output_path = os.path.join(results.split('/')[0], 'Plots', 'accuracy_vs_batches.png')
+    if not os.path.exists(os.path.join(results[0:-len(results.split('/')[-1])], 'Plots')): 
+        os.makedirs(os.path.join(results[0:-len(results.split('/')[-1])], 'Plots'))
+    output_path = os.path.join(results[0:-len(results.split('/')[-1])], 'Plots', 'accuracy_vs_batches.png')
 
     fig, ax = plt.subplots()
     sample_points = [(i + 1) * interval for i in range(len(data))]
@@ -47,9 +47,9 @@ def accuracy_vs_epochs(results):
 
     data = f['classifier_accuracy_epoch_train']
 
-    if not os.path.exists(os.path.join(results.split('/')[0], 'Plots')): 
-        os.makedirs(os.path.join(results.split('/')[0], 'Plots'))
-    output_path = os.path.join(results.split('/')[0], 'Plots', 'accuracy_vs_epochs.png')
+    if not os.path.exists(os.path.join(results[0:-len(results.split('/')[-1])], 'Plots')): 
+        os.makedirs(os.path.join(results[0:-len(results.split('/')[-1])], 'Plots'))
+    output_path = os.path.join(results[0:-len(results.split('/')[-1])], 'Plots', 'accuracy_vs_epochs.png')
 
     fig, ax = plt.subplots()
     sample_points = [(i + 1) for i in range(len(data))]
@@ -71,9 +71,9 @@ def loss_vs_batches(results, interval):
     f = h5py.File(results, 'r')
     data = f['classifier_loss_history_train']
 
-    if not os.path.exists(os.path.join(results.split('/')[0], 'Plots')): 
-        os.makedirs(os.path.join(results.split('/')[0], 'Plots'))
-    output_path = os.path.join(results.split('/')[0], 'Plots', 'loss_vs_batches.png')
+    if not os.path.exists(os.path.join(results[0:-len(results.split('/')[-1])], 'Plots')): 
+        os.makedirs(os.path.join(results[0:-len(results.split('/')[-1])], 'Plots'))
+    output_path = os.path.join(results[0:-len(results.split('/')[-1])], 'Plots', 'loss_vs_batches.png')
 
     fig, ax = plt.subplots()
     sample_points = [(i + 1) * interval for i in range(len(data))]
@@ -99,9 +99,9 @@ def loss_vs_epochs(results):
 
     data = f['classifier_loss_epoch_train']
 
-    if not os.path.exists(os.path.join(results.split('/')[0], 'Plots')): 
-        os.makedirs(os.path.join(results.split('/')[0], 'Plots'))
-    output_path = os.path.join(results.split('/')[0], 'Plots', 'loss_vs_epochs.png')
+    if not os.path.exists(os.path.join(results[0:-len(results.split('/')[-1])], 'Plots')): 
+        os.makedirs(os.path.join(results[0:-len(results.split('/')[-1])], 'Plots'))
+    output_path = os.path.join(results[0:-len(results.split('/')[-1])], 'Plots', 'loss_vs_epochs.png')
 
     fig, ax = plt.subplots()
     sample_points = [(i + 1) for i in range(len(data))]
