@@ -162,35 +162,6 @@ def update_test_loss(epoch_end):
     GAN_test_loss /= n_test_batches
     classifier_test_accuracy /= n_test_batches
     GAN_test_accuracy /= n_test_batches
-<<<<<<< HEAD
-    if (not epoch_end):
-        print('test loss:\t', end="")
-        if (classifier != None): print('(C) %.4f\t' % (classifier_test_loss), end="")
-        if (regressor != None): print('(R) %.4f\t' % (regressor_test_loss), end="")
-        if (GAN != None): print('(G) %.4f\t' % (GAN_test_loss), end="")
-        print()
-        print('test accuracy:\t', end="")
-        if (classifier != None): print('(C) %.4f\t' % (classifier_test_accuracy), end="")
-        if (regressor != None): print('(R) -----\t', end="")
-        if (GAN != None): print('(G) %.4f\t' % (GAN_test_accuracy), end="")
-        print()
-    else:
-        print('epoch test loss:\t', end="")
-        if (classifier != None): print('(C) %.4f\t' % (classifier_test_loss), end="")
-        if (regressor != None): print('(R) %.4f\t' % (regressor_test_loss), end="")
-        if (GAN != None): print('(G) %.4f\t' % (GAN_test_loss), end="")
-        print()
-        print('epoch test accuracy:\t', end="")
-        if (classifier != None): print('(C) %.4f\t' % (classifier_test_accuracy), end="")
-        if (regressor != None): print('(R) -----\t', end="")
-        if (GAN != None): print('(G) %.4f\t' % (GAN_test_accuracy), end="")
-        print()
-    # classifier_loss_history_train.append(classifier_test_loss)
-    # regressor_loss_history_train.append(regressor_test_loss)
-    # GAN_loss_history_train.append(GAN_test_loss)
-    # classifier_accuracy_history_train.append(classifier_test_accuracy)
-    # GAN_accuracy_history_train.append(GAN_test_accuracy)
-=======
 
     print_prefix = ""
     if (epoch_end): print_prefix = "epoch "
@@ -205,7 +176,6 @@ def update_test_loss(epoch_end):
     if (GAN != None): print('(G) %.4f\t' % (GAN_test_accuracy), end="")
     print()
 
->>>>>>> master
     classifier_loss_history_test.append(classifier_test_loss)
     regressor_loss_history_test.append(regressor_test_loss)
     GAN_loss_history_test.append(GAN_test_loss)
