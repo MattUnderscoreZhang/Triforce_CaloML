@@ -102,7 +102,7 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 # Train models #
 ################
 
-# temparary save the output of classifier evaluation outputs
+# temporary save the output of classifier evaluation outputs
 classifier_test_output = []
 
 # loss histories
