@@ -102,23 +102,18 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 # Train models #
 ################
 
+# temparary save the output of classifier evaluation outputs
+classifier_test_output = []
+
 # loss histories
 classifier_loss_history_train = []
 regressor_loss_history_train = []
 GAN_loss_history_train = []
-<<<<<<< HEAD
-classifier_accuracy_history_train = []
-GAN_accuracy_history_train = []
-
-classifier_accuracy_epoch_test = []
-classifier_loss_epoch_test = []
-=======
->>>>>>> master
 classifier_loss_history_test = []
 regressor_loss_history_test = []
 GAN_loss_history_test = []
 
-# average loss over the training history of each epoch
+# last-batch loss over the training history of each epoch
 classifier_loss_epoch_train = []
 
 # accuracy histories
@@ -127,7 +122,7 @@ GAN_accuracy_history_train = []
 classifier_accuracy_history_test = []
 GAN_accuracy_history_test = []
 
-# average accuracy over the training history of each epoch
+# last-batch accuracy over the training history of each epoch
 classifier_accuracy_epoch_train = []
 
 calculate_loss_per = 20
@@ -151,8 +146,9 @@ def update_test_loss(epoch_end):
         ECALs, HCALs, ys, energies = data
         ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
         if (classifier != None):
-            classifier_test_loss += eval(classifier, ECALs, HCALs, ys)[0]
-            classifier_test_accuracy += eval(classifier, ECALs, HCALs, ys)[1]
+            classifier_test_output = eval(classifier, ECALs, HCALs, ys)
+            classifier_test_loss += classifier_test_output[0]
+            classifier_test_accuracy += classifier_test_output[1]
         if (regressor != None):
             regressor_test_loss += eval(regressor, ECALs, HCALs, energies)[0]
         if (GAN != None):
