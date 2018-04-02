@@ -12,6 +12,29 @@ class Analyzer():
     #############
     # HISTORIES #
     #############
+    def plot_loss_vs_epoch(train, test, filename): 
+
+        plt.figure()
+        plt.title("Classifier Loss History")
+        plt.xlabel("Training Epoch")
+        plt.ylabel("Loss")
+        plt.grid()
+        plt.plot(range(train), train, 'o-', color="r", label="Training Loss")
+        plt.plot(range(train), test, 'o-', color="g", label="Test Loss")
+        plt.legend(loc="best")
+        plt.save(filename)
+
+    def plot_accuracy_vs_epoch(train, test, filename): 
+
+        plt.figure()
+        plt.title("Classifier Accuracy History")
+        plt.xlabel("Training Epoch")
+        plt.ylabel("Loss")
+        plt.grid()
+        plt.plot(range(train), train, 'o-', color="r", label="Training Accuracy")
+        plt.plot(range(train), test, 'o-', color="g", label="Test Accuracy")
+        plt.legend(loc="best")
+        plt.save(filename)
 
     def plot_loss_vs_batches(train, test, filename):
 
@@ -85,4 +108,6 @@ class Analyzer():
         folder = out_file.filename[:out_file.filename.rfind('/')]
         plot_loss_vs_batches(out_file['classifier_loss_history_train'], out_file['classifier_loss_history_test'], folder+"/loss_history_batches.png")
         plot_accuracy_vs_batches(out_file['classifier_accuracy_history_train'], out_file['classifier_accuracy_history_test'], folder+"/accuracy_history_batches.png")
+        plot_loss_vs_epoch(out_file['classifier_loss_epoch_train'], out_file['classifier_loss_epoch_test'], folder+"/loss_epoch_batches.png")
+        plot_accuracy_vs_epoch(out_file['classifier_accuracy_epoch_train'], out_file['classifier_accuracy_epoch_test'], folder+"/accuracy_epoch_batches.png")
         plot_ROC(classifier_test_outputs, classifier_test_truth, folder+"/ROC.png")
