@@ -5,13 +5,13 @@ import numpy as np
 
 class Analyzer():
 
+    # main analysis function
     def analyze(self, tools, testLoader, out_file):
 
         [classifier, regressor, GAN] = tools
         classifier_test_loss = 0
         regressor_test_loss = 0
         GAN_test_loss = 0
-        n_test_batches = 0
         classifier_test_accuracy = 0
         GAN_test_accuracy = 0
         regressor_test_mean = 0
@@ -22,6 +22,7 @@ class Analyzer():
         regressor_outputs = []
         GAN_outputs = []
 
+        n_test_batches = 0
         for data in testLoader:
             ECALs, HCALs, ys, energies = data
             ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
