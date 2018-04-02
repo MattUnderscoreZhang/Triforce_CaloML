@@ -1,10 +1,11 @@
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
 from triforce_helper_functions import eval
 import numpy as np
 import sklearn as sk
-import matplotlib as mpl
-import matplotlib as plt
 
 class Analyzer():
 
