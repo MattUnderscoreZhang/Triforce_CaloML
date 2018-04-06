@@ -32,7 +32,7 @@ options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 from Classification import GoogLeNet
 from Regression import NIPS_Regressor
 from GAN import NIPS_GAN
-from Analysis import Default_Analyzer
+from Analysis import Classification_Plotter
 
 _learningRate = 0.000001
 _decayRate = 0
@@ -41,6 +41,7 @@ _hiddenLayerNeurons = None
 _nHiddenLayers = None
 
 classifier = GoogLeNet.Classifier(_learningRate, _decayRate)
-regressor = NIPS_Regressor.Regressor(_learningRate, _decayRate)
+regressor = None # NIPS_Regressor.Regressor(_learningRate, _decayRate)
 GAN = None
-analyzer = Default_Analyzer.Analyzer()
+# analyzer = Default_Analyzer.Analyzer()
+analyzer = Classification_Plotter.Analyzer()

@@ -105,7 +105,7 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 # temporarily save the output of classifier evaluation outputs
 classifier_test_output = []
 
-# loss histories
+# loss histories for each batch
 classifier_loss_history_train = []
 regressor_loss_history_train = []
 GAN_loss_history_train = []
@@ -113,17 +113,19 @@ classifier_loss_history_test = []
 regressor_loss_history_test = []
 GAN_loss_history_test = []
 
-# last-batch loss over the training history of each epoch
+# last-batch loss of each epoch
 classifier_loss_epoch_train = []
+classifier_loss_epoch_test = []
 
-# accuracy histories
+# accuracy histories for each batch
 classifier_accuracy_history_train = []
 GAN_accuracy_history_train = []
 classifier_accuracy_history_test = []
 GAN_accuracy_history_test = []
 
-# last-batch accuracy over the training history of each epoch
+# last-batch accuracy of each epoch
 classifier_accuracy_epoch_train = []
+classifier_accuracy_epoch_test = []
 
 calculate_loss_per = 20
 max_n_test_batches = 10 # stop evaluating test loss after this many batches
@@ -176,14 +178,19 @@ def update_test_loss(epoch_end):
     if (GAN != None): print('(G) %.4f\t' % (GAN_test_accuracy), end="")
     print()
 
-    classifier_loss_history_test.append(classifier_test_loss)
-    regressor_loss_history_test.append(regressor_test_loss)
-    GAN_loss_history_test.append(GAN_test_loss)
-    classifier_accuracy_history_test.append(classifier_test_accuracy)
-    GAN_accuracy_history_test.append(GAN_test_accuracy)
+    # classifier_loss_history_test.append(classifier_test_loss)
+    # regressor_loss_history_test.append(regressor_test_loss)
+    # GAN_loss_history_test.append(GAN_test_loss)
+    # classifier_accuracy_history_test.append(classifier_test_accuracy)
+    # GAN_accuracy_history_test.append(GAN_test_accuracy)
 
     # decide whether or not to end training when this epoch finishes
     if (not epoch_end):
+        classifier_loss_history_test.append(classifier_test_loss)
+        regressor_loss_history_test.append(regressor_test_loss)
+        GAN_loss_history_test.append(GAN_test_loss)
+        classifier_accuracy_history_test.append(classifier_test_accuracy)
+        GAN_accuracy_history_test.append(GAN_test_accuracy)
         total_test_loss = 0
         if (classifier != None): total_test_loss += classifier_test_loss
         if (regressor != None): total_test_loss += regressor_test_loss
@@ -197,6 +204,8 @@ def update_test_loss(epoch_end):
         if (over_break_count >= options['relativeDeltaLossNumber']):
             end_training = True
     else:
+        classifier_loss_epoch_test.append(classifier_loss_history_test[-1])
+        classifier_accuracy_epoch_test.append(classifier_accuracy_history_test[-1])
         epoch_total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
         relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
@@ -264,7 +273,9 @@ for epoch in range(options['nEpochs']):
 out_file = h5.File(options['outPath']+"results.h5", 'w')
 if (classifier != None): 
     out_file.create_dataset("classifier_loss_epoch_train", data=np.array(classifier_loss_epoch_train))
+    out_file.create_dataset("classifier_loss_epoch_test", data=np.array(classifier_loss_epoch_test))
     out_file.create_dataset("classifier_accuracy_epoch_train", data=np.array(classifier_accuracy_epoch_train))
+    out_file.create_dataset("classifier_accuracy_epoch_test", data=np.array(classifier_accuracy_epoch_test))
     out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
     out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
     out_file.create_dataset("classifier_accuracy_history_train", data=np.array(classifier_accuracy_history_train))
