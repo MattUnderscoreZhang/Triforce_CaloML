@@ -83,6 +83,7 @@ nTrain = max(nTrain,options['nTrainMax'])
 nTest = max(nTest,options['nTestMax'])
 trainFiles = []
 testFiles = []
+
 for i in range(filesPerParticle):
     newFiles = []
     for j in range(nParticles):
@@ -102,9 +103,6 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 # Train models #
 ################
 
-# temporarily save the output of classifier evaluation outputs
-classifier_test_output = []
-
 # loss histories for each batch
 classifier_loss_history_train = []
 regressor_loss_history_train = []
@@ -112,20 +110,24 @@ GAN_loss_history_train = []
 classifier_loss_history_test = []
 regressor_loss_history_test = []
 GAN_loss_history_test = []
-
 # last-batch loss of each epoch
 classifier_loss_epoch_train = []
 classifier_loss_epoch_test = []
-
 # accuracy histories for each batch
 classifier_accuracy_history_train = []
 GAN_accuracy_history_train = []
 classifier_accuracy_history_test = []
+classifier_signal_accuracy_history_test = []
+classifier_background_accuracy_history_test = []
 GAN_accuracy_history_test = []
-
 # last-batch accuracy of each epoch
 classifier_accuracy_epoch_train = []
 classifier_accuracy_epoch_test = []
+classifier_signal_accuracy_epoch_test = []
+classifier_background_accuracy_epoch_test = []
+
+# temporarily save the output of classifier evaluation outputs
+classifier_test_output = []
 
 calculate_loss_per = 20
 max_n_test_batches = 10 # stop evaluating test loss after this many batches
@@ -142,6 +144,9 @@ def update_test_loss(epoch_end):
     regressor_test_loss = 0
     GAN_test_loss = 0
     classifier_test_accuracy = 0
+    # New
+    classifier_test_signal_accuracy = 0
+    classifier_test_background_accuracy = 0
     GAN_test_accuracy = 0
     n_test_batches = 0
     for data in testLoader:
@@ -151,6 +156,8 @@ def update_test_loss(epoch_end):
             classifier_test_output = eval(classifier, ECALs, HCALs, ys)
             classifier_test_loss += classifier_test_output[0]
             classifier_test_accuracy += classifier_test_output[1]
+            classifier_test_signal_accuracy += classifier_test_output[6]
+            classifier_test_background_accuracy += classifier_test_output[7]
         if (regressor != None):
             regressor_test_loss += eval(regressor, ECALs, HCALs, energies)[0]
         if (GAN != None):
@@ -163,6 +170,8 @@ def update_test_loss(epoch_end):
     regressor_test_loss /= n_test_batches
     GAN_test_loss /= n_test_batches
     classifier_test_accuracy /= n_test_batches
+    classifier_test_signal_accuracy /= n_test_batches
+    classifier_test_background_accuracy /= n_test_batches
     GAN_test_accuracy /= n_test_batches
 
     print_prefix = ""
@@ -190,6 +199,8 @@ def update_test_loss(epoch_end):
         regressor_loss_history_test.append(regressor_test_loss)
         GAN_loss_history_test.append(GAN_test_loss)
         classifier_accuracy_history_test.append(classifier_test_accuracy)
+        classifier_signal_accuracy_history_test.append(classifier_test_signal_accuracy)
+        classifier_background_accuracy_history_test.append(classifier_test_background_accuracy)
         GAN_accuracy_history_test.append(GAN_test_accuracy)
         total_test_loss = 0
         if (classifier != None): total_test_loss += classifier_test_loss
@@ -206,6 +217,8 @@ def update_test_loss(epoch_end):
     else:
         classifier_loss_epoch_test.append(classifier_loss_history_test[-1])
         classifier_accuracy_epoch_test.append(classifier_accuracy_history_test[-1])
+        classifier_signal_accuracy_epoch_test.append(classifier_signal_accuracy_history_test[-1])
+        classifier_background_accuracy_epoch_test.append(classifier_background_accuracy_history_test[-1])
         epoch_total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
         relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
@@ -276,6 +289,8 @@ if (classifier != None):
     out_file.create_dataset("classifier_loss_epoch_test", data=np.array(classifier_loss_epoch_test))
     out_file.create_dataset("classifier_accuracy_epoch_train", data=np.array(classifier_accuracy_epoch_train))
     out_file.create_dataset("classifier_accuracy_epoch_test", data=np.array(classifier_accuracy_epoch_test))
+    out_file.create_dataset("classifier_signal_accuracy_epoch_test", data=np.array(classifier_signal_accuracy_epoch_test))
+    out_file.create_dataset("classifier_background_accuracy_epoch_test", data=np.array(classifier_background_accuracy_epoch_test))
     out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
     out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
     out_file.create_dataset("classifier_accuracy_history_train", data=np.array(classifier_accuracy_history_train))
