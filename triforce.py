@@ -19,6 +19,8 @@ import Loader.loader as loader
 import shutil
 from triforce_helper_functions import *
 import Options
+import setGPU
+
 
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
 
@@ -79,8 +81,8 @@ nTrain = int(filesPerParticle * options['trainRatio'])
 nTest = filesPerParticle - nTrain
 if (nTest==0 || nTrain==0):
     print("Not enough files found - check sample paths")
-nTrain = max(nTrain,options['nTrainMax'])
-nTest = max(nTest,options['nTestMax'])
+#nTrain = min(nTrain,options['nTrainMax'])
+#nTest = min(nTest,options['nTestMax'])
 trainFiles = []
 testFiles = []
 for i in range(filesPerParticle):
@@ -92,7 +94,10 @@ for i in range(filesPerParticle):
     else:
         testFiles.append(newFiles)
 options['eventsPerFile'] *= nParticles
-
+if options['nTrainMax']>0:
+   trainFiles = trainFiles[:options['nTrainMax']]
+if options['nTestMax']>0:
+   testFiles = testFiles[:options['nTestMax']]
 trainSet = loader.HDF5Dataset(trainFiles, options['eventsPerFile'], options['classPdgID'])
 testSet = loader.HDF5Dataset(testFiles, options['eventsPerFile'], options['classPdgID'])
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
