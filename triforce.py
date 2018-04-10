@@ -139,16 +139,11 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 ############################################
 
 # loss and accuracy data e.g. history[LOSS][CLASSIFICATION][TRAIN][EPOCH]
-history = [[[[[] for _ in range(2)] for _ in range(3)] for _ in range(3)] for _ in range(2)]
-
-classifier_signal_accuracy_history_test = []
-classifier_background_accuracy_history_test = []
-classifier_signal_accuracy_epoch_test = []
-classifier_background_accuracy_epoch_test = []
+history = [[[[[] for _ in range(2)] for _ in range(3)] for _ in range(3)] for _ in range(4)]
 
 # enumerate parts of the data structure
-qualifier_name = ['loss', 'accuracy']
-LOSS, ACCURACY = 0, 1
+qualifier_name = ['loss', 'accuracy', 'signalAccuracy', 'backgroundAccuracy']
+LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY = 0, 1, 2, 3
 tools = [classifier, regressor, GAN]
 tool_name = ['classifier', 'regressor', 'GAN']
 tool_letter = ['C', 'R', 'G']
@@ -168,53 +163,45 @@ previous_epoch_total_test_loss = 0
 end_training = False
 over_break_count = 0
 
-# see what the current test loss is, and whether we should keep training
-def update_test_loss(epoch_end):
-    global previous_total_test_loss, previous_epoch_total_test_loss, over_break_count, end_training
-    test_loss = [0]*3
-    test_accuracy = [0]*3
-    classifier_test_signal_accuracy = 0
-    classifier_test_background_accuracy = 0
+def update_test_loss(epoch_end=False):
+    
+    # find the current test qualifiers e.g. test_qualifiers[LOSS][GAN]
+    test_qualifiers = [[0]*3 for _ in range(4)]
+    qualifier_index = [0, 1, 6, 7] # return indices for eval()
     for n_test_batches, data in enumerate(validationLoader):
         ECALs, HCALs, ys, energies = data
         ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
         for tool in range(len(tools)):
             if (tools[tool] != None):
                 eval_results = eval(tools[tool], ECALs, HCALs, ys)
-                test_loss[tool] += eval_results[0]
-                test_accuracy[tool] += eval_results[1]
-        if (tools[0] != None):
-            classifier_test_output = eval(tools[0], ECALs, HCALs, ys)
-            classifier_test_signal_accuracy += classifier_test_output[6]
-            classifier_test_background_accuracy += classifier_test_output[7]
+                for qualifier in range(len(qualifier_name)):
+                    test_qualifiers[qualifier][tool] += eval_results[qualifier_index[qualifier]] 
         if (n_test_batches >= options['test_loss_eval_max_n_batches']):
             break
-    test_loss = [i/n_test_batches for i in test_loss]
-    test_accuracy = [i/n_test_batches for i in test_accuracy]
-    classifier_test_signal_accuracy /= n_test_batches
-    classifier_test_background_accuracy /= n_test_batches
+    for qualifier_index, test_qualifier in enumerate(test_qualifiers):
+        test_qualifiers[qualifier_index] = [i/n_test_batches for i in test_qualifier]
 
+    # print test loss and accuracy to screen
     print_prefix = ""
     if (epoch_end): print_prefix = "epoch "
     print(print_prefix + 'test loss:\t', end="")
     for tool in range(len(tools)):
-        if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_loss[tool]), end="")
+        if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_qualifiers[LOSS][tool]), end="")
     print(print_prefix + 'test accuracy:\t', end="")
     for tool in range(len(tools)):
-        if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_accuracy[tool]), end="")
+        if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_qualifiers[ACCURACY][tool]), end="")
     print()
 
     # decide whether or not to end training when this epoch finishes
+    global previous_total_test_loss, previous_epoch_total_test_loss, over_break_count, end_training
     if (not epoch_end):
         for tool in range(len(tools)):
             if (tools[tool] != None):
-                history[LOSS][tool][TEST][BATCH].append(test_loss[tool])
-                history[ACCURACY][tool][TEST][BATCH].append(test_accuracy[tool])
-        classifier_signal_accuracy_history_test.append(classifier_test_signal_accuracy)
-        classifier_background_accuracy_history_test.append(classifier_test_background_accuracy)
+                for qualifier in range(len(qualifier_name)):
+                    history[qualifier][tool][TEST][BATCH].append(test_qualifiers[qualifier][tool])
         total_test_loss = 0
         for tool in range(len(tools)):
-            if (tools[tool] != None): total_test_loss += test_loss[tool]
+            if (tools[tool] != None): total_test_loss += test_qualifiers[LOSS][tool]
         relativeDeltaLoss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
         previous_total_test_loss = total_test_loss
         over_break_count += (relativeDeltaLoss < options['relativeDeltaLossThreshold'])
@@ -222,11 +209,9 @@ def update_test_loss(epoch_end):
             end_training = True
     else:
         if (tools[0] != None):
-            history[LOSS][CLASSIFICATION][TEST][EPOCH].append(history[LOSS][CLASSIFICATION][TEST][BATCH][-1])
-            history[ACCURACY][CLASSIFICATION][TEST][EPOCH].append(history[ACCURACY][CLASSIFICATION][TEST][BATCH][-1])
-            classifier_signal_accuracy_epoch_test.append(classifier_signal_accuracy_history_test[-1])
-            classifier_background_accuracy_epoch_test.append(classifier_background_accuracy_history_test[-1])
-        epoch_total_test_loss = test_loss[CLASSIFICATION] + test_loss[REGRESSION] + test_loss[_GAN]
+            for qualifier in range(len(qualifier_name)):
+                history[qualifier][CLASSIFICATION][TEST][EPOCH].append(history[qualifier][CLASSIFICATION][TEST][BATCH][-1])
+        epoch_total_test_loss = test_qualifiers[LOSS][CLASSIFICATION] + test_qualifiers[LOSS][REGRESSION] + test_qualifiers[LOSS][_GAN]
         relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
         if (relativeDeltaLoss < options['relativeDeltaLossThreshold']):
@@ -288,16 +273,13 @@ print('Finished Training')
 ################
 
 out_file = h5.File(options['outPath']+"results.h5", 'w')
-for qualifier in [LOSS, ACCURACY]:
+for qualifier in [LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY]:
     for tool in [CLASSIFICATION, REGRESSION, _GAN]:
         for split in [TRAIN, VALIDATION, TEST]:
             for period in [BATCH, EPOCH]:
                 out_file.create_dataset(qualifier_name[qualifier]+"_"+tool_name[tool]+"_"+split_name[split]+"_"+period_name[period], data=np.array(history[qualifier][tool][split][period]))
 for tool in range(len(tools)):
     if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+".pt")
-if (tools[0] != None): 
-    out_file.create_dataset("classifier_signal_accuracy_epoch_test", data=np.array(classifier_signal_accuracy_epoch_test))
-    out_file.create_dataset("classifier_background_accuracy_epoch_test", data=np.array(classifier_background_accuracy_epoch_test))
 
 ##########################
 # Analyze and make plots #
