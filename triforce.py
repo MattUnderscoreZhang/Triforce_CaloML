@@ -179,7 +179,7 @@ def update_test_loss(epoch_end=False):
         if (n_test_batches >= options['test_loss_eval_max_n_batches']):
             break
     for qualifier_index, test_qualifier in enumerate(test_qualifiers):
-        test_qualifiers[qualifier_index] = [i/n_test_batches for i in test_qualifier]
+        test_qualifiers[qualifier_index] = [i/(n_test_batches+1) for i in test_qualifier]
 
     # print test loss and accuracy to screen
     print_prefix = ""
@@ -219,6 +219,8 @@ def update_test_loss(epoch_end=False):
 #########
 # Train #
 #########
+
+# NOTE - Training and test functions should probably be merged into one
 
 print('Training')
 
