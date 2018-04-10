@@ -161,7 +161,7 @@ BATCH, EPOCH = 0, 1
 previous_total_test_loss = 0
 previous_epoch_total_test_loss = 0
 end_training = False
-over_break_count = 0
+delta_loss_below_threshold_count = 0
 
 def update_test_loss(epoch_end=False):
     
@@ -192,29 +192,28 @@ def update_test_loss(epoch_end=False):
         if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_qualifiers[ACCURACY][tool]), end="")
     print()
 
-    # decide whether or not to end training when this epoch finishes
-    global previous_total_test_loss, previous_epoch_total_test_loss, over_break_count, end_training
-    if (not epoch_end):
-        for tool in range(len(tools)):
-            if (tools[tool] != None):
-                for qualifier in range(len(qualifier_name)):
-                    history[qualifier][tool][TEST][BATCH].append(test_qualifiers[qualifier][tool])
-        total_test_loss = 0
-        for tool in range(len(tools)):
-            if (tools[tool] != None): total_test_loss += test_qualifiers[LOSS][tool]
-        relativeDeltaLoss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
-        previous_total_test_loss = total_test_loss
-        over_break_count += (relativeDeltaLoss < options['relativeDeltaLossThreshold'])
-        if (over_break_count >= options['relativeDeltaLossNumber']):
-            end_training = True
-    else:
-        if (tools[0] != None):
+    # save test qualifiers
+    for tool in range(len(tools)):
+        if (tools[tool] != None):
             for qualifier in range(len(qualifier_name)):
-                history[qualifier][CLASSIFICATION][TEST][EPOCH].append(history[qualifier][CLASSIFICATION][TEST][BATCH][-1])
+                history[qualifier][tool][TEST][BATCH].append(test_qualifiers[qualifier][tool])
+                if (epoch_end): history[qualifier][tool][TEST][EPOCH].append(history[qualifier][tool])
+
+    # decide whether or not to end training when this epoch finishes
+    global previous_total_test_loss, previous_epoch_total_test_loss, delta_loss_below_threshold_count, end_training
+    total_test_loss = 0
+    for tool in range(len(tools)):
+        if (tools[tool] != None): total_test_loss += test_qualifiers[LOSS][tool]
+    relative_delta_loss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
+    previous_total_test_loss = total_test_loss
+    delta_loss_below_threshold_count += (relative_delta_loss < options['relativeDeltaLossThreshold'])
+    if (delta_loss_below_threshold_count >= options['relativeDeltaLossNumber']):
+        end_training = True
+    if (epoch_end):
         epoch_total_test_loss = test_qualifiers[LOSS][CLASSIFICATION] + test_qualifiers[LOSS][REGRESSION] + test_qualifiers[LOSS][_GAN]
-        relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
+        relative_delta_loss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
-        if (relativeDeltaLoss < options['relativeDeltaLossThreshold']):
+        if (relative_delta_loss < options['relativeDeltaLossThreshold']):
             end_training = True
 
 #########
