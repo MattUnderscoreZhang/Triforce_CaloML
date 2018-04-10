@@ -220,10 +220,11 @@ def update_test_loss(epoch_end):
         if (over_break_count >= options['relativeDeltaLossNumber']):
             end_training = True
     else:
-        classifier_loss_epoch_test.append(classifier_loss_history_test[-1])
-        classifier_accuracy_epoch_test.append(classifier_accuracy_history_test[-1])
-        classifier_signal_accuracy_epoch_test.append(classifier_signal_accuracy_history_test[-1])
-        classifier_background_accuracy_epoch_test.append(classifier_background_accuracy_history_test[-1])
+        if (classifier != None):
+            classifier_loss_epoch_test.append(classifier_loss_history_test[-1])
+            classifier_accuracy_epoch_test.append(classifier_accuracy_history_test[-1])
+            classifier_signal_accuracy_epoch_test.append(classifier_signal_accuracy_history_test[-1])
+            classifier_background_accuracy_epoch_test.append(classifier_background_accuracy_history_test[-1])
         epoch_total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
         relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
