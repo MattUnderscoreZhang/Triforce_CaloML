@@ -9,14 +9,14 @@
 #  ##########################################################  #
 ################################################################
 
+from __future__ import division
 import torch
 import torch.utils.data as data
 from torch.autograd import Variable
-import glob, os, sys
+import glob, os, sys, shutil
 import numpy as np
 import h5py as h5
 import Loader.loader as loader
-import shutil
 from triforce_helper_functions import *
 import Options
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
@@ -27,21 +27,23 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 
 optionsFileName = "default_options"
 
-##################################################
-# Init tools - Warn if options file has problems #
-##################################################
+######################################################
+# Import options & warn if options file has problems #
+######################################################
 
 # load options
 exec("from Options." + optionsFileName + " import *")
 
 # options file must have these parameters set
-requiredOptionNames = ['importGPU', 'samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+requiredOptionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
 for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
 
 # for Caltech GPU cluster
+if 'importGPU' not in options.keys():
+    options['importGPU'] = False
 if (options['importGPU']):
     import setGPU
 
@@ -140,32 +142,24 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 # Train models #
 ################
 
-# loss histories for each batch
-classifier_loss_history_train = []
-regressor_loss_history_train = []
-GAN_loss_history_train = []
-classifier_loss_history_test = []
-regressor_loss_history_test = []
-GAN_loss_history_test = []
-# last-batch loss of each epoch
-classifier_loss_epoch_train = []
-classifier_loss_epoch_test = []
-# accuracy histories for each batch
-classifier_accuracy_history_train = []
-GAN_accuracy_history_train = []
-classifier_accuracy_history_test = []
+# loss and accuracy data e.g. history[LOSS][CLASSIFICATION][TRAIN][EPOCH]
+history = [[[[[] for _ in range(2)] for _ in range(3)] for _ in range(3)] for _ in range(2)]
+
 classifier_signal_accuracy_history_test = []
 classifier_background_accuracy_history_test = []
-GAN_accuracy_history_test = []
-# last-batch accuracy of each epoch
-classifier_accuracy_epoch_train = []
-classifier_accuracy_epoch_test = []
 classifier_signal_accuracy_epoch_test = []
 classifier_background_accuracy_epoch_test = []
 
-# temporarily save the output of classifier evaluation outputs
-classifier_test_output = []
+# enumerate parts of the data structure
+LOSS, ACCURACY = 0, 1
+tools = [classifier, regressor, GAN]
+tool_name = ['classifier', 'regressor', 'GAN']
+tool_letter = ['C', 'R', 'G']
+CLASSIFICATION, REGRESSION, _GAN = 0, 1, 2
+TRAIN, VALIDATION, TEST = 0, 1, 2
+BATCH, EPOCH = 0, 1
 
+# when to calculate loss/accuracy and when to end training
 calculate_loss_per = 20
 max_n_test_batches = 10 # stop evaluating test loss after this many batches
 previous_total_test_loss = 0 # stop training when loss stops decreasing
@@ -177,87 +171,61 @@ over_break_count = 0
 # see what the current test loss is, and whether we should keep training
 def update_test_loss(epoch_end):
     global previous_total_test_loss, previous_epoch_total_test_loss, over_break_count, end_training
-    classifier_test_loss = 0
-    regressor_test_loss = 0
-    GAN_test_loss = 0
-    classifier_test_accuracy = 0
-    # New
+    test_loss = [0]*3
+    test_accuracy = [0]*3
     classifier_test_signal_accuracy = 0
     classifier_test_background_accuracy = 0
-    GAN_test_accuracy = 0
-    n_test_batches = 0
-    for data in validationLoader:
+    for n_test_batches, data in enumerate(validationLoader):
         ECALs, HCALs, ys, energies = data
         ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
-        if (classifier != None):
-            classifier_test_output = eval(classifier, ECALs, HCALs, ys)
-            classifier_test_loss += classifier_test_output[0]
-            classifier_test_accuracy += classifier_test_output[1]
+        for tool in range(len(tools)):
+            if (tools[tool] != None):
+                test_loss[tool] += eval(tools[tool], ECALs, HCALs, ys)[0]
+                test_accuracy[tool] += eval(tools[tool], ECALs, HCALs, ys)[1]
+        if (tools[0] != None):
+            classifier_test_output = eval(tools[0], ECALs, HCALs, ys)
             classifier_test_signal_accuracy += classifier_test_output[6]
             classifier_test_background_accuracy += classifier_test_output[7]
-        if (regressor != None):
-            regressor_test_loss += eval(regressor, ECALs, HCALs, energies)[0]
-        if (GAN != None):
-            GAN_test_loss += eval(GAN, ECALs, HCALs, ys)[0]
-            GAN_test_accuracy += eval(GAN, ECALs, HCALs, ys)[1]
-        n_test_batches += 1
         if (n_test_batches >= max_n_test_batches):
             break
-    classifier_test_loss /= n_test_batches
-    regressor_test_loss /= n_test_batches
-    GAN_test_loss /= n_test_batches
-    classifier_test_accuracy /= n_test_batches
+    test_loss = [i/n_test_batches for i in test_loss]
+    test_accuracy = [i/n_test_batches for i in test_loss]
     classifier_test_signal_accuracy /= n_test_batches
     classifier_test_background_accuracy /= n_test_batches
-    GAN_test_accuracy /= n_test_batches
 
     print_prefix = ""
     if (epoch_end): print_prefix = "epoch "
     print(print_prefix + 'test loss:\t', end="")
-    if (classifier != None): print('(C) %.4f\t' % (classifier_test_loss), end="")
-    if (regressor != None): print('(R) %.4f\t' % (regressor_test_loss), end="")
-    if (GAN != None): print('(G) %.4f\t' % (GAN_test_loss), end="")
-    print()
+    for tool in range(len(tools)):
+        if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_loss[tool]), end="")
     print(print_prefix + 'test accuracy:\t', end="")
-    if (classifier != None): print('(C) %.4f\t' % (classifier_test_accuracy), end="")
-    if (regressor != None): print('(R) -----\t', end="")
-    if (GAN != None): print('(G) %.4f\t' % (GAN_test_accuracy), end="")
+    for tool in range(len(tools)):
+        if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_accuracy[tool]), end="")
     print()
-
-    # classifier_loss_history_test.append(classifier_test_loss)
-    # regressor_loss_history_test.append(regressor_test_loss)
-    # GAN_loss_history_test.append(GAN_test_loss)
-    # classifier_accuracy_history_test.append(classifier_test_accuracy)
-    # GAN_accuracy_history_test.append(GAN_test_accuracy)
 
     # decide whether or not to end training when this epoch finishes
     if (not epoch_end):
-        classifier_loss_history_test.append(classifier_test_loss)
-        regressor_loss_history_test.append(regressor_test_loss)
-        GAN_loss_history_test.append(GAN_test_loss)
-        classifier_accuracy_history_test.append(classifier_test_accuracy)
+        for i in [CLASSIFICATION, REGRESSION, _GAN]:
+            history[LOSS][i][TEST][BATCH].append(test_loss[i])
+        history[ACCURACY][CLASSIFICATION][TEST][BATCH].append(test_accuracy[CLASSIFICATION])
         classifier_signal_accuracy_history_test.append(classifier_test_signal_accuracy)
         classifier_background_accuracy_history_test.append(classifier_test_background_accuracy)
-        GAN_accuracy_history_test.append(GAN_test_accuracy)
+        history[ACCURACY][_GAN][TEST][BATCH].append(test_accuracy[_GAN])
         total_test_loss = 0
-        if (classifier != None): total_test_loss += classifier_test_loss
-        if (regressor != None): total_test_loss += regressor_test_loss
-        if (GAN != None): total_test_loss += GAN_test_loss
+        for tool in range(len(tools)):
+            if (tools[tool] != None): total_test_loss += test_loss[tool]
         relativeDeltaLoss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
         previous_total_test_loss = total_test_loss
-        if (relativeDeltaLoss < options['relativeDeltaLossThreshold']):
-            over_break_count += 1
-        else:
-            over_break_count = 0
+        over_break_count += (relativeDeltaLoss < options['relativeDeltaLossThreshold'])
         if (over_break_count >= options['relativeDeltaLossNumber']):
             end_training = True
     else:
-        if (classifier != None):
-            classifier_loss_epoch_test.append(classifier_loss_history_test[-1])
-            classifier_accuracy_epoch_test.append(classifier_accuracy_history_test[-1])
+        if (tools[0] != None):
+            history[LOSS][CLASSIFICATION][TEST][EPOCH].append(history[LOSS][CLASSIFICATION][TEST][BATCH][-1])
+            history[ACCURACY][CLASSIFICATION][TEST][EPOCH].append(history[ACCURACY][CLASSIFICATION][TEST][BATCH][-1])
             classifier_signal_accuracy_epoch_test.append(classifier_signal_accuracy_history_test[-1])
             classifier_background_accuracy_epoch_test.append(classifier_background_accuracy_history_test[-1])
-        epoch_total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
+        epoch_total_test_loss = test_loss[CLASSIFICATION] + test_loss[REGRESSION] + test_loss[_GAN]
         relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
         if (relativeDeltaLoss < options['relativeDeltaLossThreshold']):
@@ -266,84 +234,55 @@ def update_test_loss(epoch_end):
 # perform training
 print('Training')
 for epoch in range(options['nEpochs']):
-    classifier_training_loss = 0
-    regressor_training_loss = 0
-    GAN_training_loss = 0
-    classifier_training_accuracy = 0
-    GAN_training_accuracy = 0
+    training_loss = [0]*3
+    training_accuracy = [0]*3
     for i, data in enumerate(trainLoader):
         ECALs, HCALs, ys, energies = data
         ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
-        if (classifier != None):
-            classifier_training_loss += train(classifier, ECALs, HCALs, ys)[0]
-            classifier_training_accuracy += train(classifier, ECALs, HCALs, ys)[1]
-        if (regressor != None):
-            regressor_training_loss += train(regressor, ECALs, HCALs, energies)[0]
-        if (GAN != None):
-            GAN_training_loss += train(GAN, ECALs, HCALs, ys)[0]
-            GAN_training_accuracy += train(GAN, ECALs, HCALs, ys)[1]
+        if (tools[0] != None):
+            training_loss[CLASSIFICATION] += train(tools[0], ECALs, HCALs, ys)[0]
+            training_accuracy[CLASSIFICATION] += train(tools[0], ECALs, HCALs, ys)[1]
+        if (tools[1] != None):
+            training_loss[REGRESSION] += train(tools[1], ECALs, HCALs, energies)[0]
+        if (tools[2] != None):
+            training_loss[_GAN] += train(tools[2], ECALs, HCALs, ys)[0]
+            training_accuracy[_GAN] += train(tools[2], ECALs, HCALs, ys)[1]
         if i % calculate_loss_per == calculate_loss_per - 1:
-            if(classifier != None): classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
-            if(regressor != None):  regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
-            if (GAN != None): GAN_loss_history_train.append(GAN_training_loss / calculate_loss_per)
-            if(classifier != None): classifier_accuracy_history_train.append(classifier_training_accuracy / calculate_loss_per)
-            if (GAN != None): GAN_accuracy_history_train.append(GAN_training_accuracy / calculate_loss_per)
+            for tool in range(len(tools)):
+                if (tools[tool] != None):
+                    history[LOSS][tool][TRAIN][BATCH].append(training_loss[tool] / calculate_loss_per)
+                    history[ACCURACY][tool][TRAIN][BATCH].append(training_accuracy[tool] / calculate_loss_per)
             print('-------------------------------')
             print('epoch %d, batch %d' % (epoch+1, i+1))
             print('train loss:\t', end="")
-            if (classifier != None): print('(C) %.4f\t' % (classifier_loss_history_train[-1]), end="")
-            if (regressor != None): print('(R) %.4f\t' % (regressor_loss_history_train[-1]), end="")
-            if (GAN != None): print('(G) %.4f\t' % (GAN_loss_history_train[-1]), end="")
-            print()
+            for tool in range(len(tools)):
+                if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (history[LOSS][tool][TRAIN][BATCH][-1]), end="")
             print('train accuracy:\t', end="")
-            if (classifier != None): print('(C) %.4f\t' % (classifier_accuracy_history_train[-1]), end="")
-            if (regressor != None): print('(R) -----\t', end="")
-            if (GAN != None): print('(G) %.4f\t' % (GAN_accuracy_history_train[-1]), end="")
+            for tool in range(len(tools)):
+                if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (history[ACCURACY][tool][TRAIN][BATCH][-1]), end="")
             print()
             update_test_loss(epoch_end=False)
-            classifier_training_loss = 0
-            regressor_training_loss = 0
-            GAN_training_loss = 0
-            classifier_training_accuracy = 0
-            GAN_training_accuracy = 0
-    if (classifier != None):classifier_accuracy_epoch_train.append(classifier_accuracy_history_train[-1])
-    if (classifier != None):classifier_loss_epoch_train.append(classifier_loss_history_train[-1])
+            training_loss = [0]*3
+            training_accuracy = [0]*3
+    if (tools[0] != None):
+        history[ACCURACY][CLASSIFICATION][TRAIN][EPOCH].append(history[ACCURACY][CLASSIFICATION][TRAIN][BATCH][-1])
+        history[LOSS][CLASSIFICATION][TRAIN][EPOCH].append(history[LOSS][CLASSIFICATION][TRAIN][BATCH][-1])
     update_test_loss(epoch_end=True)
     # save results
     if ((options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0)):
         if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
-        if (classifier != None): 
-            torch.save(classifier.net, options['outPath']+"saved_classifier_epoch_"+str(epoch)+".pt")
-        if (regressor != None): 
-            torch.save(regressor.net, options['outPath']+"saved_regressor_epoch_"+str(epoch)+".pt")
-        if (GAN != None): 
-            torch.save(GAN.net, options['outPath']+"saved_GAN_epoch_"+str(epoch)+".pt")
+        for tool in range(len(tools)):
+            if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+"_epoch_"+str(epoch)+".pt")
     if end_training: break
 
 # save results
 out_file = h5.File(options['outPath']+"results.h5", 'w')
-if (classifier != None): 
-    out_file.create_dataset("classifier_loss_epoch_train", data=np.array(classifier_loss_epoch_train))
-    out_file.create_dataset("classifier_loss_epoch_test", data=np.array(classifier_loss_epoch_test))
-    out_file.create_dataset("classifier_accuracy_epoch_train", data=np.array(classifier_accuracy_epoch_train))
-    out_file.create_dataset("classifier_accuracy_epoch_test", data=np.array(classifier_accuracy_epoch_test))
+out_file.create_dataset("history", data=np.array(history))
+for tool in range(len(tools)):
+    if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+".pt")
+if (tools[0] != None): 
     out_file.create_dataset("classifier_signal_accuracy_epoch_test", data=np.array(classifier_signal_accuracy_epoch_test))
     out_file.create_dataset("classifier_background_accuracy_epoch_test", data=np.array(classifier_background_accuracy_epoch_test))
-    out_file.create_dataset("classifier_loss_history_train", data=np.array(classifier_loss_history_train))
-    out_file.create_dataset("classifier_loss_history_test", data=np.array(classifier_loss_history_test))
-    out_file.create_dataset("classifier_accuracy_history_train", data=np.array(classifier_accuracy_history_train))
-    out_file.create_dataset("classifier_accuracy_history_test", data=np.array(classifier_accuracy_history_test))
-    torch.save(classifier.net, options['outPath']+"saved_classifier.pt")
-if (regressor != None): 
-    out_file.create_dataset("regressor_loss_history_train", data=np.array(regressor_loss_history_train))
-    out_file.create_dataset("regressor_loss_history_test", data=np.array(regressor_loss_history_test))
-    torch.save(regressor.net, options['outPath']+"saved_regressor.pt")
-if (GAN != None): 
-    out_file.create_dataset("GAN_loss_history_train", data=np.array(GAN_loss_history_train))
-    out_file.create_dataset("GAN_loss_history_test", data=np.array(GAN_loss_history_test))
-    out_file.create_dataset("GAN_accuracy_history_train", data=np.array(GAN_accuracy_history_train))
-    out_file.create_dataset("GAN_accuracy_history_test", data=np.array(GAN_accuracy_history_test))
-    torch.save(GAN.net, options['outPath']+"saved_GAN.pt")
 
 print('-------------------------------')
 print('Finished Training')
@@ -353,4 +292,4 @@ print('Finished Training')
 ######################
 
 print('Performing Analysis')
-analyzer.analyze([classifier, regressor, GAN], validationLoader, out_file)
+analyzer.analyze([tools[0], tools[1], tools[2]], validationLoader, out_file)
