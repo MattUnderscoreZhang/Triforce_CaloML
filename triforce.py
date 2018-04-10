@@ -197,7 +197,7 @@ def update_test_loss(epoch_end=False):
         if (tools[tool] != None):
             for qualifier in range(len(qualifier_name)):
                 history[qualifier][tool][TEST][BATCH].append(test_qualifiers[qualifier][tool])
-                if (epoch_end): history[qualifier][tool][TEST][EPOCH].append(history[qualifier][tool])
+                if (epoch_end): history[qualifier][tool][TEST][EPOCH].append(test_qualifiers[qualifier][tool])
 
     # decide whether or not to end training when this epoch finishes
     global previous_total_test_loss, previous_epoch_total_test_loss, delta_loss_below_threshold_count, end_training
