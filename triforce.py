@@ -35,11 +35,15 @@ optionsFileName = "default_options"
 exec("from Options." + optionsFileName + " import *")
 
 # options file must have these parameters set
-requiredOptionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+requiredOptionNames = ['importGPU', 'samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
 for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
+
+# for Caltech GPU cluster
+if (options['importGPU']):
+    import setGPU
 
 # if max event numbers are not set, set them to -1
 for optionName in ['nTrainMax', 'nValidationMax', 'nTestMax']:
@@ -248,10 +252,11 @@ def update_test_loss(epoch_end):
         if (over_break_count >= options['relativeDeltaLossNumber']):
             end_training = True
     else:
-        classifier_loss_epoch_test.append(classifier_loss_history_test[-1])
-        classifier_accuracy_epoch_test.append(classifier_accuracy_history_test[-1])
-        classifier_signal_accuracy_epoch_test.append(classifier_signal_accuracy_history_test[-1])
-        classifier_background_accuracy_epoch_test.append(classifier_background_accuracy_history_test[-1])
+        if (classifier != None):
+            classifier_loss_epoch_test.append(classifier_loss_history_test[-1])
+            classifier_accuracy_epoch_test.append(classifier_accuracy_history_test[-1])
+            classifier_signal_accuracy_epoch_test.append(classifier_signal_accuracy_history_test[-1])
+            classifier_background_accuracy_epoch_test.append(classifier_background_accuracy_history_test[-1])
         epoch_total_test_loss = classifier_test_loss + regressor_test_loss + GAN_test_loss
         relativeDeltaLoss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
@@ -278,11 +283,11 @@ for epoch in range(options['nEpochs']):
             GAN_training_loss += train(GAN, ECALs, HCALs, ys)[0]
             GAN_training_accuracy += train(GAN, ECALs, HCALs, ys)[1]
         if i % calculate_loss_per == calculate_loss_per - 1:
-            classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
-            regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
-            GAN_loss_history_train.append(GAN_training_loss / calculate_loss_per)
-            classifier_accuracy_history_train.append(classifier_training_accuracy / calculate_loss_per)
-            GAN_accuracy_history_train.append(GAN_training_accuracy / calculate_loss_per)
+            if(classifier != None): classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
+            if(regressor != None):  regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
+            if (GAN != None): GAN_loss_history_train.append(GAN_training_loss / calculate_loss_per)
+            if(classifier != None): classifier_accuracy_history_train.append(classifier_training_accuracy / calculate_loss_per)
+            if (GAN != None): GAN_accuracy_history_train.append(GAN_training_accuracy / calculate_loss_per)
             print('-------------------------------')
             print('epoch %d, batch %d' % (epoch+1, i+1))
             print('train loss:\t', end="")
@@ -301,8 +306,8 @@ for epoch in range(options['nEpochs']):
             GAN_training_loss = 0
             classifier_training_accuracy = 0
             GAN_training_accuracy = 0
-    classifier_accuracy_epoch_train.append(classifier_accuracy_history_train[-1])
-    classifier_loss_epoch_train.append(classifier_loss_history_train[-1])
+    if (classifier != None):classifier_accuracy_epoch_train.append(classifier_accuracy_history_train[-1])
+    if (classifier != None):classifier_loss_epoch_train.append(classifier_loss_history_train[-1])
     update_test_loss(epoch_end=True)
     # save results
     if ((options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0)):
