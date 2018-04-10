@@ -19,7 +19,6 @@ import Loader.loader as loader
 import shutil
 from triforce_helper_functions import *
 import Options
-import setGPU
 
 
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
