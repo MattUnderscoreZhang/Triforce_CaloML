@@ -190,7 +190,7 @@ def update_test_loss(epoch_end):
         if (n_test_batches >= options['test_loss_eval_max_n_batches']):
             break
     test_loss = [i/n_test_batches for i in test_loss]
-    test_accuracy = [i/n_test_batches for i in test_loss]
+    test_accuracy = [i/n_test_batches for i in test_accuracy]
     classifier_test_signal_accuracy /= n_test_batches
     classifier_test_background_accuracy /= n_test_batches
 
