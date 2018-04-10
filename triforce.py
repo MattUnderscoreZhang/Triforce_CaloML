@@ -249,11 +249,11 @@ for epoch in range(options['nEpochs']):
             GAN_training_loss += train(GAN, ECALs, HCALs, ys)[0]
             GAN_training_accuracy += train(GAN, ECALs, HCALs, ys)[1]
         if i % calculate_loss_per == calculate_loss_per - 1:
-            classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
-            regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
-            GAN_loss_history_train.append(GAN_training_loss / calculate_loss_per)
-            classifier_accuracy_history_train.append(classifier_training_accuracy / calculate_loss_per)
-            GAN_accuracy_history_train.append(GAN_training_accuracy / calculate_loss_per)
+            if(classifier != None): classifier_loss_history_train.append(classifier_training_loss / calculate_loss_per)
+            if(regressor != None):  regressor_loss_history_train.append(regressor_training_loss / calculate_loss_per)
+            if (GAN != None): GAN_loss_history_train.append(GAN_training_loss / calculate_loss_per)
+            if(classifier != None): classifier_accuracy_history_train.append(classifier_training_accuracy / calculate_loss_per)
+            if (GAN != None): GAN_accuracy_history_train.append(GAN_training_accuracy / calculate_loss_per)
             print('-------------------------------')
             print('epoch %d, batch %d' % (epoch+1, i+1))
             print('train loss:\t', end="")
