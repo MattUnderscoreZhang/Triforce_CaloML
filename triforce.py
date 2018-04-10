@@ -42,7 +42,7 @@ for optionName in requiredOptionNames:
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_test_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10}
+defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -223,24 +223,23 @@ def update_test_loss(epoch_end=False):
 print('Training')
 
 for epoch in range(options['nEpochs']):
-    epoch_loss = [0]*3
-    epoch_accuracy = [0]*3
+
+    # find the current train qualifiers e.g. train_qualifiers[LOSS][GAN]
+    train_qualifiers = [[0]*3 for _ in range(2)]
+    qualifier_index = [0, 1] # return indices for eval()
     for batch, data in enumerate(trainLoader):
         ECALs, HCALs, ys, energies = data
         ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
-        if (tools[0] != None):
-            epoch_loss[CLASSIFICATION] += train(tools[0], ECALs, HCALs, ys)[0]
-            epoch_accuracy[CLASSIFICATION] += train(tools[0], ECALs, HCALs, ys)[1]
-        if (tools[1] != None):
-            epoch_loss[REGRESSION] += train(tools[1], ECALs, HCALs, energies)[0]
-        if (tools[2] != None):
-            epoch_loss[_GAN] += train(tools[2], ECALs, HCALs, ys)[0]
-            epoch_accuracy[_GAN] += train(tools[2], ECALs, HCALs, ys)[1]
-        if (batch+1) % options['calculate_test_loss_per_n_batches'] == 0:
+        for tool in range(len(tools)):
+            if (tools[tool] != None):
+                eval_results = train(tools[tool], ECALs, HCALs, ys)
+                for qualifier in range(2):
+                    train_qualifiers[qualifier][tool] += eval_results[qualifier_index[qualifier]] 
+        if (batch+1) % options['calculate_loss_per_n_batches'] == 0:
             for tool in range(len(tools)):
                 if (tools[tool] != None):
-                    history[LOSS][tool][TRAIN][BATCH].append(epoch_loss[tool] / options['calculate_test_loss_per_n_batches'])
-                    history[ACCURACY][tool][TRAIN][BATCH].append(epoch_accuracy[tool] / options['calculate_test_loss_per_n_batches'])
+                    for qualifier in range(2):
+                        history[qualifier][tool][TRAIN][BATCH].append(train_qualifiers[qualifier][tool] / options['calculate_loss_per_n_batches'])
             print('-------------------------------')
             print('epoch %d, batch %d' % (epoch+1, batch+1))
             print('train loss:\t', end="")
@@ -251,12 +250,15 @@ for epoch in range(options['nEpochs']):
                 if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (history[ACCURACY][tool][TRAIN][BATCH][-1]), end="")
             print()
             update_test_loss(epoch_end=False)
-            epoch_loss = [0]*3
-            epoch_accuracy = [0]*3
-    if (tools[0] != None):
-        history[ACCURACY][CLASSIFICATION][TRAIN][EPOCH].append(history[ACCURACY][CLASSIFICATION][TRAIN][BATCH][-1])
-        history[LOSS][CLASSIFICATION][TRAIN][EPOCH].append(history[LOSS][CLASSIFICATION][TRAIN][BATCH][-1])
+            train_qualifiers = [[0]*3 for _ in range(4)]
+
+    # end of epoch
+    for tool in range(len(tools)):
+        if (tools[tool] != None):
+            for qualifier in range(2):
+                history[qualifier][tool][TRAIN][EPOCH].append(history[qualifier][tool][TRAIN][BATCH][-1])
     update_test_loss(epoch_end=True)
+
     # save results
     if ((options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0)):
         if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
