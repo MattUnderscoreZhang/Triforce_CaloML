@@ -35,31 +35,27 @@ optionsFileName = "default_options"
 exec("from Options." + optionsFileName + " import *")
 
 # options file must have these parameters set
-requiredOptionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+requiredOptionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
 for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
 
+# if these parameters are not set, give them default values
+defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0}
+for optionName in defaultParameters.keys():
+    if optionName not in options.keys():
+        options[optionName] = defaultParameters[optionName]
+
 # for Caltech GPU cluster
-if 'importGPU' not in options.keys():
-    options['importGPU'] = False
 if (options['importGPU']):
     import setGPU
 
-# if max event numbers are not set, set them to -1
-for optionName in ['nTrainMax', 'nValidationMax', 'nTestMax']:
-    if optionName not in options.keys():
-        options[optionName] = -1
-
 # if validation parameters are not set, TriForce will use test set as validation set
-if 'validationRatio' not in options.keys():
-    options['validationRatio'] = -1
-    if options['trainRatio'] >= 1:
-        print("ERROR: trainRatio is too high")
-else:
-    if options['trainRatio'] + options['validationRatio'] >= 1:
-        print("ERROR: trainRatio and validationRatio are too high")
+if options['validationRatio'] == -1 and options['trainRatio'] >= 1:
+    print("ERROR: trainRatio is too high")
+elif options['validationRatio'] != -1 and options['trainRatio'] + options['validationRatio'] >= 1:
+    print("ERROR: trainRatio and validationRatio are too high")
 
 # warn if output directory already exists
 if not os.path.exists(options['outPath']):
@@ -287,9 +283,9 @@ if (tools[0] != None):
 print('-------------------------------')
 print('Finished Training')
 
-######################
-# Analysis and plots #
-######################
+##########################
+# Analyze and make plots #
+##########################
 
 print('Performing Analysis')
 analyzer.analyze([tools[0], tools[1], tools[2]], validationLoader, out_file)

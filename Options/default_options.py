@@ -13,7 +13,6 @@ options['samplePath'] = [basePath + "Pi0/Pi0Escan_*.h5", basePath + "Gamma/Gamma
 # options['classPdgID'] = [211, 11] # absolute IDs corresponding to paths above
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 options['eventsPerFile'] = 10000
-options['nWorkers'] = 0
 
 ###############
 # Job options #
