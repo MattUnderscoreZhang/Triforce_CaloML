@@ -134,9 +134,9 @@ trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],s
 validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
 
-################
-# Train models #
-################
+############################################
+# Data structures and options for training #
+############################################
 
 # loss and accuracy data e.g. history[LOSS][CLASSIFICATION][TRAIN][EPOCH]
 history = [[[[[] for _ in range(2)] for _ in range(3)] for _ in range(3)] for _ in range(2)]
@@ -160,6 +160,10 @@ calculate_loss_per = 20
 max_n_test_batches = 10 # stop evaluating test loss after this many batches
 previous_total_test_loss = 0 # stop training when loss stops decreasing
 previous_epoch_total_test_loss = 0
+
+#######################
+# Calculate test loss #
+#######################
 
 end_training = False
 over_break_count = 0
@@ -201,12 +205,12 @@ def update_test_loss(epoch_end):
 
     # decide whether or not to end training when this epoch finishes
     if (not epoch_end):
-        for i in [CLASSIFICATION, REGRESSION, _GAN]:
-            history[LOSS][i][TEST][BATCH].append(test_loss[i])
-        history[ACCURACY][CLASSIFICATION][TEST][BATCH].append(test_accuracy[CLASSIFICATION])
+        for tool in range(len(tools)):
+            if (tools[tool] != None):
+                history[LOSS][tool][TEST][BATCH].append(test_loss[tool])
+                history[ACCURACY][tool][TEST][BATCH].append(test_accuracy[tool])
         classifier_signal_accuracy_history_test.append(classifier_test_signal_accuracy)
         classifier_background_accuracy_history_test.append(classifier_test_background_accuracy)
-        history[ACCURACY][_GAN][TEST][BATCH].append(test_accuracy[_GAN])
         total_test_loss = 0
         for tool in range(len(tools)):
             if (tools[tool] != None): total_test_loss += test_loss[tool]
@@ -227,8 +231,12 @@ def update_test_loss(epoch_end):
         if (relativeDeltaLoss < options['relativeDeltaLossThreshold']):
             end_training = True
 
-# perform training
+#########
+# Train #
+#########
+
 print('Training')
+
 for epoch in range(options['nEpochs']):
     training_loss = [0]*3
     training_accuracy = [0]*3
@@ -271,7 +279,13 @@ for epoch in range(options['nEpochs']):
             if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+"_epoch_"+str(epoch)+".pt")
     if end_training: break
 
-# save results
+print('-------------------------------')
+print('Finished Training')
+
+################
+# Save results #
+################
+
 out_file = h5.File(options['outPath']+"results.h5", 'w')
 out_file.create_dataset("history", data=np.array(history))
 for tool in range(len(tools)):
@@ -279,9 +293,6 @@ for tool in range(len(tools)):
 if (tools[0] != None): 
     out_file.create_dataset("classifier_signal_accuracy_epoch_test", data=np.array(classifier_signal_accuracy_epoch_test))
     out_file.create_dataset("classifier_background_accuracy_epoch_test", data=np.array(classifier_background_accuracy_epoch_test))
-
-print('-------------------------------')
-print('Finished Training')
 
 ##########################
 # Analyze and make plots #
