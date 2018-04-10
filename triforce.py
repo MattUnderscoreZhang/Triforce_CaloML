@@ -19,29 +19,43 @@ import Loader.loader as loader
 import shutil
 from triforce_helper_functions import *
 import Options
-
-
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
 
-#####################
-# Load options file #
-#####################
+####################
+# Set options file #
+####################
 
 optionsFileName = "default_options"
 
-#########################
-# Set tools and options #
-#########################
+##################################################
+# Init tools - Warn if options file has problems #
+##################################################
 
+# load options
 exec("from Options." + optionsFileName + " import *")
 
-optionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath', 'nTrainMax',"nTestMax"]
-
-for optionName in optionNames:
+# options file must have these parameters set
+requiredOptionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
 
+# if max event numbers are not set, set them to -1
+for optionName in ['nTrainMax', 'nValidationMax', 'nTestMax']:
+    if optionName not in options.keys():
+        options[optionName] = -1
+
+# if validation parameters are not set, TriForce will use test set as validation set
+if 'validationRatio' not in options.keys():
+    options['validationRatio'] = -1
+    if options['trainRatio'] >= 1:
+        print("ERROR: trainRatio is too high")
+else:
+    if options['trainRatio'] + options['validationRatio'] >= 1:
+        print("ERROR: trainRatio and validationRatio are too high")
+
+# warn if output directory already exists
 if not os.path.exists(options['outPath']):
     os.makedirs(options['outPath'])
 else:
@@ -60,6 +74,7 @@ else:
     else:
         sys.exit()
 
+# copy options file to output directory for logging purposes
 optionsFilePath = Options.__file__[:Options.__file__.rfind('/')]
 shutil.copyfile(optionsFilePath + "/" + optionsFileName + ".py", options['outPath']+"/options.h5")
 
@@ -70,37 +85,51 @@ shutil.copyfile(optionsFilePath + "/" + optionsFileName + ".py", options['outPat
 print('-------------------------------')
 print('Loading Files')
 
-nParticles = len(options['samplePath'])
-particleFiles = [[]] * nParticles
-for i, particlePath in enumerate(options['samplePath']):
-    particleFiles[i] = glob.glob(particlePath)
+# gather sample files for each type of particle
+nClasses = len(options['samplePath'])
+classFiles = [[]] * nClasses
+for i, classPath in enumerate(options['samplePath']):
+    classFiles[i] = glob.glob(classPath)
 
-filesPerParticle = len(particleFiles[0])
-nTrain = int(filesPerParticle * options['trainRatio'])
-nTest = filesPerParticle - nTrain
-if (nTest==0 or nTrain==0):
+# calculate how many files of each particle type should be test, train, and validation
+filesPerClass = len(classFiles[0])
+nTrain = int(filesPerClass * options['trainRatio'])
+nValidation = 0
+if options['validationRatio']>0:
+    nValidation = int(filesPerClass * options['validationRatio'])
+nTest = filesPerClass - nTrain - nValidation
+if options['nTrainMax']>0:
+    nTrain = min(nTrain,options['nTrainMax'])
+if options['nValidationMax']>0:
+    nValidation = min(nValidation,options['nValidationMax'])
+if options['nTestMax']>0:
+    nTest = min(nTest,options['nTestMax'])
+if (nTest==0 or nTrain==0 or (options['validationRatio']>0 and nValidation==0)):
     print("Not enough files found - check sample paths")
-#nTrain = min(nTrain,options['nTrainMax'])
-#nTest = min(nTest,options['nTestMax'])
-trainFiles = []
-testFiles = []
 
-for i in range(filesPerParticle):
+# list the train, test, and validation files
+trainFiles = []
+validationFiles = []
+testFiles = []
+for i in range(filesPerClass):
     newFiles = []
-    for j in range(nParticles):
-        newFiles.append(particleFiles[j][i])
+    for j in range(nClasses):
+        newFiles.append(classFiles[j][i])
     if i < nTrain:
         trainFiles.append(newFiles)
+    elif i < nTrain + nValidation:
+        validationFiles.append(newFiles)
     else:
         testFiles.append(newFiles)
-options['eventsPerFile'] *= nParticles
-if options['nTrainMax']>0:
-   trainFiles = trainFiles[:options['nTrainMax']]
-if options['nTestMax']>0:
-   testFiles = testFiles[:options['nTestMax']]
-trainSet = loader.HDF5Dataset(trainFiles, options['eventsPerFile'], options['classPdgID'])
-testSet = loader.HDF5Dataset(testFiles, options['eventsPerFile'], options['classPdgID'])
+if options['validationRatio'] == -1:
+    validationFiles = testFiles
+
+# prepare the generators
+trainSet = loader.HDF5Dataset(trainFiles, options['eventsPerFile']*nClasses, options['classPdgID'])
+validationSet = loader.HDF5Dataset(validationFiles, options['eventsPerFile']*nClasses, options['classPdgID'])
+testSet = loader.HDF5Dataset(testFiles, options['eventsPerFile']*nClasses, options['classPdgID'])
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
+validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
 
 ################
@@ -153,7 +182,7 @@ def update_test_loss(epoch_end):
     classifier_test_background_accuracy = 0
     GAN_test_accuracy = 0
     n_test_batches = 0
-    for data in testLoader:
+    for data in validationLoader:
         ECALs, HCALs, ys, energies = data
         ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
         if (classifier != None):
@@ -319,4 +348,4 @@ print('Finished Training')
 ######################
 
 print('Performing Analysis')
-analyzer.analyze([classifier, regressor, GAN], testLoader, out_file)
+analyzer.analyze([classifier, regressor, GAN], validationLoader, out_file)
