@@ -42,7 +42,7 @@ for optionName in requiredOptionNames:
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0}
+defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_test_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -147,24 +147,24 @@ classifier_signal_accuracy_epoch_test = []
 classifier_background_accuracy_epoch_test = []
 
 # enumerate parts of the data structure
+qualifier_name = ['loss', 'accuracy']
 LOSS, ACCURACY = 0, 1
 tools = [classifier, regressor, GAN]
 tool_name = ['classifier', 'regressor', 'GAN']
 tool_letter = ['C', 'R', 'G']
 CLASSIFICATION, REGRESSION, _GAN = 0, 1, 2
+split_name = ['train', 'validation', 'test']
 TRAIN, VALIDATION, TEST = 0, 1, 2
+period_name = ['batch', 'epoch']
 BATCH, EPOCH = 0, 1
-
-# when to calculate loss/accuracy and when to end training
-calculate_loss_per = 20
-max_n_test_batches = 10 # stop evaluating test loss after this many batches
-previous_total_test_loss = 0 # stop training when loss stops decreasing
-previous_epoch_total_test_loss = 0
 
 #######################
 # Calculate test loss #
 #######################
 
+# determine when to end training
+previous_total_test_loss = 0
+previous_epoch_total_test_loss = 0
 end_training = False
 over_break_count = 0
 
@@ -180,13 +180,14 @@ def update_test_loss(epoch_end):
         ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
         for tool in range(len(tools)):
             if (tools[tool] != None):
-                test_loss[tool] += eval(tools[tool], ECALs, HCALs, ys)[0]
-                test_accuracy[tool] += eval(tools[tool], ECALs, HCALs, ys)[1]
+                eval_results = eval(tools[tool], ECALs, HCALs, ys)
+                test_loss[tool] += eval_results[0]
+                test_accuracy[tool] += eval_results[1]
         if (tools[0] != None):
             classifier_test_output = eval(tools[0], ECALs, HCALs, ys)
             classifier_test_signal_accuracy += classifier_test_output[6]
             classifier_test_background_accuracy += classifier_test_output[7]
-        if (n_test_batches >= max_n_test_batches):
+        if (n_test_batches >= options['test_loss_eval_max_n_batches']):
             break
     test_loss = [i/n_test_batches for i in test_loss]
     test_accuracy = [i/n_test_batches for i in test_loss]
@@ -238,26 +239,26 @@ def update_test_loss(epoch_end):
 print('Training')
 
 for epoch in range(options['nEpochs']):
-    training_loss = [0]*3
-    training_accuracy = [0]*3
-    for i, data in enumerate(trainLoader):
+    epoch_loss = [0]*3
+    epoch_accuracy = [0]*3
+    for batch, data in enumerate(trainLoader):
         ECALs, HCALs, ys, energies = data
         ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
         if (tools[0] != None):
-            training_loss[CLASSIFICATION] += train(tools[0], ECALs, HCALs, ys)[0]
-            training_accuracy[CLASSIFICATION] += train(tools[0], ECALs, HCALs, ys)[1]
+            epoch_loss[CLASSIFICATION] += train(tools[0], ECALs, HCALs, ys)[0]
+            epoch_accuracy[CLASSIFICATION] += train(tools[0], ECALs, HCALs, ys)[1]
         if (tools[1] != None):
-            training_loss[REGRESSION] += train(tools[1], ECALs, HCALs, energies)[0]
+            epoch_loss[REGRESSION] += train(tools[1], ECALs, HCALs, energies)[0]
         if (tools[2] != None):
-            training_loss[_GAN] += train(tools[2], ECALs, HCALs, ys)[0]
-            training_accuracy[_GAN] += train(tools[2], ECALs, HCALs, ys)[1]
-        if i % calculate_loss_per == calculate_loss_per - 1:
+            epoch_loss[_GAN] += train(tools[2], ECALs, HCALs, ys)[0]
+            epoch_accuracy[_GAN] += train(tools[2], ECALs, HCALs, ys)[1]
+        if (batch+1) % options['calculate_test_loss_per_n_batches'] == 0:
             for tool in range(len(tools)):
                 if (tools[tool] != None):
-                    history[LOSS][tool][TRAIN][BATCH].append(training_loss[tool] / calculate_loss_per)
-                    history[ACCURACY][tool][TRAIN][BATCH].append(training_accuracy[tool] / calculate_loss_per)
+                    history[LOSS][tool][TRAIN][BATCH].append(epoch_loss[tool] / options['calculate_test_loss_per_n_batches'])
+                    history[ACCURACY][tool][TRAIN][BATCH].append(epoch_accuracy[tool] / options['calculate_test_loss_per_n_batches'])
             print('-------------------------------')
-            print('epoch %d, batch %d' % (epoch+1, i+1))
+            print('epoch %d, batch %d' % (epoch+1, batch+1))
             print('train loss:\t', end="")
             for tool in range(len(tools)):
                 if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (history[LOSS][tool][TRAIN][BATCH][-1]), end="")
@@ -266,8 +267,8 @@ for epoch in range(options['nEpochs']):
                 if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (history[ACCURACY][tool][TRAIN][BATCH][-1]), end="")
             print()
             update_test_loss(epoch_end=False)
-            training_loss = [0]*3
-            training_accuracy = [0]*3
+            epoch_loss = [0]*3
+            epoch_accuracy = [0]*3
     if (tools[0] != None):
         history[ACCURACY][CLASSIFICATION][TRAIN][EPOCH].append(history[ACCURACY][CLASSIFICATION][TRAIN][BATCH][-1])
         history[LOSS][CLASSIFICATION][TRAIN][EPOCH].append(history[LOSS][CLASSIFICATION][TRAIN][BATCH][-1])
@@ -287,7 +288,11 @@ print('Finished Training')
 ################
 
 out_file = h5.File(options['outPath']+"results.h5", 'w')
-out_file.create_dataset("history", data=np.array(history))
+for qualifier in [LOSS, ACCURACY]:
+    for tool in [CLASSIFICATION, REGRESSION, _GAN]:
+        for split in [TRAIN, VALIDATION, TEST]:
+            for period in [BATCH, EPOCH]:
+                out_file.create_dataset(qualifier_name[qualifier]+"_"+tool_name[tool]+"_"+split_name[split]+"_"+period_name[period], data=np.array(history[qualifier][tool][split][period]))
 for tool in range(len(tools)):
     if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+".pt")
 if (tools[0] != None): 
