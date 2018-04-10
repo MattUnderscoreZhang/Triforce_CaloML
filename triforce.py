@@ -76,9 +76,10 @@ else:
     else:
         sys.exit()
 
-# copy options file to output directory for logging purposes
+# copy code to output directory for logging purposes
 optionsFilePath = Options.__file__[:Options.__file__.rfind('/')]
-shutil.copyfile(optionsFilePath + "/" + optionsFileName + ".py", options['outPath']+"/options.h5")
+shutil.copyfile(optionsFilePath + "/" + optionsFileName + ".py", options['outPath']+"/options.py")
+shutil.copyfile(optionsFilePath + "/../triforce.py", options['outPath']+"/triforce.py")
 
 ####################################
 # Load files and set up generators #

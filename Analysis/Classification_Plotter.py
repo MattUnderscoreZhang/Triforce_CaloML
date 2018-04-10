@@ -125,13 +125,12 @@ class Analyzer():
 
         print('test loss: (C) %.4f; test accuracy: (C) %.4f' % (classifier_test_loss, classifier_test_accuracy))
         # if (classifier != None): out_file.create_dataset("classifier_test_results", data=classifier_test_results)
-        if (classifier != None): out_file.create_dataset("calssifier_test_accuracy", data=classifier_test_accuracy) 
+        if (classifier != None): out_file.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
 
         folder = out_file.filename[:out_file.filename.rfind('/')]
-        self.plot_loss_vs_batches(out_file['classifier_loss_history_train'].value, out_file['classifier_loss_history_test'].value, folder+"/loss_history_batches.png")
-        self.plot_accuracy_vs_batches(out_file['classifier_accuracy_history_train'].value, out_file['classifier_accuracy_history_test'].value, folder+"/accuracy_history_batches.png")
-        self.plot_loss_vs_epoch(out_file['classifier_loss_epoch_train'].value, out_file['classifier_loss_epoch_test'].value, folder+"/loss_epoch_batches.png")
-        self.plot_accuracy_vs_epoch(out_file['classifier_accuracy_epoch_train'].value, out_file['classifier_accuracy_epoch_test'].value, folder+"/accuracy_epoch_batches.png")
+        self.plot_loss_vs_batches(out_file['loss_classifier_train_batch'].value, out_file['loss_classifier_test_batch'].value, folder+"/loss_batches.png")
+        self.plot_accuracy_vs_batches(out_file['accuracy_classifier_train_batch'].value, out_file['accuracy_classifier_test_batch'].value, folder+"/accuracy_batches.png")
+        self.plot_loss_vs_epoch(out_file['loss_classifier_train_epoch'].value, out_file['loss_classifier_test_epoch'].value, folder+"/loss_epoch_batches.png")
+        self.plot_accuracy_vs_epoch(out_file['accuracy_classifier_train_epoch'].value, out_file['accuracy_classifier_test_epoch'].value, folder+"/accuracy_epoch_batches.png")
         # try: 
         self.plot_ROC(classifier_test_outputs, classifier_test_truth, folder+"/ROC.png")
-
