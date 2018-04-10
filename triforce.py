@@ -35,12 +35,13 @@ optionsFileName = "default_options"
 
 exec("from Options." + optionsFileName + " import *")
 
-optionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath', 'nTrainMax',"nTestMax"]
-
+optionNames = ['importGPU','samplePath', 'classPdgID', 'eventsPerFile', 'nWorkers', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath', 'nTrainMax',"nTestMax"]
 for optionName in optionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
+
+if(options['importGPU']): import setGPU
 
 if not os.path.exists(options['outPath']):
     os.makedirs(options['outPath'])

@@ -6,6 +6,7 @@ options = {}
 ##################
 
 # basePath = "/data/LCD/V3/Original/EleChPi/"
+options['importGPU'] = False
 basePath = "/data/LCD/V3/Original/GammaPi0/"
 # options['samplePath'] = [basePath + "ChPi/ChPiEscan_*.h5", basePath + "Ele/EleEscan_*.h5"]
 options['samplePath'] = [basePath + "Pi0/Pi0Escan_*.h5", basePath + "Gamma/GammaEscan_*.h5"]
