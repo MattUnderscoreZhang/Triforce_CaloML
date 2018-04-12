@@ -42,7 +42,7 @@ for optionName in requiredOptionNames:
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'stopTraining':True}
+defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':True}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -209,13 +209,13 @@ def update_test_loss(epoch_end=False):
     previous_total_test_loss = total_test_loss
     delta_loss_below_threshold_count += (relative_delta_loss < options['relativeDeltaLossThreshold'])
     if (delta_loss_below_threshold_count >= options['relativeDeltaLossNumber']):
-        if(options['stopTraining']):end_training = True
+        if(options['earlyStopping']): end_training = True
     if (epoch_end):
         epoch_total_test_loss = test_qualifiers[LOSS][CLASSIFICATION] + test_qualifiers[LOSS][REGRESSION] + test_qualifiers[LOSS][_GAN]
         relative_delta_loss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
         previous_epoch_total_test_loss = epoch_total_test_loss
         if (relative_delta_loss < options['relativeDeltaLossThreshold']):
-            if(options['stopTraining']): end_training = True
+            if(options['earlyStopping']): end_training = True
 
 #########
 # Train #
