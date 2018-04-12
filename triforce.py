@@ -35,14 +35,14 @@ optionsFileName = "default_options"
 exec("from Options." + optionsFileName + " import *")
 
 # options file must have these parameters set
-requiredOptionNames = ['samplePath', 'classPdgID', 'eventsPerFile', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
 for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':True}
+defaultParameters = {'importGPU':False, 'eventsPerFile':10000, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':True}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -276,7 +276,7 @@ print('Finished Training')
 # Save results #
 ################
 
-out_file = h5.File(options['outPath']+"results.h5", 'w')
+out_file = h5.File(options['outPath']+"training_results.h5", 'w')
 for qualifier in [LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY]:
     for tool in [CLASSIFICATION, REGRESSION, _GAN]:
         for split in [TRAIN, VALIDATION, TEST]:
