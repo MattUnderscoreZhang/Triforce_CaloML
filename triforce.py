@@ -272,8 +272,8 @@ for epoch in range(options['nEpochs']):
 print('-------------------------------')
 print('Finished Training')
 
-import pdb
-pdb.set_trace()
+# import pdb
+# pdb.set_trace()
 ################
 # Save results #
 ################
