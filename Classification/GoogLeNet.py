@@ -58,6 +58,13 @@ class Inception(nn.Module):
         y4 = self.b4(x)
         return torch.cat([y1,y2,y3,y4], 1)
 
+class FeatureScaling(nn.Module): 
+    def __init__(self): 
+        super(FeatureScaling, self).__init__()
+    def forward(self, x): 
+        minimums = x.min(dim=1)[0].min(dim=1)[0] # batch_size
+        maximums = x.max(dim=1)[0].min(dim=1)[0] # batch_size
+        return (x - minimums) / (maximums - minimums)
 
 class GoogLeNet(nn.Module):
     def __init__(self):
@@ -68,8 +75,8 @@ class GoogLeNet(nn.Module):
             nn.ReLU(True),
         )
 
-        # self.norm = nn.InstanceNorm3d(1)
-        self.norm = nn.BatchNorm3d(1)
+        self.norm = nn.InstanceNorm3d(1)
+        # self.norm = nn.BatchNorm3d(1)
 
         self.a3 = Inception(192,  64,  96, 128, 16, 32, 32)
         self.b3 = Inception(256, 128, 128, 192, 32, 96, 64)
