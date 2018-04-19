@@ -25,7 +25,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 # Set options file #
 ####################
 
-optionsFileName = "default_options"
+optionsFileName = "variable_angle_new_samples"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -207,7 +207,8 @@ def update_test_loss(epoch_end=False):
         if (tools[tool] != None): total_test_loss += test_qualifiers[LOSS][tool]
     relative_delta_loss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
     previous_total_test_loss = total_test_loss
-    delta_loss_below_threshold_count += (relative_delta_loss < options['relativeDeltaLossThreshold'])
+    if (relative_delta_loss < options['relativeDeltaLossThreshold']): delta_loss_below_threshold_count += 1
+    else: delta_loss_below_threshold_count = 0
     if (delta_loss_below_threshold_count >= options['relativeDeltaLossNumber']):
         if(options['earlyStopping']): end_training = True
     if (epoch_end):
