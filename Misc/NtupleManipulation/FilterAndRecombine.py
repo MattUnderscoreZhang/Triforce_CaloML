@@ -4,8 +4,10 @@ import glob
 import h5py as h5
 import numpy as np
 
-in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/EleEscan_*_MERGED/EleEscan_*.h5"
-out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/EleEscan"
+# in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/EleEscan_*_MERGED/EleEscan_*.h5"
+# out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/EleEscan"
+in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/Incomplete/Pi0Escan_*.h5"
+out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/Pi0Escan"
 target_events_per_file = 10000
 
 ##########
@@ -16,7 +18,8 @@ def filter(file):
 
     n_events = file['ECAL'].shape[0]
     filtered_events = []
-    return list(np.where(file['HCAL_ECAL_ERatio'][:] <= 0.25)[0])
+    # return list(np.where(file['HCAL_ECAL_ERatio'][:] <= 0.25)[0])
+    return list(np.where(file['HCAL_ECAL_ERatio'][:] >= 0)[0])
 
 ###########
 # COMBINE #
@@ -46,6 +49,7 @@ for file_name in in_files:
         starting_new_file = False
         if n_leftover_filtered_events > 0:
             filtered_keys = leftover_filtered_keys
+            n_filtered_events = n_leftover_filtered_events
         else:
             for key in file_keys:
                 filtered_keys[key] = []
