@@ -73,6 +73,7 @@ for file_name in in_files:
 
 # write out any extra events
 if n_leftover_filtered_events > 0:
+    print("Writing out file", out_path + "_" + str(out_file_count) + "_incomplete.h5")
     out_file = h5.File(out_path + "_" + str(out_file_count) + "_incomplete.h5", 'w')
     for key in file_keys:
         out_file[key] = leftover_filtered_keys[key]
