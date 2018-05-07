@@ -4,8 +4,8 @@ import glob
 import h5py as h5
 import numpy as np
 
-in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/Pi0Escan_*_MERGED/Pi0Escan_*.h5"
-out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/Pi0Escan"
+in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/EleEscan_*_MERGED/EleEscan_*.h5"
+out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/EleEscan"
 target_events_per_file = 10000
 
 ##########
@@ -16,7 +16,7 @@ def filter(file):
 
     n_events = file['ECAL'].shape[0]
     filtered_events = []
-    return list(np.where(file['HCAL_ECAL_ERatio'][:] <= 0.025)[0])
+    return list(np.where(file['HCAL_ECAL_ERatio'][:] <= 0.25)[0])
 
 ###########
 # COMBINE #
