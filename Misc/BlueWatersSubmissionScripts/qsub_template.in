@@ -1,0 +1,10 @@
+#PBS -l nodes=1:ppn=16:xe
+#PBS -l walltime=05:00:00
+#PBS -l gres=ccm
+#PBS -j oe
+#PBS -m n
+#PBS -N TriForce
+#PBS -o output.log
+module add bwpy
+module add ccm
+ccmrun -n 1 python3 /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce/triforce.py

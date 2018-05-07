@@ -1,0 +1,27 @@
+----------------------------------------
+Begin Torque Prologue on nid25349
+at Fri May  4 01:47:03 CDT 2018
+Job Id:			8579805.bw
+Username:		zhang10
+Group:			ILL_bakx
+Job name:		TriForce
+Requested resources:	gres=ccm,neednodes=1:ppn=16:xk,nodes=1:ppn=16:xk,walltime=01:00:00
+Queue:			normal
+Account:		bakx
+End Torque Prologue:  0.166 elapsed
+----------------------------------------
+In CCM JOB:  8579805.bw  JID  8579805  USER  zhang10  GROUP  ILL_bakx  WLM  torque
+Initializing CCM environment, Please Wait
+Warning: The -E option is deprecated and has no effect
+CCM Start success, 1 of 1 responses
+
+
+
+
+Fri May  4 01:47:15 2018: [unset]:_pmi_alps_sync:alps response not OKAY
+Fri May  4 01:47:15 2018: [unset]:_pmiu_daemon:_pmi_alps_sync failed 
+Child terminated with signal 6.
+Fri May  4 01:47:15 2018: [PE_0]:_pmi_daemon_barrier:PE pipe read failed from daemon errno = Success
+Fri May  4 01:47:15 2018: [PE_0]:_pmi_init:_pmi_daemon_barrier returned -1
+Application 66707113 exit codes: 1
+Application 66707113 resources: utime ~0s, stime ~1s, Rss ~26860, inblocks ~8540, outblocks ~0
