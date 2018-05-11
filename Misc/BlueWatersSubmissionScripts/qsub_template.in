@@ -1,10 +1,18 @@
-#PBS -l nodes=1:ppn=16:xe
+### Request one GPU node with 16 processing elements
+#PBS -l nodes=1:ppn=16:xk
+### Max 5 hours runtime
 #PBS -l walltime=05:00:00
-#PBS -l gres=ccm
-#PBS -j oe
+### No email notification
 #PBS -m n
-#PBS -N TriForce
-#PBS -o output.log
-module add bwpy
-module add ccm
-ccmrun -n 1 python3 /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce/triforce.py
+### Job name
+#PBS -N TriForce_HYPERPARAMETERS
+### Standard output and error
+#PBS -o Logs/output_HYPERPARAMETERS.log
+#PBS -e Logs/error_HYPERPARAMETERS.log
+### Use Ben's allocation
+#PBS -A bakx
+### I forget what these are
+#PBS -j oe
+module load bwpy
+cd /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce/
+aprun -n 1 python3 triforce.py Output_HYPERPARAMETERS
