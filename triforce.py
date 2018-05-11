@@ -25,7 +25,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 # Set options file #
 ####################
 
-optionsFileName = "variable_angle_new_samples"
+optionsFileName = "fixed_angle_new_samples"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -122,7 +122,7 @@ for i in range(filesPerClass):
         trainFiles.append(newFiles)
     elif i < nTrain + nValidation:
         validationFiles.append(newFiles)
-    else:
+    else i < nTrain + nValidation + nTest:
         testFiles.append(newFiles)
 if options['validationRatio'] == -1:
     validationFiles = testFiles
