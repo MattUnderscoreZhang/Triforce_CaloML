@@ -122,8 +122,10 @@ for i in range(filesPerClass):
         trainFiles.append(newFiles)
     elif i < nTrain + nValidation:
         validationFiles.append(newFiles)
-    else i < nTrain + nValidation + nTest:
+    elif i < nTrain + nValidation + nTest:
         testFiles.append(newFiles)
+    else:
+        break
 if options['validationRatio'] == -1:
     validationFiles = testFiles
 
