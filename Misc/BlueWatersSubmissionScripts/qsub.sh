@@ -1,17 +1,15 @@
-#md=(5 6 7)
-#ne=(400 600 800)
-#lr=(0.5)
-md=(5)
-ne=(400)
-lr=(0.5)
+hl=(4 5 6)
+ne=(256 512 1024)
+lr=(0.001 0.005 0.01)
 
-for md_i in ${md[@]}
+for hl_i in ${hl[@]}
 do
     for ne_i in ${ne[@]}
     do
         for lr_i in ${lr[@]}
         do
-            sed 's/HYPERPARAMETERS/'${md_i}_${ne_i}_${lr_i}'/g' <qsub_template.in >qsub.in
+            sed 's/HYPERPARAMETERS_SEPARATED/'${hl_i} ${ne_i} ${lr_i}'/g' <qsub_template.in >qsub.in
+            sed 's/HYPERPARAMETERS/'${hl_i}_${ne_i}_${lr_i}'/g' <qsub_template.in >qsub.in
             qsub qsub.in
         done
     done

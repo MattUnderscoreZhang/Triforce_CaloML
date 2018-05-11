@@ -5,14 +5,14 @@
 ### No email notification
 #PBS -m n
 ### Job name
-#PBS -N TriForce_5_400_0.5
+#PBS -N TriForce_Test
 ### Standard output and error
-#PBS -o Logs/output_5_400_0.5.log
-#PBS -e Logs/error_5_400_0.5.log
+#PBS -o Logs/output_Test.log
+#PBS -e Logs/error_Test.log
 ### Use Ben's allocation
 #PBS -A bakx
 ### I forget what these are
 #PBS -j oe
 module load bwpy
 cd /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce/
-aprun -n 1 python3 triforce.py Output_5_400_0.5
+aprun -n 1 python3 triforce.py Test

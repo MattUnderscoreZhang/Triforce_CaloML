@@ -15,4 +15,4 @@
 #PBS -j oe
 module load bwpy
 cd /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce/
-aprun -n 1 python3 triforce.py Output_HYPERPARAMETERS
+aprun -n 1 python3 triforce.py Output_HYPERPARAMETERS HYPERPARAMETERS_SEPARATED
