@@ -11,10 +11,13 @@ class Classifier_Net(nn.Module):
     def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb):
         super().__init__()
         self.input = nn.Linear(51 * 51 * 25, hiddenLayerNeurons)
+        self.input = nn.DataParallel(self.input) # multi-GPU
         self.hidden = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
+        self.hidden = nn.DataParallel(self.hidden) # multi-GPU
         self.nHiddenLayers = nHiddenLayers
         self.dropout = nn.Dropout(p = dropoutProb)
         self.output = nn.Linear(hiddenLayerNeurons, 2)
+        self.output = nn.DataParallel(self.output) # multi-GPU
     def forward(self, x, _):
         x = x.view(-1, 51 * 51 * 25)
         x = self.input(x)
