@@ -8,8 +8,8 @@ do
     do
         for lr_i in ${lr[@]}
         do
-            sed 's/HYPERPARAMETERS_SEPARATED/'${hl_i} ${ne_i} ${lr_i}'/g' <qsub_template.in >qsub.in
-            sed 's/HYPERPARAMETERS/'${hl_i}_${ne_i}_${lr_i}'/g' <qsub_template.in >qsub.in
+            sed 's/HYPERPARAMETERS_SEPARATED/'${hl_i}' '${ne_i}' '${lr_i}'/g' <qsub_template.in >qsub.in
+            sed 's/HYPERPARAMETERS/'${hl_i}_${ne_i}_${lr_i}'/g' -i qsub.in
             qsub qsub.in
         done
     done
