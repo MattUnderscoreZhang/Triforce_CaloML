@@ -35,8 +35,9 @@ for file_name in chpi_files:
     chpi_E += list(file['energy'][:])
     file.close()
 
-plt.hist(ele_ratio, bins=np.arange(0,1,0.01), density=True, histtype='step', label='Ele')
-plt.hist(chpi_ratio, bins=np.arange(0,1,0.01), density=True, histtype='step', label='ChPi')
+bins=np.arange(0,10,0.1)
+plt.hist(np.clip(ele_ratio, bins[0], bins[-1]), bins=bins, density=True, histtype='step', label='Ele')
+plt.hist(np.clip(chpi_ratio, bins[0], bins[-1]), bins=bins, density=True, histtype='step', label='ChPi')
 plt.xlabel('HCAL_ECAL_ERatio')
 plt.ylabel('Normalized Fraction')
 plt.legend()
@@ -44,8 +45,30 @@ plt.savefig('ratios.png')
 
 plt.clf()
 
+bins=np.arange(0,1,0.01)
+plt.hist(np.clip(ele_ratio, bins[0], bins[-1]), bins=bins, density=True, histtype='step', label='Ele')
+plt.hist(np.clip(chpi_ratio, bins[0], bins[-1]), bins=bins, density=True, histtype='step', label='ChPi')
+plt.xlabel('HCAL_ECAL_ERatio')
+plt.ylabel('Normalized Fraction')
+plt.legend()
+plt.savefig('zoom_ratios.png')
+
+plt.clf()
+
 bin_ele_E_means = binned_statistic(ele_ratio, ele_E, bins=50, range=(0, 5)).statistic
 bin_chpi_E_means = binned_statistic(chpi_ratio, chpi_E, bins=50, range=(0, 5)).statistic
+
+plt.plot(np.arange(0,5,0.1), bin_ele_E_means, label='Ele')
+plt.plot(np.arange(0,5,0.1), bin_chpi_E_means, label='ChPi')
+plt.title('Mean Energy in H/E Energy Ratio Bins')
+plt.xlabel('HCAL_ECAL_ERatio')
+plt.ylabel('Energy')
+plt.legend()
+plt.savefig('ratio_vs_energy.png')
+
+plt.clf()
+
+zip(*[(r, E) for r, E in zip(chpi_ratio, chpi_E) if r < 0.1])
 
 plt.plot(np.arange(0,5,0.1), bin_ele_E_means, label='Ele')
 plt.plot(np.arange(0,5,0.1), bin_chpi_E_means, label='ChPi')
