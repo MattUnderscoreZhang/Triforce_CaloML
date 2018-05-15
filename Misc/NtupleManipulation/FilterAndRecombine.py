@@ -4,11 +4,13 @@ import glob
 import h5py as h5
 import numpy as np
 
-# in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/EleEscan_*_MERGED/EleEscan_*.h5"
-# out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/EleEscan"
-in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/Incomplete/GammaEscan_*.h5"
-out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/GammaEscan"
-target_events_per_file = 10000
+# in_path = "/data/LCD/NewSamples/Fixed/ChPiEscan*/ChPiEscan*.h5"
+# out_path = "/data/LCD/NewSamples/FixedFiltered/ChPiEscan/ChPiEscan"
+in_path = "/data/LCD/NewSamples/Fixed/EleEscan*/EleEscan*.h5"
+out_path = "/data/LCD/NewSamples/FixedFiltered/EleEscan/EleEscan"
+# in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/Incomplete/GammaEscan_*.h5"
+# out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/GammaEscan"
+target_events_per_file = 500
 
 ##########
 # FILTER #
@@ -16,10 +18,7 @@ target_events_per_file = 10000
 
 def filter(file):
 
-    n_events = file['ECAL'].shape[0]
-    filtered_events = []
-    # return list(np.where(file['HCAL_ECAL_ERatio'][:] <= 0.25)[0])
-    return list(np.where(file['HCAL_ECAL_ERatio'][:] >= 0)[0])
+    return list(np.where(file['HCAL_ECAL_ERatio'][:] <= 0.1)[0])
 
 ###########
 # COMBINE #
@@ -59,11 +58,13 @@ for file_name in in_files:
 
     # if we've loaded enough events, write out a file
     n_filtered_events += n_new_filtered_events
-    if n_filtered_events >= target_events_per_file:
+    while n_filtered_events >= target_events_per_file:
         print("Writing out file", out_path + "_" + str(out_file_count) + ".h5")
         out_file = h5.File(out_path + "_" + str(out_file_count) + ".h5", 'w')
-        n_leftover_filtered_events = n_filtered_events - target_events_per_file
-        n_filtered_events = 0
+        n_filtered_events -= target_events_per_file
+        if n_filtered_events < target_events_per_file:
+            n_leftover_filtered_events = n_filtered_events
+            n_filtered_events = 0
         for key in file_keys:
             out_file[key] = filtered_keys[key][:target_events_per_file]
             leftover_filtered_keys[key] = filtered_keys[key][target_events_per_file:]
@@ -73,8 +74,8 @@ for file_name in in_files:
 
 # write out any extra events
 if n_leftover_filtered_events > 0:
-    print("Writing out file", out_path + "_" + str(out_file_count) + "_incomplete.h5")
-    out_file = h5.File(out_path + "_" + str(out_file_count) + "_incomplete.h5", 'w')
+    print("Writing out file", out_path + "_" + str(out_file_count) + ".h5_incomplete")
+    out_file = h5.File(out_path + "_" + str(out_file_count) + ".h5_incomplete", 'w')
     for key in file_keys:
         out_file[key] = leftover_filtered_keys[key]
     out_file.close()
