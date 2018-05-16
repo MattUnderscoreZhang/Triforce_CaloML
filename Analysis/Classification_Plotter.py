@@ -93,8 +93,8 @@ class Analyzer():
 
         classifier_test_results = []
         for data in testLoader:
-            ECALs, HCALs, ys, energies = data
-            ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
+            ECALs, HCALs, ys, energies, etas = data
+            ECALs, HCALs, ys, energies, etas = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda()), Variable(etas.cuda())
             if (classifier != None): classifier_test_results.append(eval(classifier, ECALs, HCALs, ys))
             else: classifier_test_results.append((0,0,0,0,0,0))
 
