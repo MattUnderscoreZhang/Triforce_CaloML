@@ -25,7 +25,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 # Set options file #
 ####################
 
-optionsFileName = "fixed_angle_new_samples"
+optionsFileName = "NIPS"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -172,8 +172,8 @@ def update_test_loss(epoch_end=False):
     test_qualifiers = [[0]*3 for _ in range(4)]
     qualifier_index = [0, 1, 6, 7] # return indices for eval()
     for n_test_batches, data in enumerate(validationLoader):
-        ECALs, HCALs, ys, energies = data
-        ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
+        ECALs, HCALs, ys, energies, etas = data
+        ECALs, HCALs, ys, energies, etas = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda()), Variable(etas.cuda())
         for tool in range(len(tools)):
             if (tools[tool] != None):
                 eval_results = eval(tools[tool], ECALs, HCALs, ys)
@@ -234,8 +234,8 @@ for epoch in range(options['nEpochs']):
     train_qualifiers = [[0]*3 for _ in range(2)]
     qualifier_index = [0, 1] # return indices for eval()
     for batch, data in enumerate(trainLoader):
-        ECALs, HCALs, ys, energies = data
-        ECALs, HCALs, ys, energies = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda())
+        ECALs, HCALs, ys, energies, etas = data
+        ECALs, HCALs, ys, energies, etas = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda()), Variable(etas.cuda())
         for tool in range(len(tools)):
             if (tools[tool] != None):
                 eval_results = train(tools[tool], ECALs, HCALs, ys)

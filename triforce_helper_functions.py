@@ -4,10 +4,13 @@ import pdb
 # This module has to be here for dependency reasons
 
 # train model
-def train(model, ECALs, HCALs, truth):
+def train(model, ECALs, HCALs, truth, etas=None):
     model.net.train()
     model.optimizer.zero_grad()
-    outputs = model.net(ECALs, HCALs)
+    if (etas == None):
+        outputs = model.net(ECALs, HCALs)
+    else:
+        outputs = model.net(ECALs, HCALs, etas=etas)
     loss = model.lossFunction(outputs, truth)
     loss.backward()
     model.optimizer.step()
@@ -19,10 +22,13 @@ def train(model, ECALs, HCALs, truth):
     return (loss.data[0], accuracy)
 
 # evaluate model
-def eval(model, ECALs, HCALs, truth):
+def eval(model, ECALs, HCALs, truth, etas=None):
     try:
         model.net.eval()
-        outputs = model.net(ECALs, HCALs)
+        if (etas == None):
+            outputs = model.net(ECALs, HCALs)
+        else:
+            outputs = model.net(ECALs, HCALs, etas=etas)
         loss = model.lossFunction(outputs, truth)
         _, predicted = torch.max(outputs.data, 1)
     except:

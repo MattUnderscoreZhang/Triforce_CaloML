@@ -16,19 +16,24 @@ def load_hdf5(file):
         ECAL = f['ECAL'][:]
         HCAL = f['HCAL'][:]
         pdgID = f['pdgID'][:]
-        energy = f['energy'][:]
+        energy = np.zeros(len(pdgID))
+        eta = np.zeros(len(pdgID))
+        if 'energy' in f.keys():
+            energy = f['energy'][:]
+        if 'eta' in f.keys():
+            eta = f['eta'][:]
 
-    return ECAL.astype(np.float32), HCAL.astype(np.float32), pdgID.astype(int), energy.astype(np.float32)
+    return ECAL.astype(np.float32), HCAL.astype(np.float32), pdgID.astype(int), energy.astype(np.float32), eta.astype(np.float32)
 
 def load_3d_hdf5(file):
 
     """Loads H5 file and adds an extra dimension for CNN. Used by HDF5Dataset."""
 
-    ECAL, HCAL, pdgID, energy = load_hdf5(file)
+    ECAL, HCAL, pdgID, energy, eta = load_hdf5(file)
     ECAL = np.expand_dims(ECAL, axis=1)
     HCAL = np.expand_dims(HCAL, axis=1)
 
-    return ECAL, HCAL, pdgID, energy
+    return ECAL, HCAL, pdgID, energy, eta
 
 class HDF5Dataset(data.Dataset):
 
@@ -58,7 +63,7 @@ class HDF5Dataset(data.Dataset):
             self.HCAL = []
             self.y = []
             for dataname in self.dataname_tuples[fileN]:
-                file_ECAL, file_HCAL, file_pdgID, energy = load_hdf5(dataname)
+                file_ECAL, file_HCAL, file_pdgID, energy, eta = load_hdf5(dataname)
                 if len(file_pdgID.shape) == 2: # in case this has the wrong dimensions
                     file_pdgID = file_pdgID[:,0]
                 if (self.ECAL != []):
@@ -67,13 +72,15 @@ class HDF5Dataset(data.Dataset):
                     newy = [self.classPdgID[abs(i)] for i in file_pdgID] # should probably make this one-hot
                     self.y = np.append(self.y, newy) 
                     self.energy = np.append(self.energy, energy)
+                    self.eta = np.append(self.eta, eta)
                 else:
                     self.ECAL = file_ECAL
                     self.HCAL = file_HCAL
                     self.y = [self.classPdgID[abs(i)] for i in file_pdgID] # should probably make this one-hot
                     self.energy = energy
+                    self.eta = eta
             self.fileInMemory = fileN
-        return self.ECAL[indexInFile], self.HCAL[indexInFile], self.y[indexInFile], self.energy[indexInFile]
+        return self.ECAL[indexInFile], self.HCAL[indexInFile], self.y[indexInFile], self.energy[indexInFile], self.eta[indexInFile]
 
     def __len__(self):
         return len(self.dataname_tuples)*self.num_per_file
