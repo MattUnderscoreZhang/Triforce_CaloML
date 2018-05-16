@@ -38,6 +38,7 @@ for file_name in chpi_files:
 bins=np.arange(0,10,0.1)
 plt.hist(np.clip(ele_ratio, bins[0], bins[-1]), bins=bins, density=True, histtype='step', label='Ele')
 plt.hist(np.clip(chpi_ratio, bins[0], bins[-1]), bins=bins, density=True, histtype='step', label='ChPi')
+plt.title('H/E Ratio of Electron and ChPi Events')
 plt.xlabel('HCAL_ECAL_ERatio')
 plt.ylabel('Normalized Fraction')
 plt.legend()
@@ -48,6 +49,7 @@ plt.clf()
 bins=np.arange(0,1,0.01)
 plt.hist(np.clip(ele_ratio, bins[0], bins[-1]), bins=bins, density=True, histtype='step', label='Ele')
 plt.hist(np.clip(chpi_ratio, bins[0], bins[-1]), bins=bins, density=True, histtype='step', label='ChPi')
+plt.title('H/E Ratio of Electron and ChPi Events')
 plt.xlabel('HCAL_ECAL_ERatio')
 plt.ylabel('Normalized Fraction')
 plt.legend()
@@ -64,16 +66,19 @@ plt.title('Mean Energy in H/E Energy Ratio Bins')
 plt.xlabel('HCAL_ECAL_ERatio')
 plt.ylabel('Energy')
 plt.legend()
-plt.savefig('ratio_vs_energy.png')
+plt.savefig('mean_energy_vs_ratio.png')
 
 plt.clf()
 
-zip(*[(r, E) for r, E in zip(chpi_ratio, chpi_E) if r < 0.1])
+ele_pass_cut = [r < 0.1 for r in ele_ratio]
+chpi_pass_cut = [r < 0.1 for r in chpi_ratio]
+bin_ele_pass_cut_means = binned_statistic(ele_E, ele_pass_cut, bins=50, range=(0, 500)).statistic
+bin_chpi_pass_cut_means = binned_statistic(chpi_E, chpi_pass_cut, bins=50, range=(0, 500)).statistic
 
-plt.plot(np.arange(0,5,0.1), bin_ele_E_means, label='Ele')
-plt.plot(np.arange(0,5,0.1), bin_chpi_E_means, label='ChPi')
-plt.title('Mean Energy in H/E Energy Ratio Bins')
-plt.xlabel('HCAL_ECAL_ERatio')
-plt.ylabel('Energy')
+plt.plot(np.arange(0,5,0.1), bin_ele_pass_cut_means, label='Ele')
+plt.plot(np.arange(0,5,0.1), bin_chpi_pass_cut_means, label='ChPi')
+plt.title('Fraction of Events Passing H/E < 0.1 Cut')
+plt.xlabel('Energy')
+plt.ylabel('Fraction')
 plt.legend()
-plt.savefig('ratio_vs_energy.png')
+plt.savefig('ratio_cut_vs_energy.png')
