@@ -53,7 +53,7 @@ plt.savefig('mean_energy_vs_opening_angle.png')
 
 plt.clf()
 
-pi0_pass_cut = [a < 0.01 for a in pi0_openging_angle]
+pi0_pass_cut = [a < 0.01 for a in pi0_opening_angle]
 bin_pi0_pass_cut_means = binned_statistic(pi0_E, pi0_pass_cut, bins=50, range=(0, 500)).statistic
 
 plt.plot(np.arange(0,5,0.1), bin_pi0_pass_cut_means, label='Pi0')
