@@ -9,6 +9,7 @@ from scipy.stats import binned_statistic
 
 # [particles][HCAL][stat]
 # particles - 0 = Ele/ChPi; 1 = Gamma/Pi0
+particles_name = ["Ele/ChPi", "Gamma/Pi0"]
 # HCAL - 0 = without; 1 = with
 # stat - 0 = train accuracy; 1 = train loss; 2 = test accuracy; 3 = test loss
 stat_name = ["Training Accuracy", "Training Loss", "Test Accuracy", "Test Loss"]
@@ -29,21 +30,25 @@ for particles in range(2):
             data[particles][HCAL][2].append(list(file['accuracy_classifier_test_batch'][:30]))
             data[particles][HCAL][3].append(list(file['loss_classifier_test_batch'][:30]))
             file.close()
-
-# sns.set_style("whitegrid")
-for particles in range(2):
-    for HCAL in range(2):
         for stat in range(4):
             data_error[particles][HCAL][stat] = np.sqrt(np.mean(np.square(data[particles][HCAL][stat]), axis=0))/len(data[particles][HCAL][stat]) # approximation of std using n instead of (n-1)
             data[particles][HCAL][stat] = np.mean(data[particles][HCAL][stat], axis=0)
-            x = np.arange(1, len(data[particles][HCAL][0])+1)
-            plt.clf()
-            plt.errorbar(x, data[particles][HCAL][stat], data_error[particles][HCAL][stat], fmt='o-', markersize=8)
-            plt.xlabel("Batch Number")
-            plt.xlabel(stat_name[stat])
-            plt.title(stat_name[stat])
-            xmax = max(x) + 5
-            ymax = max([i+j for (i, j) in zip(data[particles][HCAL][0], data_error[particles][HCAL][0])]) + 0.3
-            plt.xlim(0, xmax)
-            plt.ylim(0, ymax)
-            plt.savefig(str(particles)+"_"+str(HCAL)+"_"+str(stat)+".png")
+
+# sns.set_style("whitegrid")
+for particles in range(2):
+    for stat in range(4):
+        x = np.arange(1, len(data[particles][0][stat])+1)
+        plt.clf()
+        plt.errorbar(x, data[particles][0][stat], data_error[particles][0][stat], fmt='o-', markersize=3, label='No HCAL')
+        plt.errorbar(x, data[particles][1][stat], data_error[particles][1][stat], fmt='o-', markersize=3, label='HCAL')
+        plt.xlabel("Batch Number")
+        plt.ylabel("Average " + stat_name[stat] + " Over 10 Trials")
+        plt.title(particles_name[particles] + " " + stat_name[stat])
+        plt.legend()
+        xmax = max(x) + 5
+        ymax_noHCAL = max([i+j for (i, j) in zip(data[particles][0][stat], data_error[particles][0][stat])])
+        ymax_HCAL = max([i+j for (i, j) in zip(data[particles][1][stat], data_error[particles][1][stat])])
+        ymax = max(ymax_noHCAL, ymax_HCAL) + 0.3
+        plt.xlim(0, xmax)
+        plt.ylim(0, ymax)
+        plt.savefig(str(particles)+"_"+str(stat)+".png")
