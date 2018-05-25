@@ -2,15 +2,17 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+import math
 
 ##################
 # Classification #
 ##################
 
 class Classifier_Net(nn.Module):
-    def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb):
+    def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb, windowSize):
         super().__init__()
-        self.input = nn.Linear(51 * 51 * 25, hiddenLayerNeurons)
+        self.windowSize = windowSize
+        self.input = nn.Linear(windowSize * windowSize * 25, hiddenLayerNeurons)
         self.input = nn.DataParallel(self.input) # multi-GPU
         self.hidden = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
         self.hidden = nn.DataParallel(self.hidden) # multi-GPU
@@ -19,7 +21,10 @@ class Classifier_Net(nn.Module):
         self.output = nn.Linear(hiddenLayerNeurons, 2)
         self.output = nn.DataParallel(self.output) # multi-GPU
     def forward(self, x, _):
-        x = x.view(-1, 51 * 51 * 25)
+        lowerBound = 26 - int(math.ceil(self.windowSize/2))
+        upperBound = lowerBound + self.windowSize
+        x = x[lowerBound:upperBound][lowerBound:upperBound]
+        x = x.view(-1, self.windowSize * self.windowSize * 25)
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):
             x = F.relu(self.hidden(x))
@@ -28,8 +33,8 @@ class Classifier_Net(nn.Module):
         return x
 
 class Classifier():
-    def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb, learningRate, decayRate):
-        self.net = Classifier_Net(hiddenLayerNeurons, nHiddenLayers, dropoutProb)
+    def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb, learningRate, decayRate, windowSize):
+        self.net = Classifier_Net(hiddenLayerNeurons, nHiddenLayers, dropoutProb, windowSize)
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
         self.lossFunction = nn.CrossEntropyLoss()
