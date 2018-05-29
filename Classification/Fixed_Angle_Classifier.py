@@ -23,7 +23,7 @@ class Classifier_Net(nn.Module):
     def forward(self, x, _):
         lowerBound = 26 - int(math.ceil(self.windowSize/2))
         upperBound = lowerBound + self.windowSize
-        x = x[lowerBound:upperBound][lowerBound:upperBound]
+        x = x[lowerBound:upperBound, lowerBound:upperBound]
         x = x.view(-1, self.windowSize * self.windowSize * 25)
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):
