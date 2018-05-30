@@ -10,15 +10,18 @@ do
     do
         for lr_i in ${lr[@]}
         do
+            cp qsub_template.in qsub.in
+            sed 's/JOBNAME/'${hl_i}_${ne_i}_${lr_i}'/g' -i qsub.in
             for dp_i in ${dp[@]}
             do
                 for ws_i in ${ws[@]}
                 do
-                    sed 's/HYPERPARAMETERS_SEPARATED/'${hl_i}' '${ne_i}' '${lr_i}' '${dp_i}' '${ws_i}'/g' <qsub_template.in >qsub.in
+                    echo "aprun -n 1 python3 triforce.py Output_HYPERPARAMETERS HYPERPARAMETERS_SEPARATED" >> qsub.in
+                    sed 's/HYPERPARAMETERS_SEPARATED/'${hl_i}' '${ne_i}' '${lr_i}' '${dp_i}' '${ws_i}'/g' -i qsub.in
                     sed 's/HYPERPARAMETERS/'${hl_i}_${ne_i}_${lr_i}_${dp_i}_${ws_i}'/g' -i qsub.in
-                    qsub qsub.in
                 done
             done
+            qsub qsub.in
         done
     done
 done
