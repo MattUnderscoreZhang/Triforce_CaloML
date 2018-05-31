@@ -8,20 +8,19 @@ for hl_i in ${hl[@]}
 do
     for ne_i in ${ne[@]}
     do
+        cp qsub_template.in qsub.in
+        sed 's/JOBNAME/'${hl_i}_${ne_i}'/g' -i qsub.in
         for lr_i in ${lr[@]}
         do
-            cp qsub_template.in qsub.in
-            sed 's/JOBNAME/'${hl_i}_${ne_i}_${lr_i}'/g' -i qsub.in
             for dp_i in ${dp[@]}
             do
                 for ws_i in ${ws[@]}
                 do
-                    echo "aprun -n 1 python3 triforce.py Output_HYPERPARAMETERS HYPERPARAMETERS_SEPARATED" >> qsub.in
-                    sed 's/HYPERPARAMETERS_SEPARATED/'${hl_i}' '${ne_i}' '${lr_i}' '${dp_i}' '${ws_i}'/g' -i qsub.in
-                    sed 's/HYPERPARAMETERS/'${hl_i}_${ne_i}_${lr_i}_${dp_i}_${ws_i}'/g' -i qsub.in
+                    echo "aprun -n 1 python3 triforce.py Output_${hl_i}_${ne_i}_${lr_i}_${dp_i}_${ws_i} ${hl_i} ${ne_i} ${lr_i} ${dp_i} ${ws_i} > Output/Output_${hl_i}_${ne_i}_${lr_i}_${dp_i}_${ws_i}_log.txt &" >> qsub.in
                 done
             done
-            qsub qsub.in
         done
     done
 done
+echo "wait" >> qsub.in
+#qsub qsub.in

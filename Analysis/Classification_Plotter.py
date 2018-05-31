@@ -92,11 +92,16 @@ class Analyzer():
         [classifier, regressor, GAN] = tools
 
         classifier_test_results = []
+        classifier_test_parameters = []  # (energy, eta, y)
         for data in testLoader:
             ECALs, HCALs, ys, energies, etas = data
             ECALs, HCALs, ys, energies, etas = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda()), Variable(etas.cuda())
-            if (classifier != None): classifier_test_results.append(eval(classifier, ECALs, HCALs, ys))
-            else: classifier_test_results.append((0,0,0,0,0,0))
+            if (classifier != None):
+                classifier_test_results.append(eval(classifier, ECALs, HCALs, ys))
+                classifier_test_parameters.append([(energies, etas, ys)])
+            else:
+                classifier_test_results.append((0,0,0,0,0,0))
+                classifier_test_results.append((0,0,0))
 
         n_test_batches = len(classifier_test_results)
         # extract test loss

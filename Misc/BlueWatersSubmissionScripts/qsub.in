@@ -1,37 +1,20 @@
 ### Request GPU nodes with 16 processing elements each
-#PBS -l nodes=20:ppn=16:xk
-### Max 5 hours runtime
-#PBS -l walltime=05:00:00
+#PBS -l nodes=2:ppn=16:xk
+### Max 2 hours runtime
+#PBS -l walltime=02:00:00
 ### No email notification
 #PBS -m n
 ### Job name
-#PBS -N TriForce_7_1024_0.001
+#PBS -N TriForce_7_1024
 ### Standard output and error
-#PBS -o Logs/output_7_1024_0.001.log
-#PBS -e Logs/error_7_1024_0.001.log
+#PBS -o Logs/output_7_1024.log
+#PBS -e Logs/error_7_1024.log
 ### Use Ben's allocation
 #PBS -A bakx
 ### I forget what these are
 #PBS -j oe
 module load bwpy
 cd /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce/
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.2_11 7 1024 0.001 0.2 11
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.2_21 7 1024 0.001 0.2 21
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.2_31 7 1024 0.001 0.2 31
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.2_41 7 1024 0.001 0.2 41
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.2_51 7 1024 0.001 0.2 51
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.3_11 7 1024 0.001 0.3 11
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.3_21 7 1024 0.001 0.3 21
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.3_31 7 1024 0.001 0.3 31
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.3_41 7 1024 0.001 0.3 41
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.3_51 7 1024 0.001 0.3 51
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.4_11 7 1024 0.001 0.4 11
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.4_21 7 1024 0.001 0.4 21
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.4_31 7 1024 0.001 0.4 31
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.4_41 7 1024 0.001 0.4 41
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.4_51 7 1024 0.001 0.4 51
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.5_11 7 1024 0.001 0.5 11
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.5_21 7 1024 0.001 0.5 21
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.5_31 7 1024 0.001 0.5 31
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.5_41 7 1024 0.001 0.5 41
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.5_51 7 1024 0.001 0.5 51
+aprun -n 1 python3 triforce.py Output_7_512_0.001_0.5_51 7 512 0.001 0.5 51 > Output/Output_7_512_0.001_0.5_51_log.txt &
+aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.5_51 7 1024 0.001 0.5 51 > Output/Output_7_1024_0.001_0.5_51_log.txt &
+wait

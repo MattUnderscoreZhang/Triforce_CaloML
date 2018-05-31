@@ -1,7 +1,7 @@
 ### Request GPU nodes with 16 processing elements each
-#PBS -l nodes=20:ppn=16:xk
-### Max 5 hours runtime
-#PBS -l walltime=05:00:00
+#PBS -l nodes=60:ppn=16:xk
+### Max 2 hours runtime
+#PBS -l walltime=02:00:00
 ### No email notification
 #PBS -m n
 ### Job name
