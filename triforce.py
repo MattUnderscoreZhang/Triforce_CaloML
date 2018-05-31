@@ -135,6 +135,7 @@ validationSet = loader.HDF5Dataset(validationFiles, options['eventsPerFile']*nCl
 testSet = loader.HDF5Dataset(testFiles, options['eventsPerFile']*nClasses, options['classPdgID'])
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
 validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
+validationLoaderSingle = data.DataLoader(dataset=validationSet,batch_size=1,sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
 
 ############################################
@@ -293,4 +294,4 @@ for tool in range(len(tools)):
 ##########################
 
 print('Performing Analysis')
-analyzer.analyze([tools[0], tools[1], tools[2]], validationLoader, out_file)
+analyzer.analyze([tools[0], tools[1], tools[2]], validationLoaderSingle, out_file)
