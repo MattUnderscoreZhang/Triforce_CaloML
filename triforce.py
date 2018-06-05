@@ -166,10 +166,10 @@ history = historyData()
 # enumerate parts of the data structure
 stat_name = ['loss', 'accuracy', 'signalAccuracy', 'backgroundAccuracy']
 LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY = 0, 1, 2, 3
-tools = [classifier, regressor, GAN]
-tool_name = ['classifier', 'regressor', 'GAN']
+tools = [classifier, regressor, generator]
+tool_name = ['classifier', 'regressor', 'generator']
 tool_letter = ['C', 'R', 'G']
-CLASSIFICATION, REGRESSION, _GAN = 0, 1, 2
+CLASSIFICATION, REGRESSION, GAN = 0, 1, 2
 split_name = ['train', 'validation', 'test']
 TRAIN, VALIDATION, TEST = 0, 1, 2
 timescale_name = ['batch', 'epoch']
@@ -280,10 +280,10 @@ print('Finished Training')
 ################
 
 out_file = h5.File(options['outPath']+"training_results.h5", 'w')
-for stat in [LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY]:
-    for tool in [CLASSIFICATION, REGRESSION, _GAN]:
-        for split in [TRAIN, VALIDATION, TEST]:
-            for timescale in [BATCH, EPOCH]:
+for stat in range(len(stat_name)):
+    for tool in range(len(tool_name)):
+        for split in range(len(split_name)):
+            for timescale in range(len(timescale_name)):
                 out_file.create_dataset(stat_name[stat]+"_"+tool_name[tool]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][tool][split][timescale]))
 if options['saveFinalModel']:
     for tool in range(len(tools)):
