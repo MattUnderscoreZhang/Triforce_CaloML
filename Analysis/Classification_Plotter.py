@@ -92,24 +92,25 @@ class Analyzer():
         [classifier, regressor, GAN] = tools
 
         classifier_test_results = []
-        classifier_test_parameters = []  # (energy, eta, y)
+        # classifier_test_parameters = []  # (energy, eta, y)
         for data in testLoader:
-            ECALs, HCALs, ys, energies, etas = data
-            ECALs, HCALs, ys, energies, etas = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda()), Variable(etas.cuda())
+            ECAL, HCAL, y, energy, eta = data
             if (classifier != None):
-                classifier_test_results.append(eval(classifier, ECALs, HCALs, ys))
-                classifier_test_parameters.append([(energies, etas, ys)])
+                # classifier_test_parameters.append((energy, eta, y))
+                ECAL, HCAL, y, energy, eta = Variable(ECAL.cuda()), Variable(HCAL.cuda()), Variable(y.cuda()), Variable(energy.cuda()), Variable(eta.cuda())
+                classifier_test_results.append(eval(classifier, ECAL, HCAL, y))
             else:
                 classifier_test_results.append((0,0,0,0,0,0))
                 classifier_test_results.append((0,0,0))
+        # classifier_test_parameters = np.array(classifier_test_parameters)
 
-        n_test_batches = len(classifier_test_results)
+        n_samples = len(classifier_test_results)
         # extract test loss
         classifier_test_loss = [classifier_test_results[i][0] for i in range(len(classifier_test_results))]
-        classifier_test_loss = sum(classifier_test_loss) / n_test_batches
+        classifier_test_loss = sum(classifier_test_loss) / n_samples
         # extract test accuracy
         classifier_test_accuracy = [classifier_test_results[i][1] for i in range(len(classifier_test_results))]
-        classifier_test_accuracy = sum(classifier_test_accuracy) / n_test_batches
+        classifier_test_accuracy = sum(classifier_test_accuracy) / n_samples
         # extract test outputs
         classifier_test_outputs = torch.FloatTensor([])
         for i in range(len(classifier_test_results)):
@@ -126,7 +127,6 @@ class Analyzer():
             else: 
                 classifier_test_truth = torch.cat((classifier_test_truth, classifier_test_results[i][3]))
         classifier_test_truth = np.array(classifier_test_truth)
-        
 
         print('test loss: (C) %.4f; test accuracy: (C) %.4f' % (classifier_test_loss, classifier_test_accuracy))
         # if (classifier != None): out_file.create_dataset("classifier_test_results", data=classifier_test_results)
@@ -139,3 +139,5 @@ class Analyzer():
         self.plot_accuracy_vs_epoch(out_file['accuracy_classifier_train_epoch'].value, out_file['accuracy_classifier_test_epoch'].value, folder+"/accuracy_epoch_batches.png")
         # try: 
         self.plot_ROC(classifier_test_outputs, classifier_test_truth, folder+"/ROC.png")
+
+        # pdb.set_trace()

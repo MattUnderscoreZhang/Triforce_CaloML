@@ -179,80 +179,13 @@ BATCH, EPOCH = 0, 1
 # Train #
 #########
 
-# # determine when to end training
-# previous_total_test_loss = 0
-# previous_epoch_total_test_loss = 0
-# end_training = False
-# delta_loss_below_threshold_count = 0
-
-# def update_test_loss(epoch_end=False):
-    
-    # # find the current test stats e.g. test_stats[LOSS][GAN]
-    # test_stats = [[0]*3 for _ in range(4)]
-    # stat_index = [0, 1, 6, 7] # return indices for eval()
-    # for n_test_batches, data in enumerate(validationLoader):
-        # ECALs, HCALs, ys, energies, etas = data
-        # ECALs, HCALs, ys, energies, etas = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda()), Variable(etas.cuda())
-        # for tool in range(len(tools)):
-            # if (tools[tool] != None):
-                # eval_results = eval(tools[tool], ECALs, HCALs, ys)
-                # for stat in range(len(stat_name)):
-                    # test_stats[stat][tool] += eval_results[stat_index[stat]] 
-        # if (n_test_batches >= options['test_loss_eval_max_n_batches']):
-            # break
-    # for stat_index, test_stat in enumerate(test_stats):
-        # test_stats[stat_index] = [i/(n_test_batches+1) for i in test_stat]
-
-    # # print test loss and accuracy to screen
-    # print_prefix = ""
-    # if (epoch_end):
-        # print("-------------------------------")
-        # print_prefix = "epoch "
-    # print(print_prefix + 'test loss:\t', end="")
-    # for tool in range(len(tools)):
-        # if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_stats[LOSS][tool]), end="")
-    # print(print_prefix + 'test accuracy:\t', end="")
-    # for tool in range(len(tools)):
-        # if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_stats[ACCURACY][tool]), end="")
-    # print()
-
-    # # save test stats
-    # for tool in range(len(tools)):
-        # if (tools[tool] != None):
-            # for stat in range(len(stat_name)):
-                # history[stat][tool][TEST][BATCH].append(test_stats[stat][tool])
-                # if (epoch_end): history[stat][tool][TEST][EPOCH].append(test_stats[stat][tool])
-
-    # # decide whether or not to end training when this epoch finishes
-    # global previous_total_test_loss, previous_epoch_total_test_loss, delta_loss_below_threshold_count, end_training
-    # total_test_loss = 0
-    # for tool in range(len(tools)):
-        # if (tools[tool] != None): total_test_loss += test_stats[LOSS][tool]
-    # relative_delta_loss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
-    # previous_total_test_loss = total_test_loss
-    # if (relative_delta_loss < options['relativeDeltaLossThreshold']): delta_loss_below_threshold_count += 1
-    # else: delta_loss_below_threshold_count = 0
-    # if (delta_loss_below_threshold_count >= options['relativeDeltaLossNumber']):
-        # if(options['earlyStopping']): end_training = True
-    # if (epoch_end):
-        # epoch_total_test_loss = test_stats[LOSS][CLASSIFICATION] + test_stats[LOSS][REGRESSION] + test_stats[LOSS][_GAN]
-        # relative_delta_loss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
-        # previous_epoch_total_test_loss = epoch_total_test_loss
-        # if (relative_delta_loss < options['relativeDeltaLossThreshold']):
-            # if(options['earlyStopping']): end_training = True
-
-print('Training')
-
-total_batch_n = 0
-saved_batch_n = 0
-
-def update_batch_history(data_train, data_test, epoch_end=False):
+def update_batch_history(data_train, data_test, saved_batch_n, total_batch_n):
     train_ECALs, train_HCALs, train_ys, train_energies, train_etas = data_train
     test_ECALs, test_HCALs, test_ys, test_energies, test_etas = data_test
     for tool in range(len(tools)):
         if (tools[tool] != None):
             for split in [TRAIN, TEST]:
-                if split == TRAIN and not epoch_end:
+                if split == TRAIN:
                     eval_results = train(tools[tool], Variable(train_ECALs.cuda()), Variable(train_HCALs.cuda()), Variable(train_ys.cuda()))
                 else:
                     eval_results = eval(tools[tool], Variable(test_ECALs.cuda()), Variable(test_HCALs.cuda()), Variable(test_ys.cuda()))
@@ -261,43 +194,84 @@ def update_batch_history(data_train, data_test, epoch_end=False):
                     if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
                         history[stat][tool][split][BATCH][saved_batch_n] /= options['calculate_loss_per_n_batches']
 
+def update_epoch_history():
+    for tool in range(len(tools)):
+        if (tools[tool] != None):
+            for stat in range(2):
+                for split in [TRAIN, TEST]:
+                    history[stat][tool][split][EPOCH].append(history[stat][tool][split][BATCH][-1])
+
 def print_stats(timescale):
-    print_prefix = ""
-    if (epoch_end): print_prefix = "epoch "
-    print('-------------------------------')
-    print('epoch %d, batch %d' % (epoch+1, total_batch_n))
+    print_prefix = "epoch " if timescale == EPOCH else ""
     for split in [TRAIN, TEST]:
+        if timescale == EPOCH and split == TRAIN: continue
         for stat in [LOSS, ACCURACY]:
             print(print_prefix + split_name[split] + ' ' + stat_name[stat] + ':\t', end="")
             for tool in range(len(tools)):
                 if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (history[stat][tool][split][timescale][-1]), end="")
         print()
 
-for epoch in range(options['nEpochs']):
+# early stopping
+previous_total_test_loss = 0
+previous_epoch_total_test_loss = 0
+delta_loss_below_threshold_count = 0
 
-    for data_train in trainLoader:
-        total_batch_n += 1
-        data_test = next(iter(testLoader))
-        update_batch_history(data_train, data_test)
-        if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
-            print_stats(BATCH)
-            saved_batch_n += 1
+def should_i_stop(timescale):
 
-    # end of epoch
+    if not options['earlyStopping']: return False
+
+    total_test_loss = 0
     for tool in range(len(tools)):
-        if (tools[tool] != None):
-            for stat in range(2):
-                for split in [TRAIN, TEST]:
-                    history[stat][tool][split][EPOCH].append(history[stat][tool][split][BATCH][-1])
-    print_stats(EPOCH)
+        if (tools[tool] != None): total_test_loss += history[LOSS][tool][TEST][timescale][-1]
 
-    # save results
-    if options['saveFinalModel'] and (options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0):
-        if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
-        for tool in range(len(tools)):
-            if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+"_epoch_"+str(epoch)+".pt")
-    # if end_training: break
+    if timescale == BATCH:
+        relative_delta_loss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
+        previous_total_test_loss = total_test_loss
+        if (relative_delta_loss < options['relativeDeltaLossThreshold']): delta_loss_below_threshold_count += 1
+        if (delta_loss_below_threshold_count >= options['relativeDeltaLossNumber']): return True
+        else: delta_loss_below_threshold_count = 0
+    elif timescale == EPOCH:
+        relative_delta_loss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
+        previous_epoch_total_test_loss = total_test_loss
+        if (relative_delta_loss < options['relativeDeltaLossThreshold']): return True
 
+    return False
+
+def do_all_training():
+
+    total_batch_n = 0
+    saved_batch_n = 0
+    end_training = False
+
+    for epoch in range(options['nEpochs']):
+
+        for data_train in trainLoader:
+            total_batch_n += 1
+            data_test = next(iter(testLoader))
+            update_batch_history(data_train, data_test, saved_batch_n, total_batch_n)
+            if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
+                print('-------------------------------')
+                print('epoch %d, batch %d' % (epoch+1, total_batch_n))
+                print_stats(BATCH)
+                saved_batch_n += 1
+            if should_i_stop(BATCH): end_training = True
+
+        # end of epoch
+        update_epoch_history()
+        print('-------------------------------')
+        print_stats(EPOCH)
+        if should_i_stop(EPOCH): end_training = True
+
+        # save results
+        if options['saveFinalModel'] and (options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0):
+            if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
+            for tool in range(len(tools)):
+                if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+"_epoch_"+str(epoch)+".pt")
+
+        if end_training: break
+
+print('Training')
+do_all_training()
 print('-------------------------------')
 print('Finished Training')
 
