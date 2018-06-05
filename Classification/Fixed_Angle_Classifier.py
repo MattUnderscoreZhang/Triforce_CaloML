@@ -12,14 +12,16 @@ class Classifier_Net(nn.Module):
     def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb, windowSize):
         super().__init__()
         self.windowSize = windowSize
-        self.input = nn.Linear(windowSize * windowSize * 25, hiddenLayerNeurons)
-        self.input = nn.DataParallel(self.input) # multi-GPU
-        self.hidden = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
-        self.hidden = nn.DataParallel(self.hidden) # multi-GPU
         self.nHiddenLayers = nHiddenLayers
-        self.dropout = nn.Dropout(p = dropoutProb)
+        self.input = nn.Linear(windowSize * windowSize * 25, hiddenLayerNeurons)
+        self.hidden = [None] * self.nHiddenLayers
+        self.dropout = [None] * self.nHiddenLayers
+        for i in range(self.nHiddenLayers):
+            self.hidden[i] = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
+            self.hidden[i].cuda()
+            self.dropout[i] = nn.Dropout(p = dropoutProb)
+            self.dropout[i].cuda()
         self.output = nn.Linear(hiddenLayerNeurons, 2)
-        self.output = nn.DataParallel(self.output) # multi-GPU
     def forward(self, x, _):
         lowerBound = 26 - int(math.ceil(self.windowSize/2))
         upperBound = lowerBound + self.windowSize
@@ -27,8 +29,8 @@ class Classifier_Net(nn.Module):
         x = x.contiguous().view(-1, self.windowSize * self.windowSize * 25)
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):
-            x = F.relu(self.hidden(x))
-            x = self.dropout(x)
+            x = F.relu(self.hidden[i](x))
+            x = self.dropout[i](x)
         x = F.softmax(self.output(x), dim=1)
         return x
 
