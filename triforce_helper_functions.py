@@ -50,7 +50,7 @@ def eval(model, ECALs, HCALs, truth, etas=None):
     try: 
         returndata = (loss.data[0], accuracy, outputs.data, truth.data, mean, sigma, signal_accuracy, background_accuracy)
     except:
-        returndata = (loss.data[0], accuracy, outputs.data, truth.data, mean, sigma)
+        returndata = (0, accuracy, outputs.data, truth.data, mean, sigma)
     return returndata
 
 def sgl_bkgd_acc(predicted, truth): 
