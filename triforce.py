@@ -9,7 +9,6 @@
 #  ##########################################################  #
 ################################################################
 
-from __future__ import division
 import torch
 import torch.utils.data as data
 from torch.autograd import Variable
@@ -25,7 +24,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 # Set options file #
 ####################
 
-optionsFileName = "NIPS"
+optionsFileName = "fixed_angle_new_samples"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -35,14 +34,14 @@ optionsFileName = "NIPS"
 exec("from Options." + optionsFileName + " import *")
 
 # options file must have these parameters set
-requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs', 'relativeDeltaLossThreshold', 'relativeDeltaLossNumber', 'batchSize', 'saveModelEveryNEpochs', 'outPath']
+requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs', 'batchSize', 'outPath']
 for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'eventsPerFile':10000, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False}
+defaultParameters = {'importGPU':False, 'eventsPerFile':10000, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -267,7 +266,7 @@ for epoch in range(options['nEpochs']):
     update_test_loss(epoch_end=True)
 
     # save results
-    if ((options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0)):
+    if options['saveFinalModel'] and (options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0):
         if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
         for tool in range(len(tools)):
             if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+"_epoch_"+str(epoch)+".pt")
@@ -286,8 +285,9 @@ for qualifier in [LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY]:
         for split in [TRAIN, VALIDATION, TEST]:
             for period in [BATCH, EPOCH]:
                 out_file.create_dataset(qualifier_name[qualifier]+"_"+tool_name[tool]+"_"+split_name[split]+"_"+period_name[period], data=np.array(history[qualifier][tool][split][period]))
-for tool in range(len(tools)):
-    if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+".pt")
+if options['saveFinalModel']:
+    for tool in range(len(tools)):
+        if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+".pt")
 
 ##########################
 # Analyze and make plots #
