@@ -141,8 +141,23 @@ testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sam
 # Data structures for holding training results #
 ################################################
 
+class historyData(list):
+    def __init__(self, my_list=[]):
+        super().__init__(my_list)
+    def extend(self, places):
+        for _ in range(places):
+            self.append(historyData())
+    def __getitem__(self, key): # overloads list[i] for i out of range
+        if key >= len(self):
+            self.extend(key+1-len(self))
+        return super().__getitem__(key)
+    def __setitem__(self, key, item): # overloads list[i]=x for i out of range
+        if key >= len(self):
+            self.extend(key+1-len(self))
+        super().__setitem__(key, item)
+
 # training results e.g. history[LOSS][CLASSIFICATION][TRAIN][EPOCH]
-history = [[[[[] for _ in range(2)] for _ in range(3)] for _ in range(3)] for _ in range(4)]
+history = historyData()
 
 # enumerate parts of the data structure
 qualifier_name = ['loss', 'accuracy', 'signalAccuracy', 'backgroundAccuracy']
@@ -156,9 +171,9 @@ TRAIN, VALIDATION, TEST = 0, 1, 2
 period_name = ['batch', 'epoch']
 BATCH, EPOCH = 0, 1
 
-#######################
-# Calculate test loss #
-#######################
+#########
+# Train #
+#########
 
 # determine when to end training
 previous_total_test_loss = 0
@@ -186,7 +201,9 @@ def update_test_loss(epoch_end=False):
 
     # print test loss and accuracy to screen
     print_prefix = ""
-    if (epoch_end): print_prefix = "epoch "
+    if (epoch_end):
+        print("-------------------------------")
+        print_prefix = "epoch "
     print(print_prefix + 'test loss:\t', end="")
     for tool in range(len(tools)):
         if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (test_qualifiers[LOSS][tool]), end="")
@@ -220,12 +237,6 @@ def update_test_loss(epoch_end=False):
         if (relative_delta_loss < options['relativeDeltaLossThreshold']):
             if(options['earlyStopping']): end_training = True
 
-#########
-# Train #
-#########
-
-# NOTE - Training and test functions should probably be merged into one
-
 print('Training')
 
 for epoch in range(options['nEpochs']):
@@ -233,7 +244,7 @@ for epoch in range(options['nEpochs']):
     # find the current train qualifiers e.g. train_qualifiers[LOSS][GAN]
     train_qualifiers = [[0]*3 for _ in range(2)]
     qualifier_index = [0, 1] # return indices for eval()
-    for batch, data in enumerate(trainLoader):
+    for batch_n, data in enumerate(trainLoader):
         ECALs, HCALs, ys, energies, etas = data
         ECALs, HCALs, ys, energies, etas = Variable(ECALs.cuda()), Variable(HCALs.cuda()), Variable(ys.cuda()), Variable(energies.cuda()), Variable(etas.cuda())
         for tool in range(len(tools)):
@@ -241,13 +252,13 @@ for epoch in range(options['nEpochs']):
                 eval_results = train(tools[tool], ECALs, HCALs, ys)
                 for qualifier in range(2):
                     train_qualifiers[qualifier][tool] += eval_results[qualifier_index[qualifier]] 
-        if (batch+1) % options['calculate_loss_per_n_batches'] == 0:
+        if (batch_n+1) % options['calculate_loss_per_n_batches'] == 0:
             for tool in range(len(tools)):
                 if (tools[tool] != None):
                     for qualifier in range(2):
                         history[qualifier][tool][TRAIN][BATCH].append(train_qualifiers[qualifier][tool] / options['calculate_loss_per_n_batches'])
             print('-------------------------------')
-            print('epoch %d, batch %d' % (epoch+1, batch+1))
+            print('epoch %d, batch %d' % (epoch+1, batch_n+1))
             print('train loss:\t', end="")
             for tool in range(len(tools)):
                 if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (history[LOSS][tool][TRAIN][BATCH][-1]), end="")
