@@ -41,7 +41,7 @@ for optionName in requiredOptionNames:
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'eventsPerFile':10000, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':-1, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
+defaultParameters = {'importGPU':False, 'eventsPerFile':10000, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -51,10 +51,8 @@ if (options['importGPU']):
     import setGPU
 
 # if validation parameters are not set, TriForce will use test set as validation set
-if options['validationRatio'] == -1 and options['trainRatio'] >= 1:
-    print("ERROR: trainRatio is too high")
-elif options['validationRatio'] != -1 and options['trainRatio'] + options['validationRatio'] >= 1:
-    print("ERROR: trainRatio and validationRatio are too high")
+if options['validationRatio'] + options['trainRatio'] >= 1:
+    print("ERROR: validationRatio and/or trainRatio is too high")
 
 # warn if output directory already exists
 if not os.path.exists(options['outPath']):
@@ -93,13 +91,15 @@ classFiles = [[]] * nClasses
 for i, classPath in enumerate(options['samplePath']):
     classFiles[i] = glob.glob(classPath)
 
-# calculate how many files of each particle type should be test, train, and validation
-filesPerClass = len(classFiles[0])
+# determine numbers of test, train, and validation files
+filesPerClass = min([len(files) for files in classFiles])
 nTrain = int(filesPerClass * options['trainRatio'])
-nValidation = 0
-if options['validationRatio']>0:
-    nValidation = int(filesPerClass * options['validationRatio'])
+nValidation = int(filesPerClass * options['validationRatio'])
 nTest = filesPerClass - nTrain - nValidation
+if (options['validationRatio'] > 0):
+    print("Split (files per class): %d train, %d test, %d validation" % (nTrain, nTest, nValidation))
+else:
+    print("Split (files per class): %d train, %d test" % (nTrain, nTest))
 if options['nTrainMax']>0:
     nTrain = min(nTrain,options['nTrainMax'])
 if options['nValidationMax']>0:
@@ -108,8 +108,9 @@ if options['nTestMax']>0:
     nTest = min(nTest,options['nTestMax'])
 if (nTest==0 or nTrain==0 or (options['validationRatio']>0 and nValidation==0)):
     print("Not enough files found - check sample paths")
+print('-------------------------------')
 
-# list the train, test, and validation files
+# split the train, test, and validation files
 trainFiles = []
 validationFiles = []
 testFiles = []
@@ -125,7 +126,7 @@ for i in range(filesPerClass):
         testFiles.append(newFiles)
     else:
         break
-if options['validationRatio'] == -1:
+if options['validationRatio'] == 0:
     validationFiles = testFiles
 
 # prepare the generators
@@ -134,14 +135,13 @@ validationSet = loader.HDF5Dataset(validationFiles, options['eventsPerFile']*nCl
 testSet = loader.HDF5Dataset(testFiles, options['eventsPerFile']*nClasses, options['classPdgID'])
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
 validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
-validationLoaderSingle = data.DataLoader(dataset=validationSet,batch_size=1,sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
 
-############################################
-# Data structures and options for training #
-############################################
+################################################
+# Data structures for holding training results #
+################################################
 
-# loss and accuracy data e.g. history[LOSS][CLASSIFICATION][TRAIN][EPOCH]
+# training results e.g. history[LOSS][CLASSIFICATION][TRAIN][EPOCH]
 history = [[[[[] for _ in range(2)] for _ in range(3)] for _ in range(3)] for _ in range(4)]
 
 # enumerate parts of the data structure
@@ -294,4 +294,4 @@ if options['saveFinalModel']:
 ##########################
 
 print('Performing Analysis')
-analyzer.analyze([tools[0], tools[1], tools[2]], validationLoaderSingle, out_file)
+analyzer.analyze([tools[0], tools[1], tools[2]], validationLoader, out_file)
