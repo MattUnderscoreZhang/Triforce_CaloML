@@ -190,31 +190,31 @@ def sgl_bkgd_acc(predicted, truth):
             correct_bkgd += 1
     return float(correct_sgl / truth_sgl.shape[0]), float(correct_bkgd / truth_bkgd.shape[0]) # signal acc, bkg acc
 
-def eval(model, data, do_training=False):
+def eval(model, event_data, do_training=False):
     if do_training:
         model.net.train()
         model.optimizer.zero_grad()
     else:
         model.net.eval()
-    outputs = model.net(data)
-    return_data = {}
-    truth = Variable(data["pdgID"].cuda())
+    outputs = model.net(event_data)
+    return_event_data = {}
+    truth = Variable(event_data["pdgID"].cuda())
     loss = model.lossFunction(outputs, truth)
-    return_data["loss"] = loss.data[0]
+    return_event_data["loss"] = loss.data[0]
     if do_training:
         loss.backward()
         model.optimizer.step()
     _, predicted = torch.max(outputs.data, 1)
-    return_data["accuracy"] = (predicted == truth.data).sum()/truth.shape[0]
-    return_data["signal_accuracy"], return_data["background_accuracy"] = sgl_bkgd_acc(predicted, truth.data)
-    # truth_energy = Variable(data["energy"].cuda())
+    return_event_data["accuracy"] = (predicted == truth.data).sum()/truth.shape[0]
+    return_event_data["signal_accuracy"], return_event_data["background_accuracy"] = sgl_bkgd_acc(predicted, truth.data)
+    # truth_energy = Variable(event_data["energy"].cuda())
     # reldiff = 100.0*(truth_energy.data - outputs.data)/truth_energy.data
-    # return_data["mean"] = torch.mean(reldiff)
-    # return_data["sigma"] = torch.std(reldiff)
-    return return_data
+    # return_event_data["mean"] = torch.mean(reldiff)
+    # return_event_data["sigma"] = torch.std(reldiff)
+    return return_event_data
 
-def train(model, data):
-    return eval(model, data, do_training=True)
+def train(model, event_data):
+    return eval(model, event_data, do_training=True)
 
 ####################
 # Perform Training #
