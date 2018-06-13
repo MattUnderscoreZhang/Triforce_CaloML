@@ -36,9 +36,14 @@ class Classifier_Net(nn.Module):
         x = F.softmax(self.output(x), dim=1)
         return x
 
+# def lossFunction(output, data):
+    # truth = Variable(data["pdgID"].cuda())
+    # return nn.CrossEntropyLoss(output, truth).data[0]
+
 class Net():
     def __init__(self, hiddenLayerNeurons, nHiddenLayers, dropoutProb, learningRate, decayRate, windowSize):
         self.net = Classifier_Net(hiddenLayerNeurons, nHiddenLayers, dropoutProb, windowSize)
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
+        # self.lossFunction = lossFunction
         self.lossFunction = nn.CrossEntropyLoss()

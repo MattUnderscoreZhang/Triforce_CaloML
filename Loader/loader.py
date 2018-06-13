@@ -8,32 +8,29 @@ from torch import from_numpy
 import h5py
 import numpy as np
 
-def load_hdf5(file):
-
-    """Loads H5 file. Used by HDF5Dataset."""
-
+def load_hdf5(file, pdgIDs):
+    '''Loads H5 file. Used by HDF5Dataset.'''
+    return_data = {}
     with h5py.File(file, 'r') as f:
-        ECAL = f['ECAL'][:]
-        HCAL = f['HCAL'][:]
-        pdgID = f['pdgID'][:]
-        energy = np.zeros(len(pdgID))
-        eta = np.zeros(len(pdgID))
+        return_data['ECAL'] = f['ECAL'][:].astype(np.float32)
+        n_events = len(return_data['ECAL'])
+        return_data['HCAL'] = f['HCAL'][:].astype(np.float32)
+        return_data['pdgID'] = f['pdgID'][:].astype(int)
+        return_data['pdgID'] = [pdgIDs[abs(i)] for i in return_data['pdgID']] # should probably make this one-hot
         if 'energy' in f.keys():
-            energy = f['energy'][:]
+            return_data['energy'] = f['energy'][:].astype(np.float32)
+        else: return_data['energy'] = np.zeros(n_events)
         if 'eta' in f.keys():
-            eta = f['eta'][:]
+            return_data['eta'] = f['eta'][:].astype(np.float32)
+        else: return_data['eta'] = np.zeros(n_events)
+    return return_data
 
-    return ECAL.astype(np.float32), HCAL.astype(np.float32), pdgID.astype(int), energy.astype(np.float32), eta.astype(np.float32)
-
-def load_3d_hdf5(file):
-
-    """Loads H5 file and adds an extra dimension for CNN. Used by HDF5Dataset."""
-
-    ECAL, HCAL, pdgID, energy, eta = load_hdf5(file)
-    ECAL = np.expand_dims(ECAL, axis=1)
-    HCAL = np.expand_dims(HCAL, axis=1)
-
-    return ECAL, HCAL, pdgID, energy, eta
+def load_3d_hdf5(file, pdgIDs):
+    '''Loads H5 file and adds an extra dimension for CNN. Used by HDF5Dataset.'''
+    return_data = load_hdf5(file, pdgIDs)
+    return_data['ECAL'] = np.expand_dims(return_data['ECAL'], axis=1)
+    return_data['HCAL'] = np.expand_dims(return_data['HCAL'], axis=1)
+    return return_data
 
 class HDF5Dataset(data.Dataset):
 
@@ -44,48 +41,33 @@ class HDF5Dataset(data.Dataset):
         num_per_file: number of events in each data file
     """
 
-    def __init__(self, dataname_tuples, num_per_file, classPdgID):
+    def __init__(self, dataname_tuples, num_per_file, pdgIDs):
         self.dataname_tuples = sorted(dataname_tuples)
         self.num_per_file = num_per_file
         self.fileInMemory = -1
-        self.ECAL = []
-        self.HCAL = []
-        self.y = []
-        self.classPdgID = {}
-        for i, ID in enumerate(classPdgID):
-            self.classPdgID[ID] = i
+        self.data = {}
+        self.pdgIDs = {}
+        for i, ID in enumerate(pdgIDs):
+            self.pdgIDs[ID] = i
 
     def __getitem__(self, index):
         fileN = index//self.num_per_file
         indexInFile = index%self.num_per_file-1
+        # if we started to look at a new file, read the file data
         if(fileN != self.fileInMemory):
-            self.ECAL = []
-            self.HCAL = []
-            self.y = []
+            self.data = {}
             for dataname in self.dataname_tuples[fileN]:
-                file_ECAL, file_HCAL, file_pdgID, energy, eta = load_hdf5(dataname)
-                if len(file_pdgID.shape) == 2: # in case this has the wrong dimensions
-                    file_pdgID = file_pdgID[:,0]
-                if (self.ECAL != []):
-                    self.ECAL = np.append(self.ECAL, file_ECAL, axis=0)
-                    self.HCAL = np.append(self.HCAL, file_HCAL, axis=0)
-                    newy = [self.classPdgID[abs(i)] for i in file_pdgID] # should probably make this one-hot
-                    self.y = np.append(self.y, newy) 
-                    self.energy = np.append(self.energy, energy)
-                    self.eta = np.append(self.eta, eta)
-                else:
-                    self.ECAL = file_ECAL
-                    self.HCAL = file_HCAL
-                    self.y = [self.classPdgID[abs(i)] for i in file_pdgID] # should probably make this one-hot
-                    self.energy = energy
-                    self.eta = eta
+                file_data = load_hdf5(dataname, self.pdgIDs)
+                for key in file_data.keys():
+                    if key in self.data.keys():
+                        self.data[key] = np.append(self.data[key], file_data[key], axis=0)
+                    else:
+                        self.data[key] = file_data[key]
             self.fileInMemory = fileN
+        # return the correct sample
         return_data = {}
-        return_data["ECAL"] = self.ECAL[indexInFile]
-        return_data["HCAL"] = self.HCAL[indexInFile]
-        return_data["y"] = self.y[indexInFile]
-        return_data["energy"] = self.energy[indexInFile]
-        return_data["eta"] = self.eta[indexInFile]
+        for key in self.data.keys():
+            return_data[key] = self.data[key][indexInFile]
         return return_data
 
     def __len__(self):

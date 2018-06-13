@@ -177,56 +177,7 @@ BATCH, EPOCH = 0, 1
 # Training and Evaluation Functions #
 #####################################
 
-# train model
-def train(model, data):
-    model.net.train()
-    model.optimizer.zero_grad()
-    outputs = model.net(data)
-    truth = Variable(data["y"].cuda())
-    loss = model.lossFunction(outputs, truth)
-    loss.backward()
-    model.optimizer.step()
-    _, predicted = torch.max(outputs.data, 1)
-    try:
-        accuracy = (predicted == truth.data).sum()/truth.shape[0]
-    except:
-        accuracy = 0 # ignore accuracy for energy regression
-    return (loss.data[0], accuracy)
-
-# evaluate model
-def eval(model, data):
-    model.net.eval()
-    outputs = model.net(data)
-    truth = Variable(data["y"].cuda())
-    loss = model.lossFunction(outputs, truth)
-    _, predicted = torch.max(outputs.data, 1)
-    try:
-        accuracy = (predicted == truth.data).sum()/truth.shape[0]
-        signal_accuracy, background_accuracy = sgl_bkgd_acc(predicted, truth.data)
-    except:
-        accuracy = 0 # ignore accuracy for energy regression
-    # relative diff mean and sigma, for regression
-    try:
-        reldiff = 100.0*(truth.data - outputs.data)/truth.data
-        mean = torch.mean(reldiff)
-        sigma = torch.std(reldiff)
-    except:
-        mean = 0
-        sigma = 0
-    try: 
-        returndata = (loss.data[0], accuracy, outputs.data, truth.data, mean, sigma, signal_accuracy, background_accuracy)
-    except:
-        returndata = (0, accuracy, outputs.data, truth.data, mean, sigma)
-    return returndata
-
 def sgl_bkgd_acc(predicted, truth): 
-    """
-    Considering 'predicted' and 'truth' are both in Tensor format
-    sgl = 1
-    bkgd = 0
-
-    Return signal accuracy and background accuracy
-    """
     truth_sgl = truth.nonzero() # indices of non-zero elements in truth
     truth_bkgd = (truth == 0).nonzero() # indices of zero elements in truth
     correct_sgl = 0
@@ -237,8 +188,33 @@ def sgl_bkgd_acc(predicted, truth):
     for i in range(truth_bkgd.shape[0]): 
         if predicted[truth_bkgd[i]][0] == truth[truth_bkgd[i]][0]: 
             correct_bkgd += 1
+    return float(correct_sgl / truth_sgl.shape[0]), float(correct_bkgd / truth_bkgd.shape[0]) # signal acc, bkg acc
 
-    return float(correct_sgl / truth_sgl.shape[0]), float(correct_bkgd / truth_bkgd.shape[0])
+def eval(model, data, do_training=False):
+    if do_training:
+        model.net.train()
+        model.optimizer.zero_grad()
+    else:
+        model.net.eval()
+    outputs = model.net(data)
+    return_data = {}
+    truth = Variable(data["pdgID"].cuda())
+    loss = model.lossFunction(outputs, truth)
+    return_data["loss"] = loss.data[0]
+    if do_training:
+        loss.backward()
+        model.optimizer.step()
+    _, predicted = torch.max(outputs.data, 1)
+    return_data["accuracy"] = (predicted == truth.data).sum()/truth.shape[0]
+    return_data["signal_accuracy"], return_data["background_accuracy"] = sgl_bkgd_acc(predicted, truth.data)
+    # truth_energy = Variable(data["energy"].cuda())
+    # reldiff = 100.0*(truth_energy.data - outputs.data)/truth_energy.data
+    # return_data["mean"] = torch.mean(reldiff)
+    # return_data["sigma"] = torch.std(reldiff)
+    return return_data
+
+def train(model, data):
+    return eval(model, data, do_training=True)
 
 ####################
 # Perform Training #
@@ -253,7 +229,7 @@ def update_batch_history(data_train, data_test, saved_batch_n, total_batch_n):
                 else:
                     eval_results = eval(tools[tool], data_test)
                 for stat in range(2):
-                    history[stat][tool][split][BATCH][saved_batch_n] += eval_results[stat] 
+                    history[stat][tool][split][BATCH][saved_batch_n] += eval_results[stat_name[stat]] 
                     if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
                         history[stat][tool][split][BATCH][saved_batch_n] /= options['calculate_loss_per_n_batches']
 
@@ -359,12 +335,7 @@ if options['saveFinalModel']:
 classifier_test_results = []
 # classifier_test_parameters = []  # (energy, eta, y)
 for data in validationLoader:
-    if (classifier != None):
-        # classifier_test_parameters.append((energy, eta, y))
-        classifier_test_results.append(eval(classifier, data))
-    else:
-        classifier_test_results.append((0,0,0,0,0,0))
-        classifier_test_results.append((0,0,0))
+    classifier_test_results.append(eval(combined_classifier, data))
 # classifier_test_parameters = np.array(classifier_test_parameters)
 
 print('Performing Analysis')
