@@ -80,7 +80,13 @@ class HDF5Dataset(data.Dataset):
                     self.energy = energy
                     self.eta = eta
             self.fileInMemory = fileN
-        return self.ECAL[indexInFile], self.HCAL[indexInFile], self.y[indexInFile], self.energy[indexInFile], self.eta[indexInFile]
+        return_data = {}
+        return_data["ECAL"] = self.ECAL[indexInFile]
+        return_data["HCAL"] = self.HCAL[indexInFile]
+        return_data["y"] = self.y[indexInFile]
+        return_data["energy"] = self.energy[indexInFile]
+        return_data["eta"] = self.eta[indexInFile]
+        return return_data
 
     def __len__(self):
         return len(self.dataname_tuples)*self.num_per_file

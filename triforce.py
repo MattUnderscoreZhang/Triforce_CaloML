@@ -168,7 +168,6 @@ LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY = 0, 1, 2, 3
 tools = [combined_classifier, discriminator, generator]
 tool_name = ['classifier', 'discriminator', 'generator']
 tool_letter = ['C', 'D', 'G']
-CLASSIFICATION, REGRESSION, GAN = 0, 1, 2
 split_name = ['train', 'validation', 'test']
 TRAIN, VALIDATION, TEST = 0, 1, 2
 timescale_name = ['batch', 'epoch']
@@ -179,13 +178,11 @@ BATCH, EPOCH = 0, 1
 #####################################
 
 # train model
-def train(model, ECALs, HCALs, truth, etas=None):
+def train(model, data):
     model.net.train()
     model.optimizer.zero_grad()
-    if (etas == None):
-        outputs = model.net(ECALs, HCALs)
-    else:
-        outputs = model.net(ECALs, HCALs, etas=etas)
+    outputs = model.net(data)
+    truth = Variable(data["y"].cuda())
     loss = model.lossFunction(outputs, truth)
     loss.backward()
     model.optimizer.step()
@@ -197,18 +194,12 @@ def train(model, ECALs, HCALs, truth, etas=None):
     return (loss.data[0], accuracy)
 
 # evaluate model
-def eval(model, ECALs, HCALs, truth, etas=None):
-    try:
-        model.net.eval()
-        if (etas == None):
-            outputs = model.net(ECALs, HCALs)
-        else:
-            outputs = model.net(ECALs, HCALs, etas=etas)
-        loss = model.lossFunction(outputs, truth)
-        _, predicted = torch.max(outputs.data, 1)
-    except:
-        model.eval()
-        outputs = model(ECALs, HCALs)
+def eval(model, data):
+    model.net.eval()
+    outputs = model.net(data)
+    truth = Variable(data["y"].cuda())
+    loss = model.lossFunction(outputs, truth)
+    _, predicted = torch.max(outputs.data, 1)
     try:
         accuracy = (predicted == truth.data).sum()/truth.shape[0]
         signal_accuracy, background_accuracy = sgl_bkgd_acc(predicted, truth.data)
@@ -254,15 +245,13 @@ def sgl_bkgd_acc(predicted, truth):
 ####################
 
 def update_batch_history(data_train, data_test, saved_batch_n, total_batch_n):
-    train_ECALs, train_HCALs, train_ys, train_energies, train_etas = data_train
-    test_ECALs, test_HCALs, test_ys, test_energies, test_etas = data_test
     for tool in range(len(tools)):
         if (tools[tool] != None):
             for split in [TRAIN, TEST]:
                 if split == TRAIN:
-                    eval_results = train(tools[tool], Variable(train_ECALs.cuda()), Variable(train_HCALs.cuda()), Variable(train_ys.cuda()))
+                    eval_results = train(tools[tool], data_train)
                 else:
-                    eval_results = eval(tools[tool], Variable(test_ECALs.cuda()), Variable(test_HCALs.cuda()), Variable(test_ys.cuda()))
+                    eval_results = eval(tools[tool], data_test)
                 for stat in range(2):
                     history[stat][tool][split][BATCH][saved_batch_n] += eval_results[stat] 
                     if total_batch_n % options['calculate_loss_per_n_batches'] == 0:

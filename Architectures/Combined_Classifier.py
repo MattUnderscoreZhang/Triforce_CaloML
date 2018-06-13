@@ -1,4 +1,5 @@
 import torch
+from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
@@ -22,7 +23,8 @@ class Classifier_Net(nn.Module):
             self.dropout[i] = nn.Dropout(p = dropoutProb)
             self.dropout[i].cuda()
         self.output = nn.Linear(hiddenLayerNeurons, 2)
-    def forward(self, x, _):
+    def forward(self, data):
+        x = Variable(data["ECAL"].cuda())
         lowerBound = 26 - int(math.ceil(self.windowSize/2))
         upperBound = lowerBound + self.windowSize
         x = x[:, lowerBound:upperBound, lowerBound:upperBound]
