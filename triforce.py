@@ -18,6 +18,7 @@ import h5py as h5
 import Loader.loader as loader
 import Options
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
+import pdb
 
 ####################
 # Set options file #
@@ -198,19 +199,21 @@ def eval(model, event_data, do_training=False):
         model.net.eval()
     outputs = model.net(event_data)
     return_event_data = {}
-    truth = Variable(event_data["pdgID"].cuda())
-    loss = model.lossFunction(outputs, truth)
+    # classification
+    truth_class = Variable(event_data["pdgID"].cuda())
+    loss = model.lossFunction(outputs['classification'], truth_class)
     return_event_data["loss"] = loss.data[0]
     if do_training:
         loss.backward()
         model.optimizer.step()
-    _, predicted = torch.max(outputs.data, 1)
-    return_event_data["accuracy"] = (predicted == truth.data).sum()/truth.shape[0]
-    return_event_data["signal_accuracy"], return_event_data["background_accuracy"] = sgl_bkgd_acc(predicted, truth.data)
-    # truth_energy = Variable(event_data["energy"].cuda())
-    # reldiff = 100.0*(truth_energy.data - outputs.data)/truth_energy.data
-    # return_event_data["mean"] = torch.mean(reldiff)
-    # return_event_data["sigma"] = torch.std(reldiff)
+    _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
+    return_event_data["accuracy"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
+    return_event_data["signal_accuracy"], return_event_data["background_accuracy"] = sgl_bkgd_acc(predicted_class.data, truth_class.data)
+    # regression
+    truth_energy = Variable(event_data["energy"].cuda())
+    reldiff = 100.0*(truth_energy.data - outputs['energy_regression'].data)/truth_energy.data
+    return_event_data["mean"] = torch.mean(reldiff)
+    return_event_data["sigma"] = torch.std(reldiff)
     return return_event_data
 
 def train(model, event_data):

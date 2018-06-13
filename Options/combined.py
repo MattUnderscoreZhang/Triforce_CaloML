@@ -49,7 +49,7 @@ _learningRate = float(sys.argv[4])
 _dropoutProb = float(sys.argv[5])
 _windowSize = int(sys.argv[6])
 
-combined_classifier = Combined_Classifier.Net(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate, _windowSize)
+combined_classifier = Combined_Classifier.Net(classes=options['classPdgID'], hiddenLayerNeurons=_hiddenLayerNeurons, nHiddenLayers=_nHiddenLayers, dropoutProb=_dropoutProb, learningRate=_learningRate, decayRate=_decayRate, windowSize=_windowSize)
 discriminator = None
 generator = None
 analyzer = Classification_Plotter.Analyzer()
