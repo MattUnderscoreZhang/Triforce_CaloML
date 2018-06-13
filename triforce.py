@@ -359,11 +359,9 @@ if options['saveFinalModel']:
 classifier_test_results = []
 # classifier_test_parameters = []  # (energy, eta, y)
 for data in validationLoader:
-    ECAL, HCAL, y, energy, eta = data
     if (classifier != None):
         # classifier_test_parameters.append((energy, eta, y))
-        ECAL, HCAL, y, energy, eta = Variable(ECAL.cuda()), Variable(HCAL.cuda()), Variable(y.cuda()), Variable(energy.cuda()), Variable(eta.cuda())
-        classifier_test_results.append(eval(classifier, ECAL, HCAL, y))
+        classifier_test_results.append(eval(classifier, data))
     else:
         classifier_test_results.append((0,0,0,0,0,0))
         classifier_test_results.append((0,0,0))
