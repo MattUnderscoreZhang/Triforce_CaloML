@@ -15,8 +15,14 @@ class Classifier_Net(nn.Module):
 
     def __init__(self, classes, hiddenLayerNeurons, nHiddenLayers, dropoutProb, windowSize):
         super().__init__()
+        # settings
         self.windowSize = windowSize
         self.nHiddenLayers = nHiddenLayers
+        self.outputs = []
+        for particle_class in classes:
+            self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
+        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
+        # layers
         self.input = nn.Linear(windowSize * windowSize * 25, hiddenLayerNeurons)
         self.hidden = [None] * self.nHiddenLayers
         self.dropout = [None] * self.nHiddenLayers
@@ -25,23 +31,22 @@ class Classifier_Net(nn.Module):
             self.hidden[i].cuda()
             self.dropout[i] = nn.Dropout(p = dropoutProb)
             self.dropout[i].cuda()
-        self.outputs = []
-        for particle_class in classes:
-            self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
-        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
         self.finalLayer = nn.Linear(hiddenLayerNeurons, len(self.outputs)) # nClasses = 2 for binary classifier
 
     def forward(self, data):
+        # window slice
         x = Variable(data["ECAL"].cuda())
         lowerBound = 26 - int(math.ceil(self.windowSize/2))
         upperBound = lowerBound + self.windowSize
         x = x[:, lowerBound:upperBound, lowerBound:upperBound]
         x = x.contiguous().view(-1, self.windowSize * self.windowSize * 25)
+        # feed forward
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):
             x = F.relu(self.hidden[i](x))
             x = self.dropout[i](x)
         x = self.finalLayer(x)
+        # preparing output
         return_data = {}
         for i, (label, activation) in enumerate(self.outputs):
             if activation == CLASSIFICATION:
