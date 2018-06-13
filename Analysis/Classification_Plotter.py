@@ -3,7 +3,6 @@ mpl.use('Agg')
 import matplotlib.pyplot as plt
 import torch
 from torch.autograd import Variable
-from triforce_helper_functions import eval
 import numpy as np
 from sklearn import metrics
 import pdb
@@ -87,22 +86,9 @@ class Analyzer():
     # MAIN ANALYSIS FUNCTION #
     ##########################
 
-    def analyze(self, tools, testLoader, out_file):
+    def analyze(self, tools, classifier_test_results, out_file):
 
         [classifier, regressor, GAN] = tools
-
-        classifier_test_results = []
-        # classifier_test_parameters = []  # (energy, eta, y)
-        for data in testLoader:
-            ECAL, HCAL, y, energy, eta = data
-            if (classifier != None):
-                # classifier_test_parameters.append((energy, eta, y))
-                ECAL, HCAL, y, energy, eta = Variable(ECAL.cuda()), Variable(HCAL.cuda()), Variable(y.cuda()), Variable(energy.cuda()), Variable(eta.cuda())
-                classifier_test_results.append(eval(classifier, ECAL, HCAL, y))
-            else:
-                classifier_test_results.append((0,0,0,0,0,0))
-                classifier_test_results.append((0,0,0))
-        # classifier_test_parameters = np.array(classifier_test_parameters)
 
         n_samples = len(classifier_test_results)
         # extract test loss

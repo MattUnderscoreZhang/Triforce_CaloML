@@ -16,7 +16,6 @@ import glob, os, sys, shutil
 import numpy as np
 import h5py as h5
 import Loader.loader as loader
-from triforce_helper_functions import *
 import Options
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
 
@@ -24,7 +23,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 # Set options file #
 ####################
 
-optionsFileName = "fixed_angle_new_samples"
+optionsFileName = "combined"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -166,18 +165,93 @@ history = historyData()
 # enumerate parts of the data structure
 stat_name = ['loss', 'accuracy', 'signalAccuracy', 'backgroundAccuracy']
 LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY = 0, 1, 2, 3
-tools = [classifier, regressor, generator]
-tool_name = ['classifier', 'regressor', 'generator']
-tool_letter = ['C', 'R', 'G']
+tools = [combined_classifier, discriminator, generator]
+tool_name = ['classifier', 'discriminator', 'generator']
+tool_letter = ['C', 'D', 'G']
 CLASSIFICATION, REGRESSION, GAN = 0, 1, 2
 split_name = ['train', 'validation', 'test']
 TRAIN, VALIDATION, TEST = 0, 1, 2
 timescale_name = ['batch', 'epoch']
 BATCH, EPOCH = 0, 1
 
-#########
-# Train #
-#########
+#####################################
+# Training and Evaluation Functions #
+#####################################
+
+# train model
+def train(model, ECALs, HCALs, truth, etas=None):
+    model.net.train()
+    model.optimizer.zero_grad()
+    if (etas == None):
+        outputs = model.net(ECALs, HCALs)
+    else:
+        outputs = model.net(ECALs, HCALs, etas=etas)
+    loss = model.lossFunction(outputs, truth)
+    loss.backward()
+    model.optimizer.step()
+    _, predicted = torch.max(outputs.data, 1)
+    try:
+        accuracy = (predicted == truth.data).sum()/truth.shape[0]
+    except:
+        accuracy = 0 # ignore accuracy for energy regression
+    return (loss.data[0], accuracy)
+
+# evaluate model
+def eval(model, ECALs, HCALs, truth, etas=None):
+    try:
+        model.net.eval()
+        if (etas == None):
+            outputs = model.net(ECALs, HCALs)
+        else:
+            outputs = model.net(ECALs, HCALs, etas=etas)
+        loss = model.lossFunction(outputs, truth)
+        _, predicted = torch.max(outputs.data, 1)
+    except:
+        model.eval()
+        outputs = model(ECALs, HCALs)
+    try:
+        accuracy = (predicted == truth.data).sum()/truth.shape[0]
+        signal_accuracy, background_accuracy = sgl_bkgd_acc(predicted, truth.data)
+    except:
+        accuracy = 0 # ignore accuracy for energy regression
+    # relative diff mean and sigma, for regression
+    try:
+        reldiff = 100.0*(truth.data - outputs.data)/truth.data
+        mean = torch.mean(reldiff)
+        sigma = torch.std(reldiff)
+    except:
+        mean = 0
+        sigma = 0
+    try: 
+        returndata = (loss.data[0], accuracy, outputs.data, truth.data, mean, sigma, signal_accuracy, background_accuracy)
+    except:
+        returndata = (0, accuracy, outputs.data, truth.data, mean, sigma)
+    return returndata
+
+def sgl_bkgd_acc(predicted, truth): 
+    """
+    Considering 'predicted' and 'truth' are both in Tensor format
+    sgl = 1
+    bkgd = 0
+
+    Return signal accuracy and background accuracy
+    """
+    truth_sgl = truth.nonzero() # indices of non-zero elements in truth
+    truth_bkgd = (truth == 0).nonzero() # indices of zero elements in truth
+    correct_sgl = 0
+    correct_bkgd = 0
+    for i in range(truth_sgl.shape[0]): 
+        if predicted[truth_sgl[i]][0] == truth[truth_sgl[i]][0]: 
+            correct_sgl += 1
+    for i in range(truth_bkgd.shape[0]): 
+        if predicted[truth_bkgd[i]][0] == truth[truth_bkgd[i]][0]: 
+            correct_bkgd += 1
+
+    return float(correct_sgl / truth_sgl.shape[0]), float(correct_bkgd / truth_bkgd.shape[0])
+
+####################
+# Perform Training #
+####################
 
 def update_batch_history(data_train, data_test, saved_batch_n, total_batch_n):
     train_ECALs, train_HCALs, train_ys, train_energies, train_etas = data_train
@@ -293,5 +367,18 @@ if options['saveFinalModel']:
 # Analyze and make plots #
 ##########################
 
+classifier_test_results = []
+# classifier_test_parameters = []  # (energy, eta, y)
+for data in validationLoader:
+    ECAL, HCAL, y, energy, eta = data
+    if (classifier != None):
+        # classifier_test_parameters.append((energy, eta, y))
+        ECAL, HCAL, y, energy, eta = Variable(ECAL.cuda()), Variable(HCAL.cuda()), Variable(y.cuda()), Variable(energy.cuda()), Variable(eta.cuda())
+        classifier_test_results.append(eval(classifier, ECAL, HCAL, y))
+    else:
+        classifier_test_results.append((0,0,0,0,0,0))
+        classifier_test_results.append((0,0,0))
+# classifier_test_parameters = np.array(classifier_test_parameters)
+
 print('Performing Analysis')
-analyzer.analyze([tools[0], tools[1], tools[2]], validationLoader, out_file)
+analyzer.analyze([tools[0], tools[1], tools[2]], classifier_test_results, out_file)
