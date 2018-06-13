@@ -45,14 +45,13 @@ class Classifier_Net(nn.Module):
         return_data = {}
         for i, (label, activation) in enumerate(self.outputs):
             if activation == CLASSIFICATION:
-                return_data[label] = F.softmax(x[:, i], dim=0)
                 if 'classification' in return_data.keys():
-                    return_data['classification'] = torch.stack((return_data['classification'], return_data[label]))
+                    return_data['classification'] = torch.stack((return_data['classification'], x[:, i]))
                 else:
-                    return_data['classification'] = return_data[label]
+                    return_data['classification'] = x[:, i]
             else:
                 return_data[label] = x[:, i]
-        return_data['classification'] = return_data['classification'].transpose(0, 1)
+        return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
         return return_data
 
 # def lossFunction(output, data):
