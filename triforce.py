@@ -181,15 +181,21 @@ BATCH, EPOCH = 0, 1
 def sgl_bkgd_acc(predicted, truth): 
     truth_sgl = truth.nonzero() # indices of non-zero elements in truth
     truth_bkgd = (truth == 0).nonzero() # indices of zero elements in truth
-    correct_sgl = 0
-    correct_bkgd = 0
-    for i in range(truth_sgl.shape[0]): 
-        if predicted[truth_sgl[i]][0] == truth[truth_sgl[i]][0]: 
-            correct_sgl += 1
-    for i in range(truth_bkgd.shape[0]): 
-        if predicted[truth_bkgd[i]][0] == truth[truth_bkgd[i]][0]: 
-            correct_bkgd += 1
-    return float(correct_sgl / truth_sgl.shape[0]), float(correct_bkgd / truth_bkgd.shape[0]) # signal acc, bkg acc
+    correct_sgl_frac = 0
+    correct_bkgd_frac = 0
+    if len(truth_sgl) > 0:
+        correct_sgl = 0
+        for i in range(truth_sgl.shape[0]):
+            if predicted[truth_sgl[i]][0] == truth[truth_sgl[i]][0]:
+                correct_sgl += 1
+        correct_sgl_frac = float(correct_sgl / truth_sgl.shape[0])
+    if len(truth_bkgd) > 0:
+        correct_bkgd = 0
+        for i in range(truth_bkgd.shape[0]):
+            if predicted[truth_bkgd[i]][0] == truth[truth_bkgd[i]][0]:
+                correct_bkgd += 1
+        correct_bkgd_frac = float(correct_bkgd / truth_bkgd.shape[0])
+    return correct_sgl_frac, correct_bkgd_frac # signal acc, bkg acc
 
 def eval(model, event_data, do_training=False):
     if do_training:
@@ -201,7 +207,7 @@ def eval(model, event_data, do_training=False):
     return_event_data = {}
     # classification
     truth_class = Variable(event_data["pdgID"].cuda())
-    loss = model.lossFunction(outputs['classification'], truth_class)
+    loss = model.lossFunction(outputs, event_data, options['lossTermWeights'])
     return_event_data["loss"] = loss.data[0]
     if do_training:
         loss.backward()

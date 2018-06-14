@@ -19,10 +19,10 @@ def load_hdf5(file, pdgIDs):
         return_data['pdgID'] = [pdgIDs[abs(i)] for i in return_data['pdgID']] # PyTorch expects class index instead of one-hot
         if 'energy' in f.keys():
             return_data['energy'] = f['energy'][:].astype(np.float32)
-        else: return_data['energy'] = np.zeros(n_events)
+        else: return_data['energy'] = np.zeros(n_events, dtype=np.float32)
         if 'eta' in f.keys():
             return_data['eta'] = f['eta'][:].astype(np.float32)
-        else: return_data['eta'] = np.zeros(n_events)
+        else: return_data['eta'] = np.zeros(n_events, dtype=np.float32)
     return return_data
 
 def load_3d_hdf5(file, pdgIDs):

@@ -35,6 +35,11 @@ options['nValidationMax'] = -1
 # options['nTestMax'] = 20
 # options['nValidationMax'] = 20
 
+## relative weight to assign to each type of output
+## set to 0 to ignore a type of output
+options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
+#options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, 'eta_regression': 1.0}
+
 ################
 # Choose tools #
 ################

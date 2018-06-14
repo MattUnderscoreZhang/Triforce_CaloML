@@ -59,14 +59,18 @@ class Classifier_Net(nn.Module):
         return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
         return return_data
 
-# def lossFunction(output, data):
-    # truth = Variable(data["pdgID"].cuda())
-    # return nn.CrossEntropyLoss(output, truth).data[0]
+def lossFunction(output, data, term_weights):
+    # classification loss: cross entropy
+    loss_class = term_weights['classification'] * F.cross_entropy(output['classification'], Variable(data['pdgID'].cuda()))
+    # regression loss: mse
+    # to add: per-event weights for energy regression
+    loss_energy = term_weights['energy_regression'] * F.mse_loss(output['energy_regression'], Variable(data['energy'].cuda()))
+    loss_eta = term_weights['eta_regression'] * F.mse_loss(output['eta_regression'], Variable(data['eta'].cuda()))
+    return loss_class+loss_energy+loss_eta
 
 class Net():
     def __init__(self, classes, hiddenLayerNeurons, nHiddenLayers, dropoutProb, learningRate, decayRate, windowSize):
         self.net = Classifier_Net(classes, hiddenLayerNeurons, nHiddenLayers, dropoutProb, windowSize)
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
-        # self.lossFunction = lossFunction
-        self.lossFunction = nn.CrossEntropyLoss()
+        self.lossFunction = lossFunction
