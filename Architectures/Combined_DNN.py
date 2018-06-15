@@ -13,24 +13,25 @@ CLASSIFICATION, REGRESSION = 0, 1
 
 class Classifier_Net(nn.Module):
 
-    def __init__(self, classes, hiddenLayerNeurons, nHiddenLayers, dropoutProb, windowSizeECAL, windowSizeHCAL):
+    def __init__(self, options):
         super().__init__()
         # settings
-        self.windowSizeECAL = windowSizeECAL
-        self.windowSizeHCAL = windowSizeHCAL
-        self.nHiddenLayers = nHiddenLayers
+        self.windowSizeECAL = options['windowSizeECAL']
+        self.windowSizeHCAL = options['windowSizeHCAL']
+        self.nHiddenLayers = options['nHiddenLayers']
+        hiddenLayerNeurons = options['hiddenLayerNeurons']
         self.outputs = []
-        for particle_class in classes:
+        for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
         self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
         # layers
-        self.input = nn.Linear(windowSizeECAL * windowSizeECAL * 25 + windowSizeHCAL * windowSizeHCAL * 60 + 2, hiddenLayerNeurons)
+        self.input = nn.Linear(self.windowSizeECAL * self.windowSizeECAL * 25 + self.windowSizeHCAL * self.windowSizeHCAL * 60 + 2, hiddenLayerNeurons)
         self.hidden = [None] * self.nHiddenLayers
         self.dropout = [None] * self.nHiddenLayers
         for i in range(self.nHiddenLayers):
             self.hidden[i] = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
             self.hidden[i].cuda()
-            self.dropout[i] = nn.Dropout(p = dropoutProb)
+            self.dropout[i] = nn.Dropout(p = options['dropoutProb'])
             self.dropout[i].cuda()
         self.finalLayer = nn.Linear(hiddenLayerNeurons + 2, len(self.outputs)) # nClasses = 2 for binary classifier
         # initialize weights for energy sums in energy output to 1: assume close to identity
@@ -95,8 +96,8 @@ def lossFunction(output, data, term_weights):
     return loss_class+loss_energy+loss_eta
 
 class Net():
-    def __init__(self, classes, hiddenLayerNeurons, nHiddenLayers, dropoutProb, learningRate, decayRate, windowSizeECAL, windowSizeHCAL):
-        self.net = Classifier_Net(classes, hiddenLayerNeurons, nHiddenLayers, dropoutProb, windowSizeECAL, windowSizeHCAL)
+    def __init__(self, options):
+        self.net = Classifier_Net(options)
         self.net.cuda()
-        self.optimizer = optim.Adam(self.net.parameters(), lr=learningRate, weight_decay=decayRate)
+        self.optimizer = optim.Adam(self.net.parameters(), lr=options['learningRate'], weight_decay=options['decayRate'])
         self.lossFunction = lossFunction

@@ -47,18 +47,18 @@ options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, '
 # Choose tools #
 ################
 
-from Architectures import Combined_Classifier, Combined_DNN, Discriminator, Generator
+from Architectures import Combined_DNN, Discriminator, Generator
 from Analysis import Classification_Plotter
 
-_decayRate = 0
-_nHiddenLayers = int(sys.argv[2])
-_hiddenLayerNeurons = int(sys.argv[3])
-_learningRate = float(sys.argv[4])
-_dropoutProb = float(sys.argv[5])
-_windowSizeECAL = int(sys.argv[6])
-_windowSizeHCAL = int(sys.argv[7])
+options['decayRate'] = 0
+options['nHiddenLayers'] = int(sys.argv[2])
+options['hiddenLayerNeurons'] = int(sys.argv[3])
+options['learningRate'] = float(sys.argv[4])
+options['dropoutProb'] = float(sys.argv[5])
+options['windowSizeECAL'] = int(sys.argv[6])
+options['windowSizeHCAL'] = int(sys.argv[7])
 
-combined_classifier = Combined_DNN.Net(classes=options['classPdgID'], hiddenLayerNeurons=_hiddenLayerNeurons, nHiddenLayers=_nHiddenLayers, dropoutProb=_dropoutProb, learningRate=_learningRate, decayRate=_decayRate, windowSizeECAL=_windowSizeECAL, windowSizeHCAL=_windowSizeHCAL)
+combined_classifier = Combined_DNN.Net(options)
 discriminator = None
 generator = None
 analyzer = Classification_Plotter.Analyzer()
