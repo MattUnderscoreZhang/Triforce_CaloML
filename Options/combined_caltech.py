@@ -47,7 +47,7 @@ options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, '
 # Choose tools #
 ################
 
-from Architectures import Combined_DNN, Discriminator, Generator
+from Architectures import Combined_DNN, Combined_CNN, Discriminator, Generator
 from Analysis import Classification_Plotter
 
 options['decayRate'] = 0
@@ -58,7 +58,19 @@ options['dropoutProb'] = float(sys.argv[5])
 options['windowSizeECAL'] = int(sys.argv[6])
 options['windowSizeHCAL'] = int(sys.argv[7])
 
-combined_classifier = Combined_DNN.Net(options)
+# options specific to CNN
+# can make these also configurable from command line
+options['nfiltECAL'] = 3
+options['kernelxyECAL'] = 4
+options['kernelzECAL'] = 4
+options['nfiltHCAL'] = 3
+options['kernelxyHCAL'] = 2
+options['kernelzHCAL'] = 6
+options['maxpoolkernelECAL'] = 2
+options['maxpoolkernelHCAL'] = 2
+
+#combined_classifier = Combined_DNN.Net(options)
+combined_classifier = Combined_CNN.Net(options)
 discriminator = None
 generator = None
 analyzer = Classification_Plotter.Analyzer()
