@@ -41,22 +41,25 @@ class Classifier_Net(nn.Module):
         output_params[energy_index][-2] = 1.0
 
     def forward(self, data):
-        # window slice and energy sums
+        # ECAL slice and energy sum
         ECAL = Variable(data["ECAL"].cuda())
         lowerBound = 26 - int(math.ceil(self.windowSizeECAL/2))
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
         ECAL = ECAL.contiguous().view(-1, self.windowSizeECAL * self.windowSizeECAL * 25)
         ECAL_sum = torch.sum(ECAL, dim = 1).view(-1, 1)
-
-        HCAL = Variable(data["HCAL"].cuda())
-        lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
-        upperBound = lowerBound + self.windowSizeHCAL
-        HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
-        HCAL = HCAL.contiguous().view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60)
-        HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1)
-
-        x = torch.cat([ECAL, HCAL, ECAL_sum, HCAL_sum], 1)
+        # HCAL slice and energy sum
+        if (self.windowSizeHCAL > 0):
+            HCAL = Variable(data["HCAL"].cuda())
+            lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
+            upperBound = lowerBound + self.windowSizeHCAL
+            HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
+            HCAL = HCAL.contiguous().view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60)
+            HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1)
+            x = torch.cat([ECAL, HCAL, ECAL_sum, HCAL_sum], 1)
+        else:
+            pdb.set_trace()
+            x = torch.cat([ECAL, ECAL_sum, Variable(torch.FloatTensor([0]).cuda())], 1)
         # feed forward
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):
@@ -76,7 +79,7 @@ class Classifier_Net(nn.Module):
             else:
                 return_data[label] = x[:, i]
         return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
-        return return_data
+        return {"total": loss_class+loss_energy+loss_eta, "classification": loss_class, "energy": loss_energy, "eta": loss_eta}
 
 def weighted_mse_loss(pred,target,weights):
     sqerr = (pred-target)**2

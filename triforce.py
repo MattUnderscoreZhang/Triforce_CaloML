@@ -160,15 +160,12 @@ class historyData(list):
     def __add__(self, key): # overloads []+x
         return key
 
-# training results e.g. history[LOSS][CLASSIFICATION][TRAIN][EPOCH]
+# training results e.g. history[CLASS_LOSS][TRAIN][EPOCH]
 history = historyData()
 
 # enumerate parts of the data structure
-stat_name = ['loss', 'accuracy', 'signalAccuracy', 'backgroundAccuracy']
-LOSS, ACCURACY, SIGNAL_ACCURACY, BACKGROUND_ACCURACY = 0, 1, 2, 3
-tools = [combined_classifier, discriminator, generator]
-tool_name = ['classifier', 'discriminator', 'generator']
-tool_letter = ['C', 'D', 'G']
+stat_name = ['class_reg_loss', 'class_acc', 'class_prediction', 'class_truth', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_bias', 'reg_eta_res']
+CLASS_LOSS, CLASS_ACC = 0, 1
 split_name = ['train', 'validation', 'test']
 TRAIN, VALIDATION, TEST = 0, 1, 2
 timescale_name = ['batch', 'epoch']
@@ -197,66 +194,71 @@ def sgl_bkgd_acc(predicted, truth):
         correct_bkgd_frac = float(correct_bkgd / truth_bkgd.shape[0])
     return correct_sgl_frac, correct_bkgd_frac # signal acc, bkg acc
 
-def eval(model, event_data, do_training=False):
+def class_reg_eval(event_data, do_training=False):
     if do_training:
-        model.net.train()
-        model.optimizer.zero_grad()
+        combined_classifier.net.train()
     else:
-        model.net.eval()
-    outputs = model.net(event_data)
+        combined_classifier.net.eval()
+    outputs = combined_classifier.net(event_data)
     return_event_data = {}
     # classification
     truth_class = Variable(event_data["pdgID"].cuda())
-    loss = model.lossFunction(outputs, event_data, options['lossTermWeights'])
-    return_event_data["loss"] = loss.data[0]
+    class_reg_loss = combined_classifier.lossFunction(outputs, event_data, options['lossTermWeights'])
     if do_training:
-        loss.backward()
-        model.optimizer.step()
+        combined_classifier.optimizer.zero_grad()
+        class_reg_loss["total"].backward()
+        combined_classifier.optimizer.step()
     _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
-    return_event_data["accuracy"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
-    return_event_data["signal_accuracy"], return_event_data["background_accuracy"] = sgl_bkgd_acc(predicted_class.data, truth_class.data)
+    class_sig_acc, class_bkg_acc = sgl_bkgd_acc(predicted_class.data, truth_class.data)
     # regression
     truth_energy = Variable(event_data["energy"].cuda())
-    reldiff = 100.0*(truth_energy.data - outputs['energy_regression'].data)/truth_energy.data
-    return_event_data["mean"] = torch.mean(reldiff)
-    return_event_data["sigma"] = torch.std(reldiff)
+    reldiff_energy = 100.0*(truth_energy.data - outputs['energy_regression'].data)/truth_energy.data
+    truth_eta = Variable(event_data["eta"].cuda())
+    reldiff_eta = 100.0*(truth_eta.data - outputs['eta_regression'].data)/truth_eta.data
+    # return values
+    return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0]
+    return_event_data["class_acc"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
+    return_event_data["class_prediction"] = outputs['classification']
+    return_event_data["class_truth"] = truth_class.data
+    return_event_data["class_sig_acc"] = class_sig_acc
+    return_event_data["class_bkg_acc"] = class_bkg_acc
+    return_event_data["reg_energy_bias"] = torch.mean(reldiff_energy)
+    return_event_data["reg_energy_res"] = torch.std(reldiff_energy)
+    return_event_data["reg_eta_bias"] = torch.mean(reldiff_eta)
+    return_event_data["reg_eta_res"] = torch.std(reldiff_eta)
     return return_event_data
 
-def train(model, event_data):
-    return eval(model, event_data, do_training=True)
+def class_reg_train(event_data):
+    return class_reg_eval(event_data, do_training=True)
 
-####################
-# Perform Training #
-####################
+############################################
+# Perform Training for Combined Classifier #
+############################################
 
 def update_batch_history(data_train, data_test, saved_batch_n, total_batch_n):
-    for tool in range(len(tools)):
-        if (tools[tool] != None):
-            for split in [TRAIN, TEST]:
-                if split == TRAIN:
-                    eval_results = train(tools[tool], data_train)
-                else:
-                    eval_results = eval(tools[tool], data_test)
-                for stat in range(2):
-                    history[stat][tool][split][BATCH][saved_batch_n] += eval_results[stat_name[stat]] 
-                    if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
-                        history[stat][tool][split][BATCH][saved_batch_n] /= options['calculate_loss_per_n_batches']
+    for split in [TRAIN, TEST]:
+        if split == TRAIN:
+            eval_results = class_reg_train(data_train)
+        else:
+            eval_results = class_reg_eval(data_test)
+        for stat in range(len(stat_name)):
+            history[stat][split][BATCH][saved_batch_n] += eval_results[stat_name[stat]] 
+            if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
+                history[stat][split][BATCH][saved_batch_n] /= options['calculate_loss_per_n_batches']
 
 def update_epoch_history():
-    for tool in range(len(tools)):
-        if (tools[tool] != None):
-            for stat in range(2):
-                for split in [TRAIN, TEST]:
-                    history[stat][tool][split][EPOCH].append(history[stat][tool][split][BATCH][-1])
+    for stat in range(2):
+        for split in [TRAIN, TEST]:
+            history[stat][split][EPOCH].append(history[stat][split][BATCH][-1])
 
 def print_stats(timescale):
     print_prefix = "epoch " if timescale == EPOCH else ""
     for split in [TRAIN, TEST]:
         if timescale == EPOCH and split == TRAIN: continue
-        for stat in [LOSS, ACCURACY]:
+        # for stat in range(len(stat_name)):
+        for stat in [CLASS_LOSS, CLASS_ACC]:
             print(print_prefix + split_name[split] + ' ' + stat_name[stat] + ':\t', end="")
-            for tool in range(len(tools)):
-                if (tools[tool] != None): print('(' + tool_letter[tool] + ') %.4f\t' % (history[stat][tool][split][timescale][-1]), end="")
+            print('%8.4f\t' % (history[stat][split][timescale][-1]), end="")
         print()
 
 # early stopping
@@ -268,9 +270,7 @@ def should_i_stop(timescale):
 
     if not options['earlyStopping']: return False
 
-    total_test_loss = 0
-    for tool in range(len(tools)):
-        if (tools[tool] != None): total_test_loss += history[LOSS][tool][TEST][timescale][-1]
+    total_test_loss = history[CLASS_LOSS][TEST][timescale][-1]
 
     if timescale == BATCH:
         relative_delta_loss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
@@ -285,7 +285,7 @@ def should_i_stop(timescale):
 
     return False
 
-def do_all_training():
+def class_reg_training():
 
     total_batch_n = 0
     saved_batch_n = 0
@@ -313,13 +313,14 @@ def do_all_training():
         # save results
         if options['saveFinalModel'] and (options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0):
             if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
-            for tool in range(len(tools)):
-                if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+"_epoch_"+str(epoch)+".pt")
+            torch.save(combined_classifier.net, options['outPath']+"saved_classifier_epoch_"+str(epoch)+".pt")
+            if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator_epoch_"+str(epoch)+".pt")
+            if generator != None: torch.save(generator.net, options['outPath']+"saved_generator_epoch_"+str(epoch)+".pt")
 
         if end_training: break
 
 print('Training')
-do_all_training()
+class_reg_training()
 print('-------------------------------')
 print('Finished Training')
 
@@ -329,23 +330,23 @@ print('Finished Training')
 
 out_file = h5.File(options['outPath']+"training_results.h5", 'w')
 for stat in range(len(stat_name)):
-    for tool in range(len(tool_name)):
-        for split in range(len(split_name)):
-            for timescale in range(len(timescale_name)):
-                out_file.create_dataset(stat_name[stat]+"_"+tool_name[tool]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][tool][split][timescale]))
+    for split in range(len(split_name)):
+        for timescale in range(len(timescale_name)):
+            out_file.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
 if options['saveFinalModel']:
-    for tool in range(len(tools)):
-        if (tools[tool] != None): torch.save(tools[tool].net, options['outPath']+"saved_"+tool_name[tool]+".pt")
+    torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
+    if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
+    if generator != None: torch.save(generator.net, options['outPath']+"saved_generator.pt")
 
 ##########################
 # Analyze and make plots #
 ##########################
 
-classifier_test_results = []
-# classifier_test_parameters = []  # (energy, eta, y)
-for data in validationLoader:
-    classifier_test_results.append(eval(combined_classifier, data))
-# classifier_test_parameters = np.array(classifier_test_parameters)
+classifier_test_results = {}
+for sample in validationLoader:
+    sample_results = class_reg_eval(sample)
+    for key in sample_results:
+        classifier_test_results.setdefault(key, []).append(sample_results[key])
 
 print('Performing Analysis')
-analyzer.analyze([tools[0], tools[1], tools[2]], classifier_test_results, out_file)
+analyzer.analyze([combined_classifier, discriminator, generator], classifier_test_results, out_file)

@@ -6,11 +6,15 @@ import numpy as np
 
 # in_path = "/data/LCD/NewSamples/Fixed/ChPiEscan*/ChPiEscan*.h5"
 # out_path = "/data/LCD/NewSamples/FixedFiltered/ChPiEscan/ChPiEscan"
-in_path = "/data/LCD/NewSamples/Fixed/EleEscan*/EleEscan*.h5"
-out_path = "/data/LCD/NewSamples/FixedFiltered/EleEscan/EleEscan"
+# in_path = "/data/LCD/NewSamples/Fixed/EleEscan*/EleEscan*.h5"
+# out_path = "/data/LCD/NewSamples/FixedFiltered/EleEscan/EleEscan"
 # in_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/Incomplete/GammaEscan_*.h5"
 # out_path = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed_Filtered/GammaEscan"
-target_events_per_file = 500
+in_path = "/data/LCD/NewSamples/Fixed/GammaEscan*/GammaEscan*.h5"
+out_path = "/data/LCD/NewSamples/FixedEnergyFilter/GammaEscan/GammaEscan"
+# in_path = "/data/LCD/NewSamples/Fixed/Pi0Escan*/Pi0Escan*.h5"
+# out_path = "/data/LCD/NewSamples/FixedEnergyFilter/Pi0Escan/Pi0Escan"
+target_events_per_file = 1000
 
 ##########
 # FILTER #
@@ -18,7 +22,8 @@ target_events_per_file = 500
 
 def filter(file):
 
-    return list(np.where(file['HCAL_ECAL_ERatio'][:] <= 0.1)[0])
+    # return list(np.where(file['HCAL_ECAL_ERatio'][:] <= 0.1)[0])
+    return list(np.where(np.logical_and(file['energy'][:] >= 50, file['energy'][:] <= 70))[0])
 
 ###########
 # COMBINE #

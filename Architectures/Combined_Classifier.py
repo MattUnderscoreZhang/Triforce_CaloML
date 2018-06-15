@@ -58,7 +58,7 @@ class Classifier_Net(nn.Module):
             else:
                 return_data[label] = x[:, i]
         return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
-        return return_data
+        return {"total": loss_class+loss_energy+loss_eta, "classification": loss_class, "energy": loss_energy, "eta": loss_eta}
 
 def lossFunction(output, data, term_weights):
     # classification loss: cross entropy

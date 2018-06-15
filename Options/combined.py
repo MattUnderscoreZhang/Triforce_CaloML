@@ -25,7 +25,7 @@ options['saveFinalModel'] = 1 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
-options['nEpochs'] = 20 # break after this number of epochs
+options['nEpochs'] = 1 # break after this number of epochs
 options['nTrainMax'] = -1
 options['nTestMax'] = -1
 options['nValidationMax'] = -1
@@ -37,14 +37,14 @@ options['nValidationMax'] = -1
 
 ## relative weight to assign to each type of output
 ## set to 0 to ignore a type of output
-options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
-#options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, 'eta_regression': 1.0}
+# options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
+options['lossTermWeights'] = {'classification': 200.0, 'energy_regression': 1.0, 'eta_regression': 3000.0}
 
 ################
 # Choose tools #
 ################
 
-from Architectures import Combined_Classifier, Discriminator, Generator
+from Architectures import Combined_DNN, Discriminator, Generator
 from Analysis import Classification_Plotter
 
 options['decayRate'] = 0
@@ -52,9 +52,10 @@ options['nHiddenLayers'] = int(sys.argv[2])
 options['hiddenLayerNeurons'] = int(sys.argv[3])
 options['learningRate'] = float(sys.argv[4])
 options['dropoutProb'] = float(sys.argv[5])
-options['windowSize'] = int(sys.argv[6])
+options['windowSizeECAL'] = int(sys.argv[6])
+options['windowSizeHCAL'] = 0
 
-combined_classifier = Combined_Classifier.Net(options)
+combined_classifier = Combined_DNN.Net(options)
 discriminator = None
 generator = None
 analyzer = Classification_Plotter.Analyzer()

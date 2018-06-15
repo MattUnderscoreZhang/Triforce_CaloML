@@ -5,6 +5,7 @@ import torch
 from torch.autograd import Variable
 import numpy as np
 from sklearn import metrics
+from statistics import mean
 import pdb
 
 class Analyzer():
@@ -66,9 +67,9 @@ class Analyzer():
     # ROC CURVE #
     #############
 
-    def plot_ROC(self, outputs, truth, filename):
+    def plot_ROC(self, scores, truth, filename):
 
-        fpr, tpr, thresholds = metrics.roc_curve(truth, outputs)
+        fpr, tpr, thresholds = metrics.roc_curve(truth, scores)
         roc_auc = metrics.auc(fpr, tpr)
         plt.figure()
         plt.plot(fpr, tpr, color='darkorange', lw=2, label='ROC curve (area = %0.2f)' % roc_auc)
@@ -88,42 +89,22 @@ class Analyzer():
 
     def analyze(self, tools, classifier_test_results, out_file):
 
-        [classifier, regressor, GAN] = tools
+        [combined_classifier, discriminator, generator] = tools
 
-        n_samples = len(classifier_test_results)
-        # extract test loss
-        classifier_test_loss = [classifier_test_results[i][0] for i in range(len(classifier_test_results))]
-        classifier_test_loss = sum(classifier_test_loss) / n_samples
-        # extract test accuracy
-        classifier_test_accuracy = [classifier_test_results[i][1] for i in range(len(classifier_test_results))]
-        classifier_test_accuracy = sum(classifier_test_accuracy) / n_samples
-        # extract test outputs
-        classifier_test_outputs = torch.FloatTensor([])
-        for i in range(len(classifier_test_results)):
-            if i == 0: 
-                classifier_test_outputs = list(classifier_test_results[0])[2][:,1]
-            else: 
-                classifier_test_outputs = torch.cat((classifier_test_outputs, list(classifier_test_results[i])[2][:,1]), 0)
-        classifier_test_outputs = np.array(classifier_test_outputs)
-        # extract test truth
-        classifier_test_truth = torch.FloatTensor([])
-        for i in range(len(classifier_test_results)): 
-            if i == 0: 
-                classifier_test_truth = classifier_test_results[i][3]
-            else: 
-                classifier_test_truth = torch.cat((classifier_test_truth, classifier_test_results[i][3]))
-        classifier_test_truth = np.array(classifier_test_truth)
+        classifier_test_loss = mean(classifier_test_results['class_reg_loss'])
+        classifier_test_accuracy = mean(classifier_test_results['class_acc'])
+        pdb.set_trace()
+        classifier_test_scores = classifier_test_results['class_prediction']
+        pdb.set_trace()
+        classifier_test_truth = classifier_test_results['class_truth']
+        pdb.set_trace()
 
-        print('test loss: (C) %.4f; test accuracy: (C) %.4f' % (classifier_test_loss, classifier_test_accuracy))
-        # if (classifier != None): out_file.create_dataset("classifier_test_results", data=classifier_test_results)
-        if (classifier != None): out_file.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
+        print('test loss: %8.4f; test accuracy: %8.4f' % (classifier_test_loss, classifier_test_accuracy))
+        out_file.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
 
         folder = out_file.filename[:out_file.filename.rfind('/')]
         self.plot_loss_vs_batches(out_file['loss_classifier_train_batch'].value, out_file['loss_classifier_test_batch'].value, folder+"/loss_batches.png")
         self.plot_accuracy_vs_batches(out_file['accuracy_classifier_train_batch'].value, out_file['accuracy_classifier_test_batch'].value, folder+"/accuracy_batches.png")
         self.plot_loss_vs_epoch(out_file['loss_classifier_train_epoch'].value, out_file['loss_classifier_test_epoch'].value, folder+"/loss_epoch_batches.png")
         self.plot_accuracy_vs_epoch(out_file['accuracy_classifier_train_epoch'].value, out_file['accuracy_classifier_test_epoch'].value, folder+"/accuracy_epoch_batches.png")
-        # try: 
-        self.plot_ROC(classifier_test_outputs, classifier_test_truth, folder+"/ROC.png")
-
-        # pdb.set_trace()
+        self.plot_ROC(classifier_test_scores, classifier_test_truth, folder+"/ROC.png")
