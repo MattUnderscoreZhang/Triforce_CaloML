@@ -12,6 +12,7 @@ import ast
 import h5py
 import nsub
 import os
+import math
 from featuresList import FeaturesList
 import addFeatures
 
@@ -223,6 +224,27 @@ def findEventMidpoint(event):
     # don't round yet, to better center each layer and ECAL vs HCAL
     return (ix_avg,iy_avg)
 
+# Given an array of cell hits (ix,iy,iz,E,X,Y,Z,module,absoluteIX,transformedIX,transformedIY), 
+# returns the weighted average in global coords (X, Y, Z)
+def findGlobalBarycenter(event):
+    x_avg = findMidpoint(event[:,4], event[:,3]) 
+    y_avg = findMidpoint(event[:,5], event[:,3]) 
+    z_avg = findMidpoint(event[:,6], event[:,3]) 
+    return (x_avg,y_avg,z_avg)
+
+###########################################
+# Cartesian to sperhical coord conversion #
+###########################################
+
+def getTheta(x, y, z):
+    return math.acos(z / math.sqrt(x*x+y*y+z*z))
+
+def getEta(theta):
+    return -math.log(math.tan(theta/2.0))
+
+def getPhi(x, y, _ = None):
+    return math.atan(y/x)
+
 ##################################################
 # Check if between bounds for calorimeter window #
 ##################################################
@@ -362,15 +384,24 @@ def convertFile(inFile, outFile):
             # get barycenter taking into account ECAL and HCAL
             fullcalo_array = np.concatenate((ECAL_array_extra,HCAL_array_extra),axis=0)
             # returns the midpoint in (transformed ix, transformed iy) local coordinates
-            midpoint_global = findEventMidpoint(fullcalo_array)
+            midpoint_local = findEventMidpoint(fullcalo_array)
 
             # returns ECAL 51x51x25 array around barycenter based on midpoint in (transformed ix, transformed iy) local coordinates
-            ECAL_window = getECALArray(ECAL_array_extra,midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
+            ECAL_window = getECALArray(ECAL_array_extra,midpoint_local[0],midpoint_local[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
             myFeatures.add("ECAL", ECAL_window)
 
             # returns HCAL 11x11x60 array around barycenter based on midpoint in (transformed ix, transformed iy) local coordinates
-            HCAL_window = getHCALArray(HCAL_array_extra,midpoint_global[0],midpoint_global[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
+            HCAL_window = getHCALArray(HCAL_array_extra,midpoint_local[0],midpoint_local[1])/1000.*50 # Geant is in units of 1/50 GeV for some reason
             myFeatures.add("HCAL", HCAL_window)
+            
+            # get barycenter in global coords to compute barycenter theta, eta, phi
+            barycenter_global = findGlobalBarycenter(fullcalo_array)
+            theta = getTheta(*barycenter_global)
+            eta = getEta(theta)
+            phi = getPhi(*barycenter_global)
+            myFeatures.add("recoTheta", theta)
+            myFeatures.add("recoEta", eta)
+            myFeatures.add("recoPhi", phi)
 
             # Truth info from txt file
             myFeatures.add("energy", my_event['E']/1000.) # convert MeV to GeV

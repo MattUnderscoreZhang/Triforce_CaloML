@@ -38,6 +38,11 @@ def convertFile(inFile, outFile):
         # ECAL = ECAL/100
         # HCAL = HCAL/100
 
+    # reco angle info
+    newFile.create_dataset("recoTheta", data=oldFile["recoTheta"][()], compression='gzip')
+    newFile.create_dataset("recoEta", data=oldFile["recoEta"][()], compression='gzip')
+    newFile.create_dataset("recoPhi", data=oldFile["recoPhi"][()], compression='gzip')
+
     # Truth info
     newFile.create_dataset("energy", data=oldFile["energy"][()], compression='gzip')
     newFile.create_dataset("pdgID", data=oldFile["pdgID"][()], compression='gzip')
