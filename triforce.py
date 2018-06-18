@@ -19,6 +19,9 @@ import Loader.loader as loader
 import Options
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
 import pdb
+from timeit import default_timer as timer
+
+start = timer()
 
 ####################
 # Set options file #
@@ -350,3 +353,6 @@ for sample in validationLoader:
 
 print('Performing Analysis')
 analyzer.analyze([combined_classifier, discriminator, generator], classifier_test_results, out_file)
+
+end = timer()
+print('Total time taken: %.2f minutes'%(float(end - start)/60.))
