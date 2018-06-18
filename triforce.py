@@ -27,7 +27,7 @@ start = timer()
 # Set options file #
 ####################
 
-optionsFileName = "combined"
+optionsFileName = "combined_caltech"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -167,7 +167,9 @@ class historyData(list):
 history = historyData()
 
 # enumerate parts of the data structure
-stat_name = ['class_reg_loss', 'class_acc', 'class_prediction', 'class_truth', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_bias', 'reg_eta_res']
+stat_name = ['class_reg_loss', 'class_acc', 'class_prediction', 'class_truth', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
+# stat metrics to print out every N batches
+print_metrics = options['print_metrics']
 CLASS_LOSS, CLASS_ACC = 0, 1
 split_name = ['train', 'validation', 'test']
 TRAIN, VALIDATION, TEST = 0, 1, 2
@@ -217,18 +219,18 @@ def class_reg_eval(event_data, do_training=False):
     truth_energy = Variable(event_data["energy"].cuda())
     reldiff_energy = 100.0*(truth_energy.data - outputs['energy_regression'].data)/truth_energy.data
     truth_eta = Variable(event_data["eta"].cuda())
-    reldiff_eta = 100.0*(truth_eta.data - outputs['eta_regression'].data)/truth_eta.data
+    diff_eta = truth_eta.data - outputs['eta_regression'].data
     # return values
     return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0]
     return_event_data["class_acc"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
-    return_event_data["class_prediction"] = outputs['classification']
+    return_event_data["class_prediction"] = predicted_class.data
     return_event_data["class_truth"] = truth_class.data
     return_event_data["class_sig_acc"] = class_sig_acc
     return_event_data["class_bkg_acc"] = class_bkg_acc
     return_event_data["reg_energy_bias"] = torch.mean(reldiff_energy)
     return_event_data["reg_energy_res"] = torch.std(reldiff_energy)
-    return_event_data["reg_eta_bias"] = torch.mean(reldiff_eta)
-    return_event_data["reg_eta_res"] = torch.std(reldiff_eta)
+    return_event_data["reg_eta_diff"] = torch.mean(diff_eta)
+    return_event_data["reg_eta_std"] = torch.std(diff_eta)
     return return_event_data
 
 def class_reg_train(event_data):
@@ -250,7 +252,7 @@ def update_batch_history(data_train, data_test, saved_batch_n, total_batch_n):
                 history[stat][split][BATCH][saved_batch_n] /= options['calculate_loss_per_n_batches']
 
 def update_epoch_history():
-    for stat in range(2):
+    for stat in range(len(stat_name)):
         for split in [TRAIN, TEST]:
             history[stat][split][EPOCH].append(history[stat][split][BATCH][-1])
 
@@ -258,10 +260,10 @@ def print_stats(timescale):
     print_prefix = "epoch " if timescale == EPOCH else ""
     for split in [TRAIN, TEST]:
         if timescale == EPOCH and split == TRAIN: continue
-        # for stat in range(len(stat_name)):
-        for stat in [CLASS_LOSS, CLASS_ACC]:
-            print(print_prefix + split_name[split] + ' ' + stat_name[stat] + ':\t', end="")
-            print('%8.4f\t' % (history[stat][split][timescale][-1]), end="")
+        print(print_prefix + split_name[split] + ' sample')
+        for stat in range(len(stat_name)):
+            if stat_name[stat] in print_metrics:
+                print('  ' + stat_name[stat] + ':\t %8.4f' % (history[stat][split][timescale][-1]))
         print()
 
 # early stopping
@@ -333,6 +335,7 @@ print('Finished Training')
 
 out_file = h5.File(options['outPath']+"training_results.h5", 'w')
 for stat in range(len(stat_name)):
+    if not stat_name[stat] in print_metrics: continue
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
             out_file.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))

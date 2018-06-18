@@ -40,6 +40,13 @@ options['nValidationMax'] = -1
 # options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
 options['lossTermWeights'] = {'classification': 200.0, 'energy_regression': 1.0, 'eta_regression': 3000.0}
 
+####################
+# Printout options #
+####################
+
+options['print_metrics'] = ['class_reg_loss', 'class_acc']
+#options['print_metrics'] = ['class_reg_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
+
 ################
 # Choose tools #
 ################

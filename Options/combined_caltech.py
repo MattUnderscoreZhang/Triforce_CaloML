@@ -34,14 +34,20 @@ options['nTestMax'] = -1
 options['nValidationMax'] = -1
 
 # options['nEpochs'] = 1 # break after this number of epochs
-# options['nTrainMax'] = 20
-# options['nTestMax'] = 20
-# options['nValidationMax'] = 20
+# options['nTrainMax'] = 1
+# options['nTestMax'] = 1
+# options['nValidationMax'] = 1
 
 ## relative weight to assign to each type of output
 ## set to 0 to ignore a type of output
 #options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
 options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, 'eta_regression': 0.0}
+
+####################
+# Printout options #
+####################
+
+options['print_metrics'] = ['class_reg_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
 
 ################
 # Choose tools #
