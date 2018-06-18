@@ -199,7 +199,7 @@ def sgl_bkgd_acc(predicted, truth):
         correct_bkgd_frac = float(correct_bkgd / truth_bkgd.shape[0])
     return correct_sgl_frac, correct_bkgd_frac # signal acc, bkg acc
 
-def class_reg_eval(event_data, do_training=False):
+def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     if do_training:
         combined_classifier.net.train()
     else:
@@ -231,6 +231,15 @@ def class_reg_eval(event_data, do_training=False):
     return_event_data["reg_energy_res"] = torch.std(reldiff_energy)
     return_event_data["reg_eta_diff"] = torch.mean(diff_eta)
     return_event_data["reg_eta_std"] = torch.std(diff_eta)
+    if store_reg_results:
+        return_event_data["reg_energy_truth"] = truth_energy.data
+        return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data
+        return_event_data["reg_eta_truth"] = truth_eta.data
+        return_event_data["reg_eta_prediction"] = outputs['eta_regression'].data
+        ECAL = event_data["ECAL"]
+        return_event_data["reg_raw_ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1)
+        HCAL = event_data["HCAL"]
+        return_event_data["reg_raw_HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1)
     return return_event_data
 
 def class_reg_train(event_data):
@@ -339,6 +348,7 @@ for stat in range(len(stat_name)):
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
             out_file.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
+out_file.close()
 if options['saveFinalModel']:
     torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
     if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
@@ -350,9 +360,25 @@ if options['saveFinalModel']:
 
 classifier_test_results = {}
 for sample in validationLoader:
-    sample_results = class_reg_eval(sample)
-    for key in sample_results:
-        classifier_test_results.setdefault(key, []).append(sample_results[key])
+    sample_results = class_reg_eval(sample, store_reg_results=True)
+    for key,data in sample_results.items():
+        # cat together tensor outputs
+        if 'Tensor' in str(type(data)):
+            if key in classifier_test_results:
+                classifier_test_results[key] = torch.cat([classifier_test_results[key], data], dim=0)
+            else:
+                classifier_test_results[key] = data
+        # put other outputs into a list
+        else:
+            classifier_test_results.setdefault(key, []).append(sample_results[key])
+
+# save validation output
+if len(options['val_outputs']) > 0:
+    val_file = h5.File(options['outPath']+"validation_results.h5", 'w')
+    for key,data in classifier_test_results.items():
+        if not key in options['val_outputs']: continue
+        val_file.create_dataset(key,data=np.asarray(data))
+    val_file.close()
 
 print('Performing Analysis')
 analyzer.analyze([combined_classifier, discriminator, generator], classifier_test_results, out_file)
