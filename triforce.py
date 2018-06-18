@@ -27,7 +27,7 @@ start = timer()
 # Set options file #
 ####################
 
-optionsFileName = "combined_caltech"
+optionsFileName = "combined"
 
 ######################################################
 # Import options & warn if options file has problems #
