@@ -2,6 +2,7 @@
 # Kaustuv Datta and Jayesh Mahaptra (July 2016)
 # Maurizio Pierni (April 2017)
 # Matt Zhang (May 2017)
+# Dominick Olivito (June 2018)
 
 from __future__ import division
 import numpy as np
@@ -39,7 +40,6 @@ def convertFile(inFile, outFile):
         # HCAL = HCAL/100
 
     # copy over all other existing arrays from the old file
-    print oldFile.keys()
     for key in oldFile.keys():
         if key in ['ECAL','HCAL']: continue
         newFile.create_dataset(key, data=oldFile[key][()], compression='gzip')
