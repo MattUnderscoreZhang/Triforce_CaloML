@@ -79,7 +79,7 @@ class Classifier_Net(nn.Module):
             else:
                 return_data[label] = x[:, i]
         return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
-        return {"total": loss_class+loss_energy+loss_eta, "classification": loss_class, "energy": loss_energy, "eta": loss_eta}
+        return return_data
 
 def weighted_mse_loss(pred,target,weights):
     sqerr = (pred-target)**2
@@ -96,7 +96,7 @@ def lossFunction(output, data, term_weights):
     event_weights = 1.0 / torch.log(truth_energy)
     loss_energy = term_weights['energy_regression'] * weighted_mse_loss(output['energy_regression'], truth_energy, event_weights)
     loss_eta = term_weights['eta_regression'] * F.mse_loss(output['eta_regression'], Variable(data['eta'].cuda()))
-    return loss_class+loss_energy+loss_eta
+    return {"total": loss_class+loss_energy+loss_eta, "classification": loss_class, "energy": loss_energy, "eta": loss_eta}
 
 class Net():
     def __init__(self, options):
