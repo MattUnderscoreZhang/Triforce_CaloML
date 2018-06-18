@@ -38,16 +38,12 @@ def convertFile(inFile, outFile):
         # ECAL = ECAL/100
         # HCAL = HCAL/100
 
-    # reco angle info
-    newFile.create_dataset("recoTheta", data=oldFile["recoTheta"][()], compression='gzip')
-    newFile.create_dataset("recoEta", data=oldFile["recoEta"][()], compression='gzip')
-    newFile.create_dataset("recoPhi", data=oldFile["recoPhi"][()], compression='gzip')
-
-    # Truth info
-    newFile.create_dataset("energy", data=oldFile["energy"][()], compression='gzip')
-    newFile.create_dataset("pdgID", data=oldFile["pdgID"][()], compression='gzip')
-    newFile.create_dataset("conversion", data=oldFile["conversion"][()], compression='gzip')
-    newFile.create_dataset("openingAngle", data=oldFile["openingAngle"][()], compression='gzip')
+    # copy over all other existing arrays from the old file
+    print oldFile.keys()
+    for key in oldFile.keys():
+        if key in ['ECAL','HCAL']: continue
+        newFile.create_dataset(key, data=oldFile[key][()], compression='gzip')
+    oldFile.close()
 
     # Calorimeter total energy and number of hits
     ECAL_E = np.sum(np.sum(np.sum(ECAL, axis=1), axis=1), axis=1)
@@ -134,6 +130,8 @@ def convertFile(inFile, outFile):
         if i==0: HCAL_midZ = HCAL_momentZ.transpose()
         newFile.create_dataset("HCALmomentZ" + str(i+1), data=HCAL_momentZ, compression='gzip')
     
+    newFile.close()
+        
 #################
 # Main function #
 #################
