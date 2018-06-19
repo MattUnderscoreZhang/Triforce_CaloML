@@ -80,6 +80,9 @@ else:
 optionsFilePath = Options.__file__[:Options.__file__.rfind('/')]
 shutil.copyfile(optionsFilePath + "/" + optionsFileName + ".py", options['outPath']+"/options.py")
 shutil.copyfile(optionsFilePath + "/../triforce.py", options['outPath']+"/triforce.py")
+# also write options dict to store also command line input parameters
+with open(options['outPath']+"/options_dict.py", 'w') as f:
+    f.write('options = '+str(options))
 
 ####################################
 # Load files and set up generators #
