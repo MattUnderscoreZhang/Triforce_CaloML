@@ -26,7 +26,10 @@ class Classifier_Net(nn.Module):
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
         self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
         # layers
-        self.input = nn.Linear(self.windowSizeECAL * self.windowSizeECAL * 25 + self.windowSizeHCAL * self.windowSizeHCAL * 60 + 2, hiddenLayerNeurons)
+        ECAL_size = self.windowSizeECAL * self.windowSizeECAL * 25
+        HCAL_size = self.windowSizeHCAL * self.windowSizeHCAL * 60
+        nsums = 2 if self.windowSizeHCAL > 0 else 1
+        self.input = nn.Linear(ECAL_size + HCAL_size + nsums, hiddenLayerNeurons)
         self.hidden = [None] * self.nHiddenLayers
         self.dropout = [None] * self.nHiddenLayers
         for i in range(self.nHiddenLayers):
@@ -34,12 +37,12 @@ class Classifier_Net(nn.Module):
             self.hidden[i].cuda()
             self.dropout[i] = nn.Dropout(p = options['dropoutProb'])
             self.dropout[i].cuda()
-        self.finalLayer = nn.Linear(hiddenLayerNeurons + 2, len(self.outputs)) # nClasses = 2 for binary classifier
+        self.finalLayer = nn.Linear(hiddenLayerNeurons + nsums, len(self.outputs)) # nClasses = 2 for binary classifier
         # initialize weights for energy sums in energy output to 1: assume close to identity
         energy_index = self.outputs.index(("energy_regression", REGRESSION))
         output_params = self.finalLayer.weight.data
         output_params[energy_index][-1] = 1.0
-        output_params[energy_index][-2] = 1.0
+        if nsums > 1: output_params[energy_index][-2] = 1.0
 
     def forward(self, data):
         # ECAL slice and energy sum
@@ -59,15 +62,17 @@ class Classifier_Net(nn.Module):
             HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1)
             x = torch.cat([ECAL, HCAL, ECAL_sum, HCAL_sum], 1)
         else:
-            pdb.set_trace()
-            x = torch.cat([ECAL, ECAL_sum, Variable(torch.FloatTensor([0]).cuda())], 1)
+            x = torch.cat([ECAL, ECAL_sum], 1)
         # feed forward
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):
             x = F.relu(self.hidden[i](x))
             x = self.dropout[i](x)
         # cat energy sums back in before final layer
-        x = torch.cat([x, ECAL_sum, HCAL_sum], 1)
+        if (self.windowSizeHCAL > 0):
+            x = torch.cat([x, ECAL_sum, HCAL_sum], 1)
+        else:
+            x = torch.cat([x, ECAL_sum], 1)
         x = self.finalLayer(x)
         # preparing output
         return_data = {}
