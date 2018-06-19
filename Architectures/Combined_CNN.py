@@ -113,7 +113,7 @@ class Classifier_Net(nn.Module):
         # join the two branches and energy sums
         x = torch.cat((branchECAL, branchHCAL, ECAL_sum, HCAL_sum), 1) 
         # fully connected layers
-        for i in range(self.nHiddenLayers-1):
+        for i in range(self.nHiddenLayers):
             x = F.relu(self.hidden[i](x))
             x = self.dropout[i](x)
         # cat energy sums back in before final layer

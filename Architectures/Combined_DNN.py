@@ -65,7 +65,7 @@ class Classifier_Net(nn.Module):
             x = torch.cat([ECAL, ECAL_sum], 1)
         # feed forward
         x = self.input(x)
-        for i in range(self.nHiddenLayers-1):
+        for i in range(self.nHiddenLayers):
             x = F.relu(self.hidden[i](x))
             x = self.dropout[i](x)
         # cat energy sums back in before final layer
