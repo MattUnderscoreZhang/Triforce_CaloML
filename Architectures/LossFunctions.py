@@ -11,7 +11,7 @@ def weighted_mse_loss(pred,target,weights):
 
 def combinedLossFunction(output, data, term_weights):
     # classification loss: cross entropy
-    loss_class = term_weights['classification'] * F.cross_entropy(output['classification'], Variable(data['pdgID'].cuda()))
+    loss_class = term_weights['classification'] * F.cross_entropy(output['classification'], Variable(data['classID'].cuda()))
     # regression loss: mse
     truth_energy = Variable(data['energy'].cuda())
     # use per-event weights for energy to emphasize lower energies

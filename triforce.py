@@ -114,6 +114,7 @@ if options['nTestMax']>0:
     nTest = min(nTest,options['nTestMax'])
 if (nTest==0 or nTrain==0 or (options['validationRatio']>0 and nValidation==0)):
     print("Not enough files found - check sample paths")
+    sys.exit()
 print('-------------------------------')
 
 # split the train, test, and validation files
@@ -210,7 +211,7 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     outputs = combined_classifier.net(event_data)
     return_event_data = {}
     # classification
-    truth_class = Variable(event_data["pdgID"].cuda())
+    truth_class = Variable(event_data["classID"].cuda())
     class_reg_loss = combined_classifier.lossFunction(outputs, event_data, options['lossTermWeights'])
     if do_training:
         combined_classifier.optimizer.zero_grad()
@@ -243,6 +244,7 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
         return_event_data["reg_raw_ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1)
         HCAL = event_data["HCAL"]
         return_event_data["reg_raw_HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1)
+        return_event_data["pdgID"] = event_data["pdgID"]
     return return_event_data
 
 def class_reg_train(event_data):

@@ -49,7 +49,7 @@ options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, '
 
 options['print_metrics'] = ['class_reg_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
 
-options['val_outputs'] = ['reg_energy_truth', 'reg_energy_prediction', 'reg_eta_truth', 'reg_eta_prediction', 'reg_raw_ECAL_E', 'reg_raw_HCAL_E']
+options['val_outputs'] = ['reg_energy_truth', 'reg_energy_prediction', 'reg_eta_truth', 'reg_eta_prediction', 'reg_raw_ECAL_E', 'reg_raw_HCAL_E', 'pdgID']
 
 ################
 # Choose tools #
