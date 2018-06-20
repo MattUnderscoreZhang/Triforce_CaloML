@@ -8,21 +8,30 @@ from torch import from_numpy
 import h5py
 import numpy as np
 
-def load_hdf5(file, pdgIDs):
+def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
     '''Loads H5 file. Used by HDF5Dataset.'''
     return_data = {}
     with h5py.File(file, 'r') as f:
-        return_data['ECAL'] = f['ECAL'][:].astype(np.float32)
-        n_events = len(return_data['ECAL'])
-        return_data['HCAL'] = f['HCAL'][:].astype(np.float32)
-        return_data['pdgID'] = f['pdgID'][:].astype(int)
-        return_data['classID'] = np.array([pdgIDs[abs(i)] for i in return_data['pdgID']]) # PyTorch expects class index instead of one-hot
-        if 'energy' in f.keys():
-            return_data['energy'] = f['energy'][:].astype(np.float32)
-        else: return_data['energy'] = np.zeros(n_events, dtype=np.float32)
-        if 'eta' in f.keys():
-            return_data['eta'] = f['eta'][:].astype(np.float32)
-        else: return_data['eta'] = np.zeros(n_events, dtype=np.float32)
+        # (default) load full ECAL / HCAL arrays and standard features
+        if loadMinimalFeatures is None:
+            return_data['ECAL'] = f['ECAL'][:].astype(np.float32)
+            n_events = len(return_data['ECAL'])
+            return_data['HCAL'] = f['HCAL'][:].astype(np.float32)
+            return_data['ECAL_E'] = f['ECAL_E'][:].astype(np.float32)
+            return_data['HCAL_E'] = f['HCAL_E'][:].astype(np.float32)
+            return_data['HCAL_ECAL_ERatio'] = f['HCAL_ECAL_ERatio'][:].astype(np.float32)
+            return_data['pdgID'] = f['pdgID'][:].astype(int)
+            return_data['classID'] = np.array([pdgIDs[abs(i)] for i in return_data['pdgID']]) # PyTorch expects class index instead of one-hot
+            if 'energy' in f.keys():
+                return_data['energy'] = f['energy'][:].astype(np.float32)
+            else: return_data['energy'] = np.zeros(n_events, dtype=np.float32)
+            if 'eta' in f.keys():
+                return_data['eta'] = f['eta'][:].astype(np.float32)
+            else: return_data['eta'] = np.zeros(n_events, dtype=np.float32)
+        # minimal data load: only load specific features that are requested
+        else:
+            for feat in loadMinimalFeatures:
+                return_data[feat] = f[feat][:]
     return return_data
 
 def load_3d_hdf5(file, pdgIDs):
@@ -41,37 +50,67 @@ class HDF5Dataset(data.Dataset):
         num_per_file: number of events in each data file
     """
 
-    def __init__(self, dataname_tuples, num_per_file, pdgIDs):
+    def __init__(self, dataname_tuples, pdgIDs, filters = []):
         self.dataname_tuples = sorted(dataname_tuples)
-        self.num_per_file = num_per_file
+        self.nClasses = len(dataname_tuples[0])
+        self.num_per_file = len(dataname_tuples) * [0]
         self.fileInMemory = -1
+        self.fileInMemoryFirstIndex = 0
+        self.fileInMemoryLastIndex = -1
         self.data = {}
         self.pdgIDs = {}
+        self.filters = filters
         for i, ID in enumerate(pdgIDs):
             self.pdgIDs[ID] = i
+        self.countEvents()
+
+    def countEvents(self):
+        # make minimal list of inputs needed to check (or count events)
+        minFeatures = []
+        for filt in self.filters: minFeatures += filt.featuresUsed
+        # use energy to count number of events if no filters
+        if len(minFeatures) == 0: minFeatures.append('energy')
+        totalevents = 0
+        for fileN in range(len(self.dataname_tuples)):
+            nevents_before, nevents_after = [], []
+            for dataname in self.dataname_tuples[fileN]:
+                file_data = load_hdf5(dataname, self.pdgIDs, minFeatures)
+                nevents_before.append(len(list(file_data.values())[0]))
+                for filt in self.filters: filt.filter(file_data)
+                nevents_after.append(len(list(file_data.values())[0]))
+            self.num_per_file[fileN] = min(nevents_after) * self.nClasses
+            totalevents += min(nevents_before) * self.nClasses
+        print('total events:',totalevents)
+        if len(self.filters) > 0:
+            print('total events passing filters:',sum(self.num_per_file))
 
     def __getitem__(self, index):
-        fileN = index//self.num_per_file
-        indexInFile = index%self.num_per_file-1
         # if we started to look at a new file, read the file data
-        if(fileN != self.fileInMemory):
+        if(index > self.fileInMemoryLastIndex):
+            # update indices to new file
+            self.fileInMemory += 1
+            self.fileInMemoryFirstIndex = int(self.fileInMemoryLastIndex+1)
+            self.fileInMemoryLastIndex += self.num_per_file[self.fileInMemory]
             self.data = {}
-            for dataname in self.dataname_tuples[fileN]:
+            for dataname in self.dataname_tuples[self.fileInMemory]:
                 file_data = load_hdf5(dataname, self.pdgIDs)
+                # apply any filters here
+                if not self.filters is None:
+                    for filt in self.filters: filt.filter(file_data)
                 for key in file_data.keys():
                     if key in self.data.keys():
                         self.data[key] = np.append(self.data[key], file_data[key], axis=0)
                     else:
                         self.data[key] = file_data[key]
-            self.fileInMemory = fileN
         # return the correct sample
+        indexInFile = index - self.fileInMemoryFirstIndex
         return_data = {}
         for key in self.data.keys():
             return_data[key] = self.data[key][indexInFile]
         return return_data
 
     def __len__(self):
-        return len(self.dataname_tuples)*self.num_per_file
+        return sum(self.num_per_file)
 
 class OrderedRandomSampler(object):
 
@@ -83,12 +122,13 @@ class OrderedRandomSampler(object):
     def __init__(self, data_source):
         self.data_source = data_source
         self.num_per_file = self.data_source.num_per_file
-        self.num_of_files = len(self.data_source.dataname_tuples)
 
     def __iter__(self):
         indices=np.array([],dtype=np.int64)
-        for i in range(self.num_of_files):
-            indices=np.append(indices, np.random.permutation(self.num_per_file)+i*self.num_per_file)
+        prev_file_end = 0
+        for i in range(len(self.num_per_file)):
+            indices=np.append(indices, np.random.permutation(self.num_per_file[i])+prev_file_end)
+            prev_file_end += self.num_per_file[i]
         return iter(from_numpy(indices))
 
     def __len__(self):

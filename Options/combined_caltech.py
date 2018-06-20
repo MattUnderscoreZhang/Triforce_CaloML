@@ -41,6 +41,17 @@ options['nValidationMax'] = -1
 #options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
 options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, 'eta_regression': 0.0}
 
+#################
+# Input filters #
+#################
+
+from Loader import filters
+
+#energy_filter = filters.energy_filter(50,70)
+#hOverE_filter = filters.hOverE_filter(0.4)
+#options['filters'] = [hOverE_filter]
+options['filters'] = []
+
 ##################
 # Output options #
 ##################
