@@ -16,7 +16,7 @@ def load_hdf5(file, pdgIDs):
         n_events = len(return_data['ECAL'])
         return_data['HCAL'] = f['HCAL'][:].astype(np.float32)
         return_data['pdgID'] = f['pdgID'][:].astype(int)
-        return_data['classID'] = [pdgIDs[abs(i)] for i in return_data['pdgID']] # PyTorch expects class index instead of one-hot
+        return_data['classID'] = np.array([pdgIDs[abs(i)] for i in return_data['pdgID']]) # PyTorch expects class index instead of one-hot
         if 'energy' in f.keys():
             return_data['energy'] = f['energy'][:].astype(np.float32)
         else: return_data['energy'] = np.zeros(n_events, dtype=np.float32)
