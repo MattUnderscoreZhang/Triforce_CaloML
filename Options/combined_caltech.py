@@ -16,8 +16,6 @@ options['eventsPerFile'] = 10000
 # Job options #
 ###############
 
-options['importGPU'] = True
-
 options['trainRatio'] = 0.90
 options['relativeDeltaLossThreshold'] = 0.0 # break if change in loss falls below this threshold over an entire epoch, or...
 options['relativeDeltaLossNumber'] = 5 # ...for this number of test losses in a row

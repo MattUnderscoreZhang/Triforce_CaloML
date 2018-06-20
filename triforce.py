@@ -23,6 +23,10 @@ from timeit import default_timer as timer
 
 start = timer()
 
+# for running at caltech
+if 'culture-plate' in socket.gethostname():
+    import setGPU
+
 ####################
 # Set options file #
 ####################
@@ -48,10 +52,6 @@ defaultParameters = {'importGPU':False, 'eventsPerFile':10000, 'nTrainMax':-1, '
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
-
-# for Caltech GPU cluster
-if (options['importGPU']):
-    import setGPU
 
 # if validation parameters are not set, TriForce will use test set as validation set
 if options['validationRatio'] + options['trainRatio'] >= 1:
