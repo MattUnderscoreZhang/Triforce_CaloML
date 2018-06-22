@@ -396,9 +396,6 @@ if len(options['val_outputs']) > 0:
 print('Making Plots')
 analyzer.analyze([combined_classifier, discriminator, generator], classifier_test_results, out_file)
 out_file.close()
-<<<<<<< HEAD
-=======
 
->>>>>>> master
 end = timer()
 print('Total time taken: %.2f minutes'%(float(end - start)/60.))
