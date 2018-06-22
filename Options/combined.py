@@ -5,12 +5,11 @@ options = {}
 # Choose samples #
 ##################
 
-basePath = "/data/LCD/NewSamples/FixedEnergyFilter/"
+basePath = "/data/LCD/NewSamples/Fixed/"
 options['samplePath'] = [basePath + "Pi0Escan*/Pi0Escan_*.h5", basePath + "GammaEscan*/GammaEscan_*.h5"]
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 # options['samplePath'] = [basePath + "ChPiEscan_1_MERGED/ChPiEscan_*.h5", basePath + "EleEscan_1_MERGED/EleEscan_*.h5"]
 # options['classPdgID'] = [211, 11] # [ChPi, Ele]
-options['eventsPerFile'] = 1000
 
 ###############
 # Job options #
@@ -25,9 +24,9 @@ options['saveFinalModel'] = 1 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
-options['nEpochs'] = 20 # break after this number of epochs
-options['nTrainMax'] = -1
-options['nTestMax'] = -1
+options['nEpochs'] = 1 # break after this number of epochs
+options['nTrainMax'] = 20
+options['nTestMax'] = 5
 options['nValidationMax'] = -1
 
 # options['nEpochs'] = 1 # break after this number of epochs
@@ -37,8 +36,8 @@ options['nValidationMax'] = -1
 
 ## relative weight to assign to each type of output
 ## set to 0 to ignore a type of output
-# options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
-options['lossTermWeights'] = {'classification': 200.0, 'energy_regression': 1.0, 'eta_regression': 3000.0}
+options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, 'eta_regression': 0.0}
+# options['lossTermWeights'] = {'classification': 200.0, 'energy_regression': 1.0, 'eta_regression': 3000.0}
 
 #################
 # Input filters #
@@ -54,17 +53,17 @@ options['filters'] = []
 # Output options #
 ##################
 
-options['print_metrics'] = ['class_reg_loss', 'class_acc']
-#options['print_metrics'] = ['class_reg_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
+# options['print_metrics'] = ['class_reg_loss', 'class_acc']
+options['print_metrics'] = ['class_reg_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
 
-options['val_outputs'] = []
-#options['val_outputs'] = ['reg_energy_truth', 'reg_energy_prediction', 'reg_eta_truth', 'reg_eta_prediction', 'reg_raw_ECAL_E', 'reg_raw_HCAL_E']
+# options['val_outputs'] = []
+options['val_outputs'] = ['reg_energy_truth', 'reg_energy_prediction', 'reg_eta_truth', 'reg_eta_prediction', 'reg_raw_ECAL_E', 'reg_raw_HCAL_E']
 
 ################
 # Choose tools #
 ################
 
-from Architectures import Combined_DNN, Discriminator, Generator
+from Architectures import Combined_DNN, Combined_CNN, Discriminator, Generator
 from Analysis import Classification_Plotter
 
 options['decayRate'] = 0
@@ -73,9 +72,20 @@ options['hiddenLayerNeurons'] = int(sys.argv[3])
 options['learningRate'] = float(sys.argv[4])
 options['dropoutProb'] = float(sys.argv[5])
 options['windowSizeECAL'] = int(sys.argv[6])
-options['windowSizeHCAL'] = 0
+options['windowSizeHCAL'] = 11
 
-combined_classifier = Combined_DNN.Net(options)
+# options specific to CNN
+# can make these also configurable from command line
+options['nfiltECAL'] = 3
+options['kernelxyECAL'] = 4
+options['kernelzECAL'] = 4
+options['nfiltHCAL'] = 3
+options['kernelxyHCAL'] = 2
+options['kernelzHCAL'] = 6
+options['maxpoolkernelECAL'] = 2
+options['maxpoolkernelHCAL'] = 2
+
+combined_classifier = Combined_CNN.Net(options)
 discriminator = None
 generator = None
 analyzer = Classification_Plotter.Analyzer()

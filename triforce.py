@@ -48,7 +48,7 @@ for optionName in requiredOptionNames:
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'eventsPerFile':10000, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
+defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -102,22 +102,23 @@ filesPerClass = min([len(files) for files in classFiles])
 nTrain = int(filesPerClass * options['trainRatio'])
 nValidation = int(filesPerClass * options['validationRatio'])
 nTest = filesPerClass - nTrain - nValidation
-if (options['validationRatio'] > 0):
-    print("Split (files per class): %d train, %d test, %d validation" % (nTrain, nTest, nValidation))
-else:
-    print("Split (files per class): %d train, %d test" % (nTrain, nTest))
 if options['nTrainMax']>0:
     nTrain = min(nTrain,options['nTrainMax'])
 if options['nValidationMax']>0:
     nValidation = min(nValidation,options['nValidationMax'])
 if options['nTestMax']>0:
     nTest = min(nTest,options['nTestMax'])
+if (options['validationRatio'] > 0):
+    print("Split (files per class): %d train, %d test, %d validation" % (nTrain, nTest, nValidation))
+else:
+    print("Split (files per class): %d train, %d test" % (nTrain, nTest))
 if (nTest==0 or nTrain==0 or (options['validationRatio']>0 and nValidation==0)):
     print("Not enough files found - check sample paths")
     sys.exit()
 print('-------------------------------')
 
 # split the train, test, and validation files
+# get lists of [[class1_file1, class2_file1], [class1_file2, class2_file2], ...]
 trainFiles = []
 validationFiles = []
 testFiles = []
@@ -238,6 +239,8 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     return_event_data["reg_energy_res"] = torch.std(reldiff_energy)
     return_event_data["reg_eta_diff"] = torch.mean(diff_eta)
     return_event_data["reg_eta_std"] = torch.std(diff_eta)
+    return_event_data["energy"] = event_data["energy"].numpy()
+    return_event_data["eta"] = event_data["eta"].numpy()
     if store_reg_results:
         return_event_data["reg_energy_truth"] = truth_energy.data
         return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data
@@ -350,13 +353,14 @@ print('Finished Training')
 # Save results #
 ################
 
+print('Saving Results')
 out_file = h5.File(options['outPath']+"training_results.h5", 'w')
 for stat in range(len(stat_name)):
     if not stat_name[stat] in print_metrics: continue
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
             out_file.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
-# out_file.close() # closed too early
+
 if options['saveFinalModel']:
     torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
     if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
@@ -366,6 +370,7 @@ if options['saveFinalModel']:
 # Analyze and make plots #
 ##########################
 
+print('Getting Validation Results')
 classifier_test_results = {}
 for sample in validationLoader:
     sample_results = class_reg_eval(sample, store_reg_results=True)
@@ -388,8 +393,12 @@ if len(options['val_outputs']) > 0:
         val_file.create_dataset(key,data=np.asarray(data))
     val_file.close()
 
-print('Performing Analysis')
+print('Making Plots')
 analyzer.analyze([combined_classifier, discriminator, generator], classifier_test_results, out_file)
 out_file.close()
+<<<<<<< HEAD
+=======
+
+>>>>>>> master
 end = timer()
 print('Total time taken: %.2f minutes'%(float(end - start)/60.))

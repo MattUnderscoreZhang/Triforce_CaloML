@@ -60,17 +60,15 @@ class Classifier_Net(nn.Module):
         size_HCAL_flat = reduce(lambda x, y: x*y, sizes_HCAL) * nfiltHCAL
 
         # dense layers
-        self.hidden = [None] * self.nHiddenLayers
-        self.dropout = [None] * self.nHiddenLayers
+        self.hidden = nn.ModuleList()
+        self.dropout = nn.ModuleList()
         for i in range(self.nHiddenLayers):
             if i == 0:
                 # first layer after convolutions
-                self.hidden[i] = nn.Linear(size_ECAL_flat+size_HCAL_flat+2, hiddenLayerNeurons)
+                self.hidden.append(nn.Linear(size_ECAL_flat+size_HCAL_flat+2, hiddenLayerNeurons))
             else:
-                self.hidden[i] = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
-            self.hidden[i].cuda()
-            self.dropout[i] = nn.Dropout(p = options['dropoutProb'])
-            self.dropout[i].cuda()
+                self.hidden.append(nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons))
+            self.dropout.append(nn.Dropout(p = options['dropoutProb']))
 
         self.finalLayer = nn.Linear(hiddenLayerNeurons+2, len(self.outputs))
         # initialize weights for energy sums in energy output to 1: assume close to identity

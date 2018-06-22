@@ -35,9 +35,9 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
                 return_data[feat] = f[feat][:]
     return return_data
 
-def load_3d_hdf5(file, pdgIDs):
+def load_3d_hdf5(file, pdgIDs, loadMinimalFeatures=None):
     '''Loads H5 file and adds an extra dimension for CNN. Used by HDF5Dataset.'''
-    return_data = load_hdf5(file, pdgIDs)
+    return_data = load_hdf5(file, pdgIDs, loadMinimalFeatures=None)
     return_data['ECAL'] = np.expand_dims(return_data['ECAL'], axis=1)
     return_data['HCAL'] = np.expand_dims(return_data['HCAL'], axis=1)
     return return_data
@@ -51,7 +51,7 @@ class HDF5Dataset(data.Dataset):
         num_per_file: number of events in each data file
     """
 
-    def __init__(self, dataname_tuples, pdgIDs, filters = []):
+    def __init__(self, dataname_tuples, pdgIDs, filters=[]):
         self.dataname_tuples = sorted(dataname_tuples)
         self.nClasses = len(dataname_tuples[0])
         self.num_per_file = len(dataname_tuples) * [0]
@@ -72,15 +72,16 @@ class HDF5Dataset(data.Dataset):
         # use energy to count number of events if no filters
         if len(minFeatures) == 0: minFeatures.append('energy')
         totalevents = 0
+        # num_per_file and totalevents count the minimum events in a file tuple (one file for each class)
         for fileN in range(len(self.dataname_tuples)):
-            nevents_before, nevents_after = [], []
+            nevents_before_filtering, nevents_after_filtering = [], []
             for dataname in self.dataname_tuples[fileN]:
                 file_data = load_hdf5(dataname, self.pdgIDs, minFeatures)
-                nevents_before.append(len(list(file_data.values())[0]))
+                nevents_before_filtering.append(len(list(file_data.values())[0]))
                 for filt in self.filters: filt.filter(file_data)
-                nevents_after.append(len(list(file_data.values())[0]))
-            self.num_per_file[fileN] = min(nevents_after) * self.nClasses
-            totalevents += min(nevents_before) * self.nClasses
+                nevents_after_filtering.append(len(list(file_data.values())[0]))
+            self.num_per_file[fileN] = min(nevents_after_filtering) * self.nClasses
+            totalevents += min(nevents_before_filtering) * self.nClasses
         print('total events:',totalevents)
         if len(self.filters) > 0:
             print('total events passing filters:',sum(self.num_per_file))
@@ -97,6 +98,7 @@ class HDF5Dataset(data.Dataset):
             self.fileInMemory += 1
             self.fileInMemoryFirstIndex = int(self.fileInMemoryLastIndex+1)
             self.fileInMemoryLastIndex += self.num_per_file[self.fileInMemory]
+            # print(index, self.fileInMemory, self.fileInMemoryFirstIndex, self.fileInMemoryLastIndex)
             self.data = {}
             for dataname in self.dataname_tuples[self.fileInMemory]:
                 file_data = load_hdf5(dataname, self.pdgIDs)
@@ -138,4 +140,4 @@ class OrderedRandomSampler(object):
         return iter(from_numpy(indices))
 
     def __len__(self):
-        return len(self.data_source)
+        return len(sum(self.num_per_file))

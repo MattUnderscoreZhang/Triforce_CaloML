@@ -25,13 +25,11 @@ class Classifier_Net(nn.Module):
         self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
         # layers
         self.input = nn.Linear(self.windowSize * self.windowSize * 25, hiddenLayerNeurons)
-        self.hidden = [None] * self.nHiddenLayers
-        self.dropout = [None] * self.nHiddenLayers
+        self.hidden = nn.ModuleList()
+        self.dropout = nn.ModuleList()
         for i in range(self.nHiddenLayers):
-            self.hidden[i] = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
-            self.hidden[i].cuda()
-            self.dropout[i] = nn.Dropout(p = options['dropoutProb'])
-            self.dropout[i].cuda()
+            self.hidden.append(nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons))
+            self.dropout.append(nn.Dropout(p = options['dropoutProb']))
         self.finalLayer = nn.Linear(hiddenLayerNeurons, len(self.outputs)) # nClasses = 2 for binary classifier
 
     def forward(self, data):
