@@ -34,9 +34,9 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
                 return_data[feat] = f[feat][:]
     return return_data
 
-def load_3d_hdf5(file, pdgIDs):
+def load_3d_hdf5(file, pdgIDs, loadMinimalFeatures=None):
     '''Loads H5 file and adds an extra dimension for CNN. Used by HDF5Dataset.'''
-    return_data = load_hdf5(file, pdgIDs)
+    return_data = load_hdf5(file, pdgIDs, loadMinimalFeatures=None)
     return_data['ECAL'] = np.expand_dims(return_data['ECAL'], axis=1)
     return_data['HCAL'] = np.expand_dims(return_data['HCAL'], axis=1)
     return return_data
@@ -50,7 +50,7 @@ class HDF5Dataset(data.Dataset):
         num_per_file: number of events in each data file
     """
 
-    def __init__(self, dataname_tuples, pdgIDs, filters = []):
+    def __init__(self, dataname_tuples, pdgIDs, filters=[]):
         self.dataname_tuples = sorted(dataname_tuples)
         self.nClasses = len(dataname_tuples[0])
         self.num_per_file = len(dataname_tuples) * [0]
