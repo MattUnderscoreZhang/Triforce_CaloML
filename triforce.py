@@ -118,6 +118,7 @@ if (nTest==0 or nTrain==0 or (options['validationRatio']>0 and nValidation==0)):
 print('-------------------------------')
 
 # split the train, test, and validation files
+# get lists of [[class1_file1, class2_file1], [class1_file2, class2_file2], ...]
 trainFiles = []
 validationFiles = []
 testFiles = []
