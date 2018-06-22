@@ -24,9 +24,9 @@ options['saveFinalModel'] = 1 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
-options['nEpochs'] = 5 # break after this number of epochs
-options['nTrainMax'] = -1
-options['nTestMax'] = -1
+options['nEpochs'] = 1 # break after this number of epochs
+options['nTrainMax'] = 20
+options['nTestMax'] = 5
 options['nValidationMax'] = -1
 
 # options['nEpochs'] = 1 # break after this number of epochs
