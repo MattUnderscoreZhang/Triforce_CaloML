@@ -30,13 +30,11 @@ class Classifier_Net(nn.Module):
         HCAL_size = self.windowSizeHCAL * self.windowSizeHCAL * 60
         nsums = 2 if self.windowSizeHCAL > 0 else 1
         self.input = nn.Linear(ECAL_size + HCAL_size + nsums, hiddenLayerNeurons)
-        self.hidden = [None] * self.nHiddenLayers
-        self.dropout = [None] * self.nHiddenLayers
+        self.hidden = nn.ModuleList()
+        self.dropout = nn.ModuleList()
         for i in range(self.nHiddenLayers):
-            self.hidden[i] = nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons)
-            self.hidden[i].cuda()
-            self.dropout[i] = nn.Dropout(p = options['dropoutProb'])
-            self.dropout[i].cuda()
+            self.hidden.append(nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons))
+            self.dropout.append(nn.Dropout(p = options['dropoutProb']))
         self.finalLayer = nn.Linear(hiddenLayerNeurons + nsums, len(self.outputs)) # nClasses = 2 for binary classifier
         # initialize weights for energy sums in energy output to 1: assume close to identity
         energy_index = self.outputs.index(("energy_regression", REGRESSION))
