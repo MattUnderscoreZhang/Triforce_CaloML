@@ -356,7 +356,7 @@ for stat in range(len(stat_name)):
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
             out_file.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
-out_file.close()
+# out_file.close() # closed too early
 if options['saveFinalModel']:
     torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
     if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
@@ -390,6 +390,6 @@ if len(options['val_outputs']) > 0:
 
 print('Performing Analysis')
 analyzer.analyze([combined_classifier, discriminator, generator], classifier_test_results, out_file)
-
+out_file.close()
 end = timer()
 print('Total time taken: %.2f minutes'%(float(end - start)/60.))
