@@ -5,12 +5,11 @@ options = {}
 # Choose samples #
 ##################
 
-basePath = "/data/LCD/NewSamples/FixedEnergyFilter/"
+basePath = "/data/LCD/NewSamples/Fixed/"
 options['samplePath'] = [basePath + "Pi0Escan*/Pi0Escan_*.h5", basePath + "GammaEscan*/GammaEscan_*.h5"]
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 # options['samplePath'] = [basePath + "ChPiEscan_1_MERGED/ChPiEscan_*.h5", basePath + "EleEscan_1_MERGED/EleEscan_*.h5"]
 # options['classPdgID'] = [211, 11] # [ChPi, Ele]
-options['eventsPerFile'] = 1000
 
 ###############
 # Job options #
@@ -25,7 +24,7 @@ options['saveFinalModel'] = 1 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
-options['nEpochs'] = 1 # break after this number of epochs
+options['nEpochs'] = 5 # break after this number of epochs
 options['nTrainMax'] = -1
 options['nTestMax'] = -1
 options['nValidationMax'] = -1

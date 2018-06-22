@@ -78,6 +78,8 @@ class HDF5Dataset(data.Dataset):
                 nevents_before.append(len(list(file_data.values())[0]))
                 for filt in self.filters: filt.filter(file_data)
                 nevents_after.append(len(list(file_data.values())[0]))
+            # self.num_per_file[fileN] = min(nevents_after) * self.nClasses
+            # totalevents += min(nevents_before) * self.nClasses
             self.num_per_file[fileN] = min(nevents_after) * self.nClasses
             totalevents += min(nevents_before) * self.nClasses
         print('total events:',totalevents)
@@ -91,6 +93,7 @@ class HDF5Dataset(data.Dataset):
             self.fileInMemory += 1
             self.fileInMemoryFirstIndex = int(self.fileInMemoryLastIndex+1)
             self.fileInMemoryLastIndex += self.num_per_file[self.fileInMemory]
+            # print(index, self.fileInMemory, self.fileInMemoryFirstIndex, self.fileInMemoryLastIndex)
             self.data = {}
             for dataname in self.dataname_tuples[self.fileInMemory]:
                 file_data = load_hdf5(dataname, self.pdgIDs)
@@ -132,4 +135,4 @@ class OrderedRandomSampler(object):
         return iter(from_numpy(indices))
 
     def __len__(self):
-        return len(self.data_source)
+        return len(sum(self.num_per_file))
