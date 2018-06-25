@@ -86,6 +86,11 @@ class HDF5Dataset(data.Dataset):
             print('total events passing filters:',sum(self.num_per_file))
 
     def __getitem__(self, index):
+        # if entering a new epoch, re-initialze necessary variables
+        if (index < self.fileInMemoryFirstIndex):
+            self.fileInMemory = -1
+            self.fileInMemoryFirstIndex = 0
+            self.fileInMemoryLastIndex = -1
         # if we started to look at a new file, read the file data
         if(index > self.fileInMemoryLastIndex):
             # update indices to new file
