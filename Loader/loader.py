@@ -28,6 +28,9 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
             if 'eta' in f.keys():
                 return_data['eta'] = f['eta'][:].astype(np.float32)
             else: return_data['eta'] = np.zeros(n_events, dtype=np.float32)
+            if 'openingAngle' in f.keys():
+                return_data['opening_angle'] = f['openingAngle'][:].astype(np.float32)
+            else: return_data['opening_angle'] = np.zeros(n_events, dtype=np.float32)
         # minimal data load: only load specific features that are requested
         else:
             for feat in loadMinimalFeatures:

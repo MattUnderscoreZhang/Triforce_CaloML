@@ -11,56 +11,34 @@ from scipy.stats import binned_statistic
 
 class Analyzer():
 
-    #############
-    # HISTORIES #
-    #############
-    def plot_loss_vs_epoch(self, train, test, filename): 
+    ####################
+    # TRAINING HISTORY #
+    ####################
+
+    def plot_history(self, train, test, loss, batch, filename): 
 
         plt.figure()
-        plt.title("Classifier Loss vs Epoch")
-        plt.xlabel("Training Epoch")
-        plt.ylabel("Loss")
+        title = "Classifier "
+        if loss:
+            title += "Loss "
+            plt.ylabel("Loss")
+        else:
+            title += "Accuracy "
+            plt.ylabel("Accuracy")
+        if batch:
+            title += "History"
+            plt.xlabel("Training Batch")
+        else:
+            title += "vs Epoch"
+            plt.xlabel("Training Epoch")
+        plt.title(title)
         plt.grid('on', linestyle='--')
-        plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Loss", alpha=0.5)
-        plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Loss", alpha=0.5)
-        plt.legend(loc="best")
-        plt.savefig(filename)
-
-    def plot_accuracy_vs_epoch(self, train, test, filename): 
-
-        plt.figure()
-        plt.title("Classifier Accuracy vs Epoch")
-        plt.xlabel("Training Epoch")
-        plt.ylabel("Accuracy")
-        plt.grid('on', linestyle='--')
-        plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Accuracy", alpha=0.5)
-        plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Accuracy", alpha=0.5)
-        plt.ylim(ymax=1.0)
-        plt.legend(loc="best")
-        plt.savefig(filename)
-
-    def plot_loss_vs_batches(self, train, test, filename):
-
-        plt.figure()
-        plt.title("Classifier Loss History")
-        plt.xlabel("Training Batches")
-        plt.ylabel("Loss")
-        plt.grid('on', linestyle='--')
-        plt.plot(range(train.shape[0]), train, 'o-', color="g", label="Training Loss", alpha=0.5)
-        plt.plot(range(test.shape[0]), test, 'o-', color="r", label="Test Loss", alpha=0.5)
-        plt.legend(loc="best")
-        plt.savefig(filename)
-
-    def plot_accuracy_vs_batches(self, train, test, filename):
-
-        plt.figure()
-        plt.title("Classifier Accuracy History")
-        plt.xlabel("Training Batches")
-        plt.ylabel("Accuracy")
-        plt.grid('on', linestyle='--')
-        plt.plot(range(train.shape[0]), train, 'o-', color="g", label="Training Accuracy", alpha=0.5)
-        plt.plot(range(test.shape[0]), test, 'o-', color="r", label="Test Accuracy", alpha=0.5)
-        plt.ylim(ymax=1.0)
+        if loss:
+            plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Loss", alpha=0.5)
+            plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Loss", alpha=0.5)
+        else:
+            plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Accuracy", alpha=0.5)
+            plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Accuracy", alpha=0.5)
         plt.legend(loc="best")
         plt.savefig(filename)
 
@@ -84,30 +62,26 @@ class Analyzer():
         plt.legend(loc="lower right")
         plt.savefig(filename)
 
-    ###############
-    # OTHER PLOTS #
-    ###############
+    ###################
+    # BINNED ACCURACY #
+    ###################
 
-    def plot_accuracy_vs_energy(self, classifier_test_results, filename):
-        class_acc = (classifier_test_results['class_prediction'] == classifier_test_results['class_truth']).cpu().numpy()
-        class_energy = np.array(classifier_test_results['energy']).flatten()
-        bin_class_acc = binned_statistic(class_energy, class_acc, bins=49, range=(10, 500)).statistic
-        plt.plot(np.arange(10,500,10), bin_class_acc)
-        plt.title('Mean Classification Accuracy in Energy Bins')
-        plt.xlabel('Energy')
-        plt.ylabel('Classification Accuracy')
-        plt.grid()
-        plt.savefig(filename)
-        plt.clf()
-
-    def plot_accuracy_vs_eta(self, classifier_test_results, filename):
-        class_acc = (classifier_test_results['class_prediction'] == classifier_test_results['class_truth']).cpu().numpy()
-        class_eta = np.array(classifier_test_results['eta']).flatten()
-        bin_class_acc = binned_statistic(class_eta, class_acc, bins=50, range=(-5, 5)).statistic
-        plt.plot(np.arange(-5,5,0.2), bin_class_acc)
-        plt.title('Mean Classification Accuracy in Eta Bins')
-        plt.xlabel('Eta')
-        plt.ylabel('Classification Accuracy')
+    def plot_accuracy_bins(self, bin_feature, final_val_results, filename):
+        class_acc = (final_val_results['class_prediction'] == final_val_results['class_truth']).cpu().numpy()
+        class_feature = np.array(final_val_results[bin_feature]).flatten()
+        n_bins = 50
+        if bin_feature == 'energy':
+            n_bins = 49
+            bin_range = (10, 500)
+        elif bin_feature == 'eta':
+            bin_range = (-5, 5)
+        elif bin_feature == 'opening_angle':
+            bin_range = (-5, 5)
+        bin_class_acc = binned_statistic(class_feature, class_acc, bins=n_bins, range=bin_range).statistic
+        plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_class_acc)
+        plt.title('Mean classification accuracy in ' + bin_feature + ' bins')
+        plt.xlabel(bin_feature)
+        plt.ylabel('accuracy')
         plt.grid()
         plt.savefig(filename)
         plt.clf()
@@ -116,25 +90,25 @@ class Analyzer():
     # MAIN ANALYSIS FUNCTION #
     ##########################
 
-    def analyze(self, tools, classifier_test_results, out_file):
+    def analyze(self, tools, test_train_history, final_val_results):
 
         [combined_classifier, discriminator, generator] = tools
 
-        classifier_test_loss = mean(classifier_test_results['class_reg_loss'])
-        classifier_test_accuracy = mean(classifier_test_results['class_acc'])
-        classifier_test_scores = classifier_test_results['class_prediction']
-        classifier_test_truth = classifier_test_results['class_truth']
+        classifier_test_loss = mean(final_val_results['class_reg_loss'])
+        classifier_test_accuracy = mean(final_val_results['class_acc'])
+        classifier_test_scores = final_val_results['class_prediction']
+        classifier_test_truth = final_val_results['class_truth']
 
         print('test loss: %8.4f; test accuracy: %8.4f' % (classifier_test_loss, classifier_test_accuracy))
-        out_file.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
+        test_train_history.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
 
-        folder = out_file.filename[:out_file.filename.rfind('/')]
+        folder = test_train_history.filename[:test_train_history.filename.rfind('/')]
 
-        self.plot_accuracy_vs_energy(classifier_test_results, folder+"/accuracy_vs_energy.png")
-        self.plot_accuracy_vs_eta(classifier_test_results, folder+"/accuracy_vs_eta.png")
+        self.plot_accuracy_bins('energy', final_val_results, folder+"/accuracy_vs_energy.png")
+        self.plot_accuracy_bins('eta', final_val_results, folder+"/accuracy_vs_eta.png")
+        self.plot_accuracy_bins('opening_angle', final_val_results, folder+"/accuracy_vs_opening_angle.png")
 
-        self.plot_loss_vs_batches(out_file['loss_classifier_train_batch'].value, out_file['loss_classifier_test_batch'].value, folder+"/loss_batches.png")
-        self.plot_accuracy_vs_batches(out_file['accuracy_classifier_train_batch'].value, out_file['accuracy_classifier_test_batch'].value, folder+"/accuracy_batches.png")
-        self.plot_loss_vs_epoch(out_file['loss_classifier_train_epoch'].value, out_file['loss_classifier_test_epoch'].value, folder+"/loss_epoch_batches.png")
-        self.plot_accuracy_vs_epoch(out_file['accuracy_classifier_train_epoch'].value, out_file['accuracy_classifier_test_epoch'].value, folder+"/accuracy_epoch_batches.png")
-        self.plot_ROC(classifier_test_scores, classifier_test_truth, folder+"/ROC.png")
+        self.plot_history(test_train_history['class_reg_loss_train_batch'], test_train_history['class_reg_loss_test_batch'], loss=True, batch=True, filename=folder+"/loss_batches.png")
+        self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/accuracy_batches.png")
+        self.plot_history(test_train_history['class_reg_loss_train_batch'], test_train_history['class_reg_loss_test_batch'], loss=True, batch=True, filename=folder+"/loss_batches.png")
+        self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/loss_batches.png")

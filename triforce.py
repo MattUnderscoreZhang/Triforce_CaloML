@@ -241,6 +241,7 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     return_event_data["reg_eta_std"] = torch.std(diff_eta)
     return_event_data["energy"] = event_data["energy"].numpy()
     return_event_data["eta"] = event_data["eta"].numpy()
+    return_event_data["opening_angle"] = event_data["opening_angle"].numpy()
     if store_reg_results:
         return_event_data["reg_energy_truth"] = truth_energy.data
         return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data
@@ -353,48 +354,48 @@ print('Finished Training')
 # Save results #
 ################
 
-print('Saving Results')
-out_file = h5.File(options['outPath']+"training_results.h5", 'w')
+print('Saving Training Results')
+test_train_history = h5.File(options['outPath']+"training_results.h5", 'w')
 for stat in range(len(stat_name)):
     if not stat_name[stat] in print_metrics: continue
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
-            out_file.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
+            test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
 if options['saveFinalModel']:
     torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
     if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
     if generator != None: torch.save(generator.net, options['outPath']+"saved_generator.pt")
 
-##########################
-# Analyze and make plots #
-##########################
-
 print('Getting Validation Results')
-classifier_test_results = {}
+final_val_results = {}
 for sample in validationLoader:
     sample_results = class_reg_eval(sample, store_reg_results=True)
     for key,data in sample_results.items():
         # cat together tensor outputs
         if 'Tensor' in str(type(data)):
-            if key in classifier_test_results:
-                classifier_test_results[key] = torch.cat([classifier_test_results[key], data], dim=0)
+            if key in final_val_results:
+                final_val_results[key] = torch.cat([final_val_results[key], data], dim=0)
             else:
-                classifier_test_results[key] = data
+                final_val_results[key] = data
         # put other outputs into a list
         else:
-            classifier_test_results.setdefault(key, []).append(sample_results[key])
+            final_val_results.setdefault(key, []).append(sample_results[key])
 
-# save validation output
+print('Saving Validation Results')
 if len(options['val_outputs']) > 0:
     val_file = h5.File(options['outPath']+"validation_results.h5", 'w')
-    for key,data in classifier_test_results.items():
+    for key,data in final_val_results.items():
         if not key in options['val_outputs']: continue
         val_file.create_dataset(key,data=np.asarray(data))
-    val_file.close()
+val_file.close()
+
+##########################
+# Analyze and make plots #
+##########################
 
 print('Making Plots')
-analyzer.analyze([combined_classifier, discriminator, generator], classifier_test_results, out_file)
-out_file.close()
+analyzer.analyze([combined_classifier, discriminator, generator], test_train_history, final_val_results)
+test_train_history.close()
 
 end = timer()
 print('Total time taken: %.2f minutes'%(float(end - start)/60.))
