@@ -7,6 +7,7 @@ import numpy as np
 from sklearn import metrics
 from statistics import mean
 import pdb
+from scipy.stats import binned_statistic
 
 class Analyzer():
 
@@ -83,6 +84,34 @@ class Analyzer():
         plt.legend(loc="lower right")
         plt.savefig(filename)
 
+    ###############
+    # OTHER PLOTS #
+    ###############
+
+    def plot_accuracy_vs_energy(self, classifier_test_results, filename):
+        class_acc = (classifier_test_results['class_prediction'] == classifier_test_results['class_truth']).cpu().numpy()
+        class_energy = np.array(classifier_test_results['energy']).flatten()
+        bin_class_acc = binned_statistic(class_energy, class_acc, bins=49, range=(10, 500)).statistic
+        plt.plot(np.arange(10,500,10), bin_class_acc)
+        plt.title('Mean Classification Accuracy in Energy Bins')
+        plt.xlabel('Energy')
+        plt.ylabel('Classification Accuracy')
+        plt.grid()
+        plt.savefig(filename)
+        plt.clf()
+
+    def plot_accuracy_vs_eta(self, classifier_test_results, filename):
+        class_acc = (classifier_test_results['class_prediction'] == classifier_test_results['class_truth']).cpu().numpy()
+        class_eta = np.array(classifier_test_results['eta']).flatten()
+        bin_class_acc = binned_statistic(class_eta, class_acc, bins=50, range=(-5, 5)).statistic
+        plt.plot(np.arange(-5,5,0.2), bin_class_acc)
+        plt.title('Mean Classification Accuracy in Eta Bins')
+        plt.xlabel('Eta')
+        plt.ylabel('Classification Accuracy')
+        plt.grid()
+        plt.savefig(filename)
+        plt.clf()
+
     ##########################
     # MAIN ANALYSIS FUNCTION #
     ##########################
@@ -93,16 +122,17 @@ class Analyzer():
 
         classifier_test_loss = mean(classifier_test_results['class_reg_loss'])
         classifier_test_accuracy = mean(classifier_test_results['class_acc'])
-        pdb.set_trace()
         classifier_test_scores = classifier_test_results['class_prediction']
-        pdb.set_trace()
         classifier_test_truth = classifier_test_results['class_truth']
-        pdb.set_trace()
 
         print('test loss: %8.4f; test accuracy: %8.4f' % (classifier_test_loss, classifier_test_accuracy))
         out_file.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
 
         folder = out_file.filename[:out_file.filename.rfind('/')]
+
+        self.plot_accuracy_vs_energy(classifier_test_results, folder+"/accuracy_vs_energy.png")
+        self.plot_accuracy_vs_eta(classifier_test_results, folder+"/accuracy_vs_eta.png")
+
         self.plot_loss_vs_batches(out_file['loss_classifier_train_batch'].value, out_file['loss_classifier_test_batch'].value, folder+"/loss_batches.png")
         self.plot_accuracy_vs_batches(out_file['accuracy_classifier_train_batch'].value, out_file['accuracy_classifier_test_batch'].value, folder+"/accuracy_batches.png")
         self.plot_loss_vs_epoch(out_file['loss_classifier_train_epoch'].value, out_file['loss_classifier_test_epoch'].value, folder+"/loss_epoch_batches.png")
