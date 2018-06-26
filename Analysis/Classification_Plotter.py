@@ -76,7 +76,7 @@ class Analyzer():
         elif bin_feature == 'eta':
             bin_range = (-5, 5)
         elif bin_feature == 'opening_angle':
-            bin_range = (-5, 5)
+            bin_range = (-0.2, 0.2)
         bin_class_acc = binned_statistic(class_feature, class_acc, bins=n_bins, range=bin_range).statistic
         plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_class_acc)
         plt.title('Mean classification accuracy in ' + bin_feature + ' bins')
@@ -110,5 +110,5 @@ class Analyzer():
 
         self.plot_history(test_train_history['class_reg_loss_train_batch'], test_train_history['class_reg_loss_test_batch'], loss=True, batch=True, filename=folder+"/loss_batches.png")
         self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/accuracy_batches.png")
-        self.plot_history(test_train_history['class_reg_loss_train_batch'], test_train_history['class_reg_loss_test_batch'], loss=True, batch=True, filename=folder+"/loss_batches.png")
-        self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/loss_batches.png")
+        self.plot_history(test_train_history['class_reg_loss_train_epoch'], test_train_history['class_reg_loss_test_epoch'], loss=True, batch=False, filename=folder+"/loss_epoches.png")
+        self.plot_history(test_train_history['class_acc_train_epoch'], test_train_history['class_acc_test_epoch'], loss=False, batch=False, filename=folder+"/loss_epoches.png")
