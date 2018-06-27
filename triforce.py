@@ -175,7 +175,7 @@ class historyData(list):
 history = historyData()
 
 # enumerate parts of the data structure
-stat_name = ['class_reg_loss', 'class_acc', 'class_prediction', 'class_truth', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
+stat_name = ['class_reg_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
 # stat metrics to print out every N batches
 print_metrics = options['print_metrics']
 CLASS_LOSS, CLASS_ACC = 0, 1
@@ -231,8 +231,8 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     # return values
     return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0]
     return_event_data["class_acc"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
-    return_event_data["class_prediction"] = predicted_class.data
-    return_event_data["class_truth"] = truth_class.data
+    return_event_data["class_prediction"] = predicted_class.data.cpu().numpy()
+    return_event_data["class_truth"] = truth_class.data.cpu().numpy()
     return_event_data["class_sig_acc"] = class_sig_acc
     return_event_data["class_bkg_acc"] = class_bkg_acc
     return_event_data["reg_energy_bias"] = torch.mean(reldiff_energy)
@@ -243,13 +243,13 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     return_event_data["eta"] = event_data["eta"].numpy()
     return_event_data["opening_angle"] = event_data["opening_angle"].numpy()
     if store_reg_results:
-        return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data
-        return_event_data["reg_eta_prediction"] = outputs['eta_regression'].data
+        return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data.cpu().numpy()
+        return_event_data["reg_eta_prediction"] = outputs['eta_regression'].data.cpu().numpy()
         ECAL = event_data["ECAL"]
-        return_event_data["ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1)
+        return_event_data["ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1).numpy()
         HCAL = event_data["HCAL"]
-        return_event_data["HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1)
-        return_event_data["pdgID"] = event_data["pdgID"]
+        return_event_data["HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1).numpy()
+        return_event_data["pdgID"] = event_data["pdgID"].numpy()
     return return_event_data
 
 def class_reg_train(event_data):
@@ -369,19 +369,13 @@ final_val_results = {}
 for sample in validationLoader:
     sample_results = class_reg_eval(sample, store_reg_results=True)
     for key,data in sample_results.items():
-        # cat together tensor outputs
-        if 'Tensor' in str(type(data)):
-            if key in final_val_results:
-                final_val_results[key] = torch.cat([final_val_results[key], data], dim=0)
-            else:
-                final_val_results[key] = data
         # cat together numpy array outputs
-        elif 'array' in str(type(data)):
+        if 'array' in str(type(data)):
             if key in final_val_results:
                 final_val_results[key] = np.concatenate([final_val_results[key], data], axis=0)
             else:
                 final_val_results[key] = data
-        # put other outputs into a list
+        # put scalar outputs into a list
         else:
             final_val_results.setdefault(key, []).append(sample_results[key])
 

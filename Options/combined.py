@@ -85,7 +85,7 @@ options['kernelzHCAL'] = 6
 options['maxpoolkernelECAL'] = 2
 options['maxpoolkernelHCAL'] = 2
 
-combined_classifier = Combined_CNN.Net(options)
+combined_classifier = Combined_DNN.Net(options)
 discriminator = None
 generator = None
 analyzer = Classification_Plotter.Analyzer()

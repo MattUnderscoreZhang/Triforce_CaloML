@@ -69,7 +69,7 @@ class Analyzer():
     ###################
 
     def plot_accuracy_bins(self, bin_feature, final_val_results, filename):
-        class_acc = (final_val_results['class_prediction'] == final_val_results['class_truth']).cpu().numpy()
+        class_acc = (final_val_results['class_prediction'] == final_val_results['class_truth'])
         class_feature = np.array(final_val_results[bin_feature]).flatten()
         n_bins = 50
         if bin_feature == 'energy':
@@ -95,7 +95,7 @@ class Analyzer():
 
     def plot_regression_bins(self, bin_feature, plot_feature, final_val_results, filenames):
         true = np.asarray(final_val_results[plot_feature]).flatten()
-        pred = final_val_results['reg_%s_prediction'%(plot_feature)].cpu().numpy().flatten()
+        pred = final_val_results['reg_%s_prediction'%(plot_feature)].flatten()
         diff = true - pred
         if plot_feature == 'energy': diff = (diff/true) * 100.0
         binvar = np.asarray(final_val_results[bin_feature]).flatten()
