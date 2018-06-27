@@ -76,9 +76,10 @@ class Analyzer():
             n_bins = 49
             bin_range = (10, 500)
         elif bin_feature == 'eta':
-            bin_range = (-5, 5)
+            n_bins = 11
+            bin_range = (-0.55, 0.55)
         elif bin_feature == 'opening_angle':
-            bin_range = (-0.2, 0.2)
+            bin_range = (0.0, 0.5)
         bin_class_acc = binned_statistic(class_feature, class_acc, bins=n_bins, range=bin_range).statistic
         plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_class_acc)
         plt.title('Mean classification accuracy in ' + bin_feature + ' bins')
