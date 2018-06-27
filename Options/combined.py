@@ -64,7 +64,7 @@ options['val_outputs'] = ['energy', 'eta', 'ECAL_E', 'HCAL_E', 'pdgID', 'reg_ene
 ################
 
 from Architectures import Combined_DNN, Combined_CNN, Discriminator, Generator
-from Analysis import Classification_Plotter
+from Analysis import Plotter
 
 options['decayRate'] = 0
 options['nHiddenLayers'] = int(sys.argv[2])
@@ -88,4 +88,4 @@ options['maxpoolkernelHCAL'] = 2
 combined_classifier = Combined_DNN.Net(options)
 discriminator = None
 generator = None
-analyzer = Classification_Plotter.Analyzer()
+analyzer = Plotter.Analyzer()
