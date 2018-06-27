@@ -37,13 +37,6 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
                 return_data[feat] = f[feat][:]
     return return_data
 
-def load_3d_hdf5(file, pdgIDs, loadMinimalFeatures=None):
-    '''Loads H5 file and adds an extra dimension for CNN. Used by HDF5Dataset.'''
-    return_data = load_hdf5(file, pdgIDs, loadMinimalFeatures=None)
-    return_data['ECAL'] = np.expand_dims(return_data['ECAL'], axis=1)
-    return_data['HCAL'] = np.expand_dims(return_data['HCAL'], axis=1)
-    return return_data
-
 class HDF5Dataset(data.Dataset):
 
     """Creates a dataset from a set of H5 files.
