@@ -243,14 +243,12 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     return_event_data["eta"] = event_data["eta"].numpy()
     return_event_data["opening_angle"] = event_data["opening_angle"].numpy()
     if store_reg_results:
-        return_event_data["reg_energy_truth"] = truth_energy.data
         return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data
-        return_event_data["reg_eta_truth"] = truth_eta.data
         return_event_data["reg_eta_prediction"] = outputs['eta_regression'].data
         ECAL = event_data["ECAL"]
-        return_event_data["reg_raw_ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1)
+        return_event_data["ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1)
         HCAL = event_data["HCAL"]
-        return_event_data["reg_raw_HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1)
+        return_event_data["HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1)
         return_event_data["pdgID"] = event_data["pdgID"]
     return return_event_data
 
@@ -375,6 +373,12 @@ for sample in validationLoader:
         if 'Tensor' in str(type(data)):
             if key in final_val_results:
                 final_val_results[key] = torch.cat([final_val_results[key], data], dim=0)
+            else:
+                final_val_results[key] = data
+        # cat together numpy array outputs
+        elif 'array' in str(type(data)):
+            if key in final_val_results:
+                final_val_results[key] = np.concatenate([final_val_results[key], data], axis=0)
             else:
                 final_val_results[key] = data
         # put other outputs into a list

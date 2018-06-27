@@ -41,6 +41,7 @@ class Analyzer():
             plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Accuracy", alpha=0.5)
         plt.legend(loc="best")
         plt.savefig(filename)
+        plt.clf()
 
     #############
     # ROC CURVE #
@@ -61,6 +62,7 @@ class Analyzer():
         plt.title('ROC Curve for Classification')
         plt.legend(loc="lower right")
         plt.savefig(filename)
+        plt.clf()
 
     ###################
     # BINNED ACCURACY #
@@ -84,6 +86,45 @@ class Analyzer():
         plt.ylabel('accuracy')
         plt.grid()
         plt.savefig(filename)
+        plt.clf()
+
+    #############################
+    # BINNED REGRESSION RESULTS #
+    #############################
+
+    def plot_regression_bins(self, bin_feature, plot_feature, final_val_results, filenames):
+        true = np.asarray(final_val_results[plot_feature]).flatten()
+        pred = final_val_results['reg_%s_prediction'%(plot_feature)].cpu().numpy().flatten()
+        diff = true - pred
+        if plot_feature == 'energy': diff = (diff/true) * 100.0
+        binvar = np.asarray(final_val_results[bin_feature]).flatten()
+        n_bins = 11
+        if bin_feature == 'energy':
+            n_bins = 25
+            bin_range = (0, 500)
+        elif bin_feature == 'eta':
+            bin_range = (-0.55, 0.55)
+
+        # plot mean
+        bin_mean = binned_statistic(binvar, diff, statistic='mean', bins=n_bins, range=bin_range).statistic
+        plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_mean, marker='o')
+        plt.title('Mean difference, ' + plot_feature + ' in bins of ' + bin_feature)
+        plt.xlabel(bin_feature)
+        plt.ylabel('Mean '+plot_feature)
+        plt.grid(True,which='both')
+        plt.savefig(filenames[0])
+        plt.clf()
+
+        # plot std dev
+        bin_std = binned_statistic(binvar, diff, statistic=np.std, bins=n_bins, range=bin_range).statistic
+        plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_std, marker='o')
+        plt.title('Stddev difference, ' + plot_feature + ' in bins of ' + bin_feature)
+        plt.xlabel(bin_feature)
+        plt.ylabel('Stddev '+plot_feature)
+        if plot_feature == 'energy' and bin_feature == 'energy': plt.yscale('log')
+        plt.grid(True,which='both')
+        plt.grid()
+        plt.savefig(filenames[1])
         plt.clf()
 
     ##########################
@@ -112,3 +153,15 @@ class Analyzer():
         self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/accuracy_batches.png")
         self.plot_history(test_train_history['class_reg_loss_train_epoch'], test_train_history['class_reg_loss_test_epoch'], loss=True, batch=False, filename=folder+"/loss_epoches.png")
         self.plot_history(test_train_history['class_acc_train_epoch'], test_train_history['class_acc_test_epoch'], loss=False, batch=False, filename=folder+"/loss_epoches.png")
+
+        # regression plots
+        if 'reg_energy_prediction' in final_val_results.keys():
+            self.plot_regression_bins('energy', 'energy', final_val_results,
+                                      [folder+'/reg_bias_energy_vs_energy.png', folder+'/reg_res_energy_vs_energy.png'])
+            self.plot_regression_bins('eta', 'energy', final_val_results,
+                                      [folder+'/reg_bias_energy_vs_eta.png', folder+'/reg_res_energy_vs_eta.png'])
+        if 'reg_eta_prediction' in final_val_results.keys():
+            self.plot_regression_bins('energy', 'eta', final_val_results,
+                                      [folder+'/reg_bias_eta_vs_energy.png', folder+'/reg_res_eta_vs_energy.png'])
+            self.plot_regression_bins('eta', 'eta', final_val_results,
+                                      [folder+'/reg_bias_eta_vs_eta.png', folder+'/reg_res_eta_vs_eta.png'])
