@@ -12,10 +12,10 @@ import pdb
 files = glob.glob("Data/*.txt")
 
 # Options
-parameter_names = ["Hidden Layers", "Neurons per Hidden Layer", "Learning Rate", "Dropout Probability", "Window Size"]
-parameter_space = [[3, 4, 5, 6, 7], [64, 128, 256, 512, 1024], [0.0001, 0.0005, 0.001], [0.2, 0.3, 0.4, 0.5], [11, 21, 31, 41, 51]]
+parameter_names = ["Hidden Layers", "Neurons per Hidden Layer", "Learning Rate", "Dropout Probability"]
+parameter_space = [[1, 2, 3, 4, 5], [256, 512, 1024, 2048, 4096], [0.0001, 0.0005, 0.001], [0.05, 0.1, 0.15, 0.2, 0.25]]
 parameter_shape = [len(dimension) for dimension in parameter_space]
-baseline_parameters = (1, 2, 2, 3, 4)
+baseline_parameters = (1, 2, 1, 1)
 
 # Extract losses and accuracies
 losses = np.zeros(parameter_shape)

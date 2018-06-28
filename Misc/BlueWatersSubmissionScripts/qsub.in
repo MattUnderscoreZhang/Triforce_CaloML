@@ -1,20 +1,93 @@
 ### Request GPU nodes with 16 processing elements each
-#PBS -l nodes=2:ppn=16:xk
-### Max 2 hours runtime
-#PBS -l walltime=02:00:00
+#PBS -l nodes=75:ppn=16:xk
+### Max 3 hours runtime
+#PBS -l walltime=03:00:00
 ### No email notification
 #PBS -m n
 ### Job name
-#PBS -N TriForce_7_1024
+#PBS -N TriForce_5
 ### Standard output and error
-#PBS -o Logs/output_7_1024.log
-#PBS -e Logs/error_7_1024.log
+#PBS -o Logs/output_5.log
+#PBS -e Logs/error_5.log
 ### Use Ben's allocation
 #PBS -A bakx
 ### I forget what these are
 #PBS -j oe
 module load bwpy
 cd /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce/
-aprun -n 1 python3 triforce.py Output_7_512_0.001_0.5_51 7 512 0.001 0.5 51 > Output/Output_7_512_0.001_0.5_51_log.txt &
-aprun -n 1 python3 triforce.py Output_7_1024_0.001_0.5_51 7 1024 0.001 0.5 51 > Output/Output_7_1024_0.001_0.5_51_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0001_0.05 5 256 0.0001 0.05 > Output/Output_5_256_0.0001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0001_0.1 5 256 0.0001 0.1 > Output/Output_5_256_0.0001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0001_0.15 5 256 0.0001 0.15 > Output/Output_5_256_0.0001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0001_0.2 5 256 0.0001 0.2 > Output/Output_5_256_0.0001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0001_0.25 5 256 0.0001 0.25 > Output/Output_5_256_0.0001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0005_0.05 5 256 0.0005 0.05 > Output/Output_5_256_0.0005_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0005_0.1 5 256 0.0005 0.1 > Output/Output_5_256_0.0005_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0005_0.15 5 256 0.0005 0.15 > Output/Output_5_256_0.0005_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0005_0.2 5 256 0.0005 0.2 > Output/Output_5_256_0.0005_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.0005_0.25 5 256 0.0005 0.25 > Output/Output_5_256_0.0005_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.001_0.05 5 256 0.001 0.05 > Output/Output_5_256_0.001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.001_0.1 5 256 0.001 0.1 > Output/Output_5_256_0.001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.001_0.15 5 256 0.001 0.15 > Output/Output_5_256_0.001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.001_0.2 5 256 0.001 0.2 > Output/Output_5_256_0.001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_256_0.001_0.25 5 256 0.001 0.25 > Output/Output_5_256_0.001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0001_0.05 5 512 0.0001 0.05 > Output/Output_5_512_0.0001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0001_0.1 5 512 0.0001 0.1 > Output/Output_5_512_0.0001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0001_0.15 5 512 0.0001 0.15 > Output/Output_5_512_0.0001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0001_0.2 5 512 0.0001 0.2 > Output/Output_5_512_0.0001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0001_0.25 5 512 0.0001 0.25 > Output/Output_5_512_0.0001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0005_0.05 5 512 0.0005 0.05 > Output/Output_5_512_0.0005_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0005_0.1 5 512 0.0005 0.1 > Output/Output_5_512_0.0005_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0005_0.15 5 512 0.0005 0.15 > Output/Output_5_512_0.0005_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0005_0.2 5 512 0.0005 0.2 > Output/Output_5_512_0.0005_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.0005_0.25 5 512 0.0005 0.25 > Output/Output_5_512_0.0005_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.001_0.05 5 512 0.001 0.05 > Output/Output_5_512_0.001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.001_0.1 5 512 0.001 0.1 > Output/Output_5_512_0.001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.001_0.15 5 512 0.001 0.15 > Output/Output_5_512_0.001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.001_0.2 5 512 0.001 0.2 > Output/Output_5_512_0.001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_512_0.001_0.25 5 512 0.001 0.25 > Output/Output_5_512_0.001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0001_0.05 5 1024 0.0001 0.05 > Output/Output_5_1024_0.0001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0001_0.1 5 1024 0.0001 0.1 > Output/Output_5_1024_0.0001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0001_0.15 5 1024 0.0001 0.15 > Output/Output_5_1024_0.0001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0001_0.2 5 1024 0.0001 0.2 > Output/Output_5_1024_0.0001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0001_0.25 5 1024 0.0001 0.25 > Output/Output_5_1024_0.0001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0005_0.05 5 1024 0.0005 0.05 > Output/Output_5_1024_0.0005_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0005_0.1 5 1024 0.0005 0.1 > Output/Output_5_1024_0.0005_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0005_0.15 5 1024 0.0005 0.15 > Output/Output_5_1024_0.0005_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0005_0.2 5 1024 0.0005 0.2 > Output/Output_5_1024_0.0005_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.0005_0.25 5 1024 0.0005 0.25 > Output/Output_5_1024_0.0005_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.001_0.05 5 1024 0.001 0.05 > Output/Output_5_1024_0.001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.001_0.1 5 1024 0.001 0.1 > Output/Output_5_1024_0.001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.001_0.15 5 1024 0.001 0.15 > Output/Output_5_1024_0.001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.001_0.2 5 1024 0.001 0.2 > Output/Output_5_1024_0.001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_1024_0.001_0.25 5 1024 0.001 0.25 > Output/Output_5_1024_0.001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0001_0.05 5 2048 0.0001 0.05 > Output/Output_5_2048_0.0001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0001_0.1 5 2048 0.0001 0.1 > Output/Output_5_2048_0.0001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0001_0.15 5 2048 0.0001 0.15 > Output/Output_5_2048_0.0001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0001_0.2 5 2048 0.0001 0.2 > Output/Output_5_2048_0.0001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0001_0.25 5 2048 0.0001 0.25 > Output/Output_5_2048_0.0001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0005_0.05 5 2048 0.0005 0.05 > Output/Output_5_2048_0.0005_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0005_0.1 5 2048 0.0005 0.1 > Output/Output_5_2048_0.0005_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0005_0.15 5 2048 0.0005 0.15 > Output/Output_5_2048_0.0005_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0005_0.2 5 2048 0.0005 0.2 > Output/Output_5_2048_0.0005_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.0005_0.25 5 2048 0.0005 0.25 > Output/Output_5_2048_0.0005_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.001_0.05 5 2048 0.001 0.05 > Output/Output_5_2048_0.001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.001_0.1 5 2048 0.001 0.1 > Output/Output_5_2048_0.001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.001_0.15 5 2048 0.001 0.15 > Output/Output_5_2048_0.001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.001_0.2 5 2048 0.001 0.2 > Output/Output_5_2048_0.001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_2048_0.001_0.25 5 2048 0.001 0.25 > Output/Output_5_2048_0.001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0001_0.05 5 4096 0.0001 0.05 > Output/Output_5_4096_0.0001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0001_0.1 5 4096 0.0001 0.1 > Output/Output_5_4096_0.0001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0001_0.15 5 4096 0.0001 0.15 > Output/Output_5_4096_0.0001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0001_0.2 5 4096 0.0001 0.2 > Output/Output_5_4096_0.0001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0001_0.25 5 4096 0.0001 0.25 > Output/Output_5_4096_0.0001_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0005_0.05 5 4096 0.0005 0.05 > Output/Output_5_4096_0.0005_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0005_0.1 5 4096 0.0005 0.1 > Output/Output_5_4096_0.0005_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0005_0.15 5 4096 0.0005 0.15 > Output/Output_5_4096_0.0005_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0005_0.2 5 4096 0.0005 0.2 > Output/Output_5_4096_0.0005_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.0005_0.25 5 4096 0.0005 0.25 > Output/Output_5_4096_0.0005_0.25_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.001_0.05 5 4096 0.001 0.05 > Output/Output_5_4096_0.001_0.05_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.001_0.1 5 4096 0.001 0.1 > Output/Output_5_4096_0.001_0.1_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.001_0.15 5 4096 0.001 0.15 > Output/Output_5_4096_0.001_0.15_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.001_0.2 5 4096 0.001 0.2 > Output/Output_5_4096_0.001_0.2_log.txt &
+aprun -n 1 python3 triforce.py Output_5_4096_0.001_0.25 5 4096 0.001 0.25 > Output/Output_5_4096_0.001_0.25_log.txt &
 wait
