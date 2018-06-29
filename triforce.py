@@ -48,7 +48,7 @@ for optionName in requiredOptionNames:
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
+defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0, 'train_class_reg_separately':False}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -207,6 +207,7 @@ def sgl_bkgd_acc(predicted, truth):
         correct_bkgd_frac = float(correct_bkgd / truth_bkgd.shape[0])
     return correct_sgl_frac, correct_bkgd_frac # signal acc, bkg acc
 
+train_classification = True
 def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     if do_training:
         combined_classifier.net.train()
@@ -219,7 +220,15 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     class_reg_loss = combined_classifier.lossFunction(outputs, event_data, options['lossTermWeights'])
     if do_training:
         combined_classifier.optimizer.zero_grad()
-        class_reg_loss["total"].backward()
+        if (options["train_class_reg_separately"]):
+            global train_classification
+            if (train_classification):
+                class_reg_loss["classification"].backward()
+            else:
+                class_reg_loss["energy"].backward()
+            train_classification = ~train_classification
+        else:
+            class_reg_loss["total"].backward()
         combined_classifier.optimizer.step()
     _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
     class_sig_acc, class_bkg_acc = sgl_bkgd_acc(predicted_class.data, truth_class.data)
