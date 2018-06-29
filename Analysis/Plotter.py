@@ -78,7 +78,7 @@ class Analyzer():
         elif bin_feature == 'eta':
             n_bins = 11
             bin_range = (-0.55, 0.55)
-        elif bin_feature == 'opening_angle':
+        elif bin_feature == 'openingAngle':
             bin_range = (0.0, 0.5)
         bin_class_acc = binned_statistic(class_feature, class_acc, bins=n_bins, range=bin_range).statistic
         plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_class_acc)
@@ -148,7 +148,7 @@ class Analyzer():
 
         self.plot_accuracy_bins('energy', final_val_results, folder+"/accuracy_vs_energy.png")
         self.plot_accuracy_bins('eta', final_val_results, folder+"/accuracy_vs_eta.png")
-        self.plot_accuracy_bins('opening_angle', final_val_results, folder+"/accuracy_vs_opening_angle.png")
+        self.plot_accuracy_bins('openingAngle', final_val_results, folder+"/accuracy_vs_openingAngle.png")
 
         self.plot_history(test_train_history['class_reg_loss_train_batch'], test_train_history['class_reg_loss_test_batch'], loss=True, batch=True, filename=folder+"/loss_batches.png")
         self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/accuracy_batches.png")

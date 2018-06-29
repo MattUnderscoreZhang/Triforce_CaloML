@@ -17,20 +17,12 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
             return_data['ECAL'] = f['ECAL'][:].astype(np.float32)
             n_events = len(return_data['ECAL'])
             return_data['HCAL'] = f['HCAL'][:].astype(np.float32)
-            return_data['ECAL_E'] = f['ECAL_E'][:].astype(np.float32)
-            return_data['HCAL_E'] = f['HCAL_E'][:].astype(np.float32)
-            return_data['HCAL_ECAL_ERatio'] = f['HCAL_ECAL_ERatio'][:].astype(np.float32)
             return_data['pdgID'] = f['pdgID'][:].astype(int)
             return_data['classID'] = np.array([pdgIDs[abs(i)] for i in return_data['pdgID']]) # PyTorch expects class index instead of one-hot
-            if 'energy' in f.keys():
-                return_data['energy'] = f['energy'][:].astype(np.float32)
-            else: return_data['energy'] = np.zeros(n_events, dtype=np.float32)
-            if 'eta' in f.keys():
-                return_data['eta'] = f['eta'][:].astype(np.float32)
-            else: return_data['eta'] = np.zeros(n_events, dtype=np.float32)
-            if 'openingAngle' in f.keys():
-                return_data['opening_angle'] = f['openingAngle'][:].astype(np.float32)
-            else: return_data['opening_angle'] = np.zeros(n_events, dtype=np.float32)
+            other_features = ['ECAL_E', 'HCAL_E', 'HCAL_ECAL_ERatio', 'energy', 'eta', 'recoEta', 'phi', 'recoPhi', 'openingAngle']
+            for feat in other_features:
+                if feat in f.keys(): return_data[feat] = f[feat][:].astype(np.float32)
+                else: return_data[feat] = np.zeros(n_events, dtype=np.float32)
         # minimal data load: only load specific features that are requested
         else:
             for feat in loadMinimalFeatures:

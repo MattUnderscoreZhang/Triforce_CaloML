@@ -241,7 +241,7 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     return_event_data["reg_eta_std"] = torch.std(diff_eta)
     return_event_data["energy"] = event_data["energy"].numpy()
     return_event_data["eta"] = event_data["eta"].numpy()
-    return_event_data["opening_angle"] = event_data["opening_angle"].numpy()
+    return_event_data["openingAngle"] = event_data["openingAngle"].numpy()
     if store_reg_results:
         return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data.cpu().numpy()
         return_event_data["reg_eta_prediction"] = outputs['eta_regression'].data.cpu().numpy()
