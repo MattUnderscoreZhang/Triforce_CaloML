@@ -175,7 +175,7 @@ class historyData(list):
 history = historyData()
 
 # enumerate parts of the data structure
-stat_name = ['class_reg_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
+stat_name = ['class_reg_loss', 'class_loss', 'reg_energy_loss', 'reg_eta_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
 # stat metrics to print out every N batches
 print_metrics = options['print_metrics']
 CLASS_LOSS, CLASS_ACC = 0, 1
@@ -230,6 +230,9 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     diff_eta = truth_eta.data - outputs['eta_regression'].data
     # return values
     return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0]
+    return_event_data["class_loss"] = class_reg_loss["classification"].data[0]
+    return_event_data["reg_energy_loss"] = class_reg_loss["energy"].data[0]
+    return_event_data["reg_eta_loss"] = class_reg_loss["eta"].data[0]
     return_event_data["class_acc"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
     return_event_data["class_prediction"] = predicted_class.data.cpu().numpy()
     return_event_data["class_truth"] = truth_class.data.cpu().numpy()
@@ -250,6 +253,9 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
         HCAL = event_data["HCAL"]
         return_event_data["HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1).numpy()
         return_event_data["pdgID"] = event_data["pdgID"].numpy()
+        return_event_data["phi"] = event_data["phi"].numpy()
+        return_event_data["recoEta"] = event_data["recoEta"].numpy()
+        return_event_data["recoPhi"] = event_data["recoPhi"].numpy()
     return return_event_data
 
 def class_reg_train(event_data):
