@@ -105,6 +105,8 @@ class Analyzer():
             bin_range = (0, 500)
         elif bin_feature == 'eta':
             bin_range = (-0.55, 0.55)
+        elif bin_feature == 'phi':
+            bin_range = (0.0, 0.35)
 
         # plot mean
         bin_mean = binned_statistic(binvar, diff, statistic='mean', bins=n_bins, range=bin_range).statistic
@@ -161,8 +163,12 @@ class Analyzer():
                                       [folder+'/reg_bias_energy_vs_energy.png', folder+'/reg_res_energy_vs_energy.png'])
             self.plot_regression_bins('eta', 'energy', final_val_results,
                                       [folder+'/reg_bias_energy_vs_eta.png', folder+'/reg_res_energy_vs_eta.png'])
+            self.plot_regression_bins('phi', 'energy', final_val_results,
+                                      [folder+'/reg_bias_energy_vs_phi.png', folder+'/reg_res_energy_vs_phi.png'])
         if 'reg_eta_prediction' in final_val_results.keys():
             self.plot_regression_bins('energy', 'eta', final_val_results,
                                       [folder+'/reg_bias_eta_vs_energy.png', folder+'/reg_res_eta_vs_energy.png'])
             self.plot_regression_bins('eta', 'eta', final_val_results,
                                       [folder+'/reg_bias_eta_vs_eta.png', folder+'/reg_res_eta_vs_eta.png'])
+            self.plot_regression_bins('phi', 'eta', final_val_results,
+                                      [folder+'/reg_bias_eta_vs_phi.png', folder+'/reg_res_eta_vs_phi.png'])
