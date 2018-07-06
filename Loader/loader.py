@@ -88,7 +88,7 @@ class HDF5Dataset(data.Dataset):
 
     def __getitem__(self, index):
         # if entering a new epoch, re-initialze necessary variables
-        if (index < self.fileInMemoryFirstIndex): 
+        if (index < self.fileInMemoryFirstIndex):
             self.fileInMemory = -1
             self.fileInMemoryFirstIndex = 0
             self.fileInMemoryLastIndex = -1
