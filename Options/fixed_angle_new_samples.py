@@ -30,6 +30,8 @@ options['nTrainMax'] = -1
 options['nTestMax'] = -1
 options['nValidationMax'] = -1
 
+options['filters'] = []
+
 # options['nEpochs'] = 1 # break after this number of epochs
 # options['nTrainMax'] = 20
 # options['nTestMax'] = 20
@@ -39,10 +41,10 @@ options['nValidationMax'] = -1
 # Choose tools #
 ################
 
-from Classification import Fixed_Angle_Classifier
+from Architectures import Fixed_Angle_Classifier
 # from Classification import GoogLeNet
-from Regression import NIPS_Regressor
-from GAN import NIPS_GAN
+# from Regression import NIPS_Regressor
+# from GAN import NIPS_GAN
 from Analysis import Classification_Plotter
 
 _decayRate = 0

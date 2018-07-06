@@ -24,7 +24,7 @@ options['saveFinalModel'] = 1 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
-options['nEpochs'] = 10 # break after this number of epochs
+options['nEpochs'] = 50 # break after this number of epochs
 options['nTrainMax'] = -1
 options['nTestMax'] = -1
 options['nValidationMax'] = -1
@@ -63,7 +63,7 @@ options['val_outputs'] = ['reg_energy_truth', 'reg_energy_prediction', 'reg_eta_
 # Choose tools #
 ################
 
-from Architectures import Combined_DNN, Combined_CNN, Discriminator, Generator
+from Architectures import Combined_DNN, Discriminator, Generator
 from Analysis import Classification_Plotter
 
 options['decayRate'] = 0
@@ -85,7 +85,7 @@ options['kernelzHCAL'] = 6
 options['maxpoolkernelECAL'] = 2
 options['maxpoolkernelHCAL'] = 2
 
-combined_classifier = Combined_CNN.Net(options)
+combined_classifier = Combined_DNN.Net(options)
 discriminator = None
 generator = None
 analyzer = Classification_Plotter.Analyzer()

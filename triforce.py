@@ -31,7 +31,7 @@ if 'culture-plate' in socket.gethostname():
 # Set options file #
 ####################
 
-optionsFileName = "combined"
+optionsFileName = "fixed_angle_new_samples"
 
 ######################################################
 # Import options & warn if options file has problems #
