@@ -30,12 +30,19 @@ options['nTrainMax'] = -1
 options['nTestMax'] = -1
 options['nValidationMax'] = -1
 
+options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
 options['filters'] = []
 
 # options['nEpochs'] = 1 # break after this number of epochs
 # options['nTrainMax'] = 20
 # options['nTestMax'] = 20
 # options['nValidationMax'] = 20
+
+# options['print_metrics'] = ['class_reg_loss', 'class_acc']
+options['print_metrics'] = ['class_reg_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc']
+
+# # options['val_outputs'] = []
+# options['val_outputs'] = ['reg_energy_truth', 'reg_energy_prediction', 'reg_eta_truth', 'reg_eta_prediction', 'reg_raw_ECAL_E', 'reg_raw_HCAL_E']
 
 ################
 # Choose tools #
@@ -46,6 +53,14 @@ from Architectures import Fixed_Angle_Classifier
 # from Regression import NIPS_Regressor
 # from GAN import NIPS_GAN
 from Analysis import Classification_Plotter
+
+# options['decayRate'] = 0
+# options['nHiddenLayers'] = int(sys.argv[2])
+# options['hiddenLayerNeurons'] = int(sys.argv[3])
+# options['learningRate'] = float(sys.argv[4])
+# options['dropoutProb'] = float(sys.argv[5])
+# options['windowSizeECAL'] = int(sys.argv[6])
+# options['windowSizeHCAL'] = 11
 
 _decayRate = 0
 _nHiddenLayers = int(sys.argv[2])
