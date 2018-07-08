@@ -36,8 +36,8 @@ options['nValidationMax'] = -1
 
 ## relative weight to assign to each type of output
 ## set to 0 to ignore a type of output
-options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, 'eta_regression': 0.0, 'phi_regression': 0.0}
-# options['lossTermWeights'] = {'classification': 200.0, 'energy_regression': 1.0, 'eta_regression': 3000.0, 'phi_regression': 0.0}
+options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 0.0, 'phi_regression': 0.0}
+#options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 500.0, 'phi_regression': 100.0}
 
 #################
 # Input filters #
@@ -89,6 +89,11 @@ options['kernelxyHCAL'] = 2
 options['kernelzHCAL'] = 6
 options['maxpoolkernelECAL'] = 2
 options['maxpoolkernelHCAL'] = 2
+
+# scaling to apply to input values in nets
+options['inputScaleSumE'] = 0.01
+options['inputScaleEta'] = 10.0
+options['inputScalePhi'] = 10.0
 
 combined_classifier = Combined_DNN.Net(options)
 discriminator = None

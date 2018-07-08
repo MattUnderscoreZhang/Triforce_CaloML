@@ -16,6 +16,7 @@ import glob, os, sys, shutil, socket
 import numpy as np
 import h5py as h5
 import Loader.loader as loader
+from Loader import transforms
 import Options
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
 import pdb
@@ -233,12 +234,12 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
     class_sig_acc, class_bkg_acc = sgl_bkgd_acc(predicted_class.data, truth_class.data)
     # regression outputs. move first to cpu
-    pred_energy = outputs['energy_regression'].data.cpu()
+    pred_energy = transforms.pred_energy_from_reg(outputs['energy_regression'].data.cpu(), event_data)
     truth_energy = event_data["energy"]
     reldiff_energy = 100.0*(truth_energy - pred_energy)/truth_energy
-    pred_eta = outputs['eta_regression'].data.cpu()
+    pred_eta = transforms.pred_eta_from_reg(outputs['eta_regression'].data.cpu(), event_data)
     diff_eta = event_data["eta"] - pred_eta
-    pred_phi = outputs['phi_regression'].data.cpu() + event_data['recoPhi']
+    pred_phi = transforms.pred_phi_from_reg(outputs['phi_regression'].data.cpu(), event_data)
     diff_phi = event_data["phi"] - pred_phi
     # return values
     return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0]

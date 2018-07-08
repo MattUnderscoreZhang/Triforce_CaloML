@@ -3,6 +3,7 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 import math, pdb
 import numpy as np
+from Loader import transforms
 
 def weighted_mse_loss(pred,target,weights):
     sqerr = (pred-target)**2
@@ -14,12 +15,10 @@ def combinedLossFunction(output, data, term_weights):
     # classification loss: cross entropy
     loss_class = term_weights['classification'] * F.cross_entropy(output['classification'], Variable(data['classID'].cuda()))
     # regression loss: mse
-    truth_energy = Variable(data['energy'].cuda())
-    # use per-event weights for energy to emphasize lower energies
-    event_weights = 1.0 / torch.log(truth_energy)
-    loss_energy = term_weights['energy_regression'] * weighted_mse_loss(output['energy_regression'], truth_energy, event_weights)
-    loss_eta = term_weights['eta_regression'] * F.mse_loss(output['eta_regression'], Variable(data['eta'].cuda()))
-    loss_phi = term_weights['phi_regression'] * F.mse_loss(output['phi_regression'], Variable((data['phi'] - data['recoPhi']).cuda()))
+    reg_energy, target_energy = transforms.reg_target_energy_for_loss(output, data)
+    loss_energy = term_weights['energy_regression'] * F.mse_loss(reg_energy, target_energy)
+    loss_eta = term_weights['eta_regression'] * F.mse_loss(output['eta_regression'], transforms.target_eta_for_loss(data))
+    loss_phi = term_weights['phi_regression'] * F.mse_loss(output['phi_regression'], transforms.target_phi_for_loss(data))
     return {"total": loss_class+loss_energy+loss_eta+loss_phi, "classification": loss_class, "energy": loss_energy, "eta": loss_eta, "phi": loss_phi}
 
 def classificationOnlyLossFunction(output, data, term_weights):

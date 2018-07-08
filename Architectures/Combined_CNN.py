@@ -38,6 +38,9 @@ class Classifier_Net(nn.Module):
         nfiltHCAL, kernelxyHCAL, kernelzHCAL = options['nfiltHCAL'], options['kernelxyHCAL'], options['kernelzHCAL']
         maxpoolkernelECAL = options['maxpoolkernelECAL']
         maxpoolkernelHCAL = options['maxpoolkernelHCAL']
+        self.inputScaleSumE = options['inputScaleSumE']
+        self.inputScaleEta = options['inputScaleEta']
+        self.inputScalePhi = options['inputScalePhi']
         
         self.outputs = []
         for particle_class in options['classPdgID']:
@@ -71,11 +74,6 @@ class Classifier_Net(nn.Module):
             self.dropout.append(nn.Dropout(p = options['dropoutProb']))
 
         self.finalLayer = nn.Linear(hiddenLayerNeurons+4, len(self.outputs))
-        # initialize weights for energy sums in energy output to 1: assume close to identity
-        energy_index = self.outputs.index(("energy_regression", REGRESSION))
-        output_params = self.finalLayer.weight.data
-        output_params[energy_index][-1] = 1.0
-        output_params[energy_index][-2] = 1.0
 
     def forward(self, data):
 
@@ -85,18 +83,18 @@ class Classifier_Net(nn.Module):
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
         ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
-        ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim = 1).view(-1, 1)
+        ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim = 1).view(-1, 1) * self.inputScaleSumE
 
         HCAL = Variable(data["HCAL"].cuda())
         lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
         upperBound = lowerBound + self.windowSizeHCAL
         HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
         HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
-        HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1)
+        HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1) * self.inputScaleSumE
 
         # get reco angles from event
-        recoEta = Variable(data["recoEta"].cuda()).view(-1,1)
-        recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1)
+        recoEta = Variable(data["recoEta"].cuda()).view(-1,1) * self.inputScaleEta
+        recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1) * self.inputScalePhi
 
         # ECAL convolutions
         branchECAL = self.convECAL(ECAL)

@@ -7,7 +7,9 @@ options = {}
 
 basePath = "/data/shared/LCDLargeWindow/fixedangle/"
 #basePath = "/data/shared/LCDLargeWindow/varangle/"
+#basePath = "/bigdata/shared/LCDLargeWindow/LCDLargeWindow/varangle/"
 options['samplePath'] = [basePath + "Pi0Escan/Pi0Escan_*.h5", basePath + "GammaEscan/GammaEscan_*.h5"]
+#options['samplePath'] = [basePath + "Pi0Escan/uncompressed_recoangles/Pi0Escan_*.h5", basePath + "GammaEscan/uncompressed_recoangles/GammaEscan_*.h5"]
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 # options['samplePath'] = [basePath + "ChPiEscan_1_MERGED/ChPiEscan_*.h5", basePath + "EleEscan_1_MERGED/EleEscan_*.h5"]
 # options['classPdgID'] = [211, 11] # [ChPi, Ele]
@@ -39,7 +41,8 @@ options['nValidationMax'] = -1
 
 ## relative weight to assign to each type of output
 ## set to 0 to ignore a type of output
-options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, 'eta_regression': 0.0, 'phi_regression': 0.0}
+#options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 0.0, 'phi_regression': 0.0}
+options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 500.0, 'phi_regression': 100.0}
 
 #################
 # Input filters #
@@ -90,6 +93,11 @@ options['kernelxyHCAL'] = 2
 options['kernelzHCAL'] = 6
 options['maxpoolkernelECAL'] = 2
 options['maxpoolkernelHCAL'] = 2
+
+# scaling to apply to input values in nets
+options['inputScaleSumE'] = 0.01
+options['inputScaleEta'] = 10.0
+options['inputScalePhi'] = 10.0
 
 #combined_classifier = Combined_DNN.Net(options)
 combined_classifier = Combined_CNN.Net(options)
