@@ -49,6 +49,11 @@ from Loader import filters
 #options['filters'] = [energy_filter]
 options['filters'] = []
 
+## filter for variable angle ele, gamma, pi0
+# hOverE_filter = filters.hOverE_filter(0.4)
+# recoOverGen_filter = filters.recoOverGen_filter(0.66)
+# options['filters'] = [hOverE_filter, recoOverGen_filter]
+
 ##################
 # Output options #
 ##################
