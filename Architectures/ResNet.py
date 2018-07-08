@@ -39,7 +39,7 @@ class ResNet(nn.Module):
         self.outputs = []
         for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
-        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
+        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION), ("phi_regression", REGRESSION)]
         # layers
         self.conv0 = nn.Conv3d(1, 32, 3, stride=1, padding=1)
         self.conv1 = nn.Conv3d(32, 64, 3, stride=2)

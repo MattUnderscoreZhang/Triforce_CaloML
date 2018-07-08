@@ -175,7 +175,7 @@ class historyData(list):
 history = historyData()
 
 # enumerate parts of the data structure
-stat_name = ['class_reg_loss', 'class_loss', 'reg_energy_loss', 'reg_eta_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
+stat_name = ['class_reg_loss', 'class_loss', 'reg_energy_loss', 'reg_eta_loss', 'reg_phi_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std', 'reg_phi_diff', 'reg_phi_std']
 # stat metrics to print out every N batches
 print_metrics = options['print_metrics']
 CLASS_LOSS, CLASS_ACC = 0, 1
@@ -232,16 +232,20 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
         combined_classifier.optimizer.step()
     _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
     class_sig_acc, class_bkg_acc = sgl_bkgd_acc(predicted_class.data, truth_class.data)
-    # regression
-    truth_energy = Variable(event_data["energy"].cuda())
-    reldiff_energy = 100.0*(truth_energy.data - outputs['energy_regression'].data)/truth_energy.data
-    truth_eta = Variable(event_data["eta"].cuda())
-    diff_eta = truth_eta.data - outputs['eta_regression'].data
+    # regression outputs. move first to cpu
+    pred_energy = outputs['energy_regression'].data.cpu()
+    truth_energy = event_data["energy"]
+    reldiff_energy = 100.0*(truth_energy - pred_energy)/truth_energy
+    pred_eta = outputs['eta_regression'].data.cpu()
+    diff_eta = event_data["eta"] - pred_eta
+    pred_phi = outputs['phi_regression'].data.cpu() + event_data['recoPhi']
+    diff_phi = event_data["phi"] - pred_phi
     # return values
     return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0]
     return_event_data["class_loss"] = class_reg_loss["classification"].data[0]
     return_event_data["reg_energy_loss"] = class_reg_loss["energy"].data[0]
     return_event_data["reg_eta_loss"] = class_reg_loss["eta"].data[0]
+    return_event_data["reg_phi_loss"] = class_reg_loss["phi"].data[0]
     return_event_data["class_acc"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
     return_event_data["class_prediction"] = predicted_class.data.cpu().numpy()
     return_event_data["class_truth"] = truth_class.data.cpu().numpy()
@@ -251,12 +255,15 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     return_event_data["reg_energy_res"] = torch.std(reldiff_energy)
     return_event_data["reg_eta_diff"] = torch.mean(diff_eta)
     return_event_data["reg_eta_std"] = torch.std(diff_eta)
+    return_event_data["reg_phi_diff"] = torch.mean(diff_phi)
+    return_event_data["reg_phi_std"] = torch.std(diff_phi)
     return_event_data["energy"] = event_data["energy"].numpy()
     return_event_data["eta"] = event_data["eta"].numpy()
     return_event_data["openingAngle"] = event_data["openingAngle"].numpy()
     if store_reg_results:
-        return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data.cpu().numpy()
-        return_event_data["reg_eta_prediction"] = outputs['eta_regression'].data.cpu().numpy()
+        return_event_data["reg_energy_prediction"] = pred_energy.numpy()
+        return_event_data["reg_eta_prediction"] = pred_eta.numpy()
+        return_event_data["reg_phi_prediction"] = pred_phi.numpy()
         ECAL = event_data["ECAL"]
         return_event_data["ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1).numpy()
         HCAL = event_data["HCAL"]

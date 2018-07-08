@@ -24,7 +24,7 @@ class Classifier_Net(nn.Module):
         self.outputs = []
         for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
-        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
+        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION), ("phi_regression", REGRESSION)]
         # layers
         ECAL_size = self.windowSizeECAL * self.windowSizeECAL * 25
         HCAL_size = self.windowSizeHCAL * self.windowSizeHCAL * 60

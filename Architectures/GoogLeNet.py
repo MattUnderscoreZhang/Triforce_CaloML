@@ -75,7 +75,7 @@ class GoogLeNet(nn.Module):
         self.outputs = []
         for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
-        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
+        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION), ("phi_regression", REGRESSION)]
 
         self.pre_layers = nn.Sequential(
             nn.Conv3d(1, 192, kernel_size=3, padding=1),

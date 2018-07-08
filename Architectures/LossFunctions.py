@@ -19,7 +19,8 @@ def combinedLossFunction(output, data, term_weights):
     event_weights = 1.0 / torch.log(truth_energy)
     loss_energy = term_weights['energy_regression'] * weighted_mse_loss(output['energy_regression'], truth_energy, event_weights)
     loss_eta = term_weights['eta_regression'] * F.mse_loss(output['eta_regression'], Variable(data['eta'].cuda()))
-    return {"total": loss_class+loss_energy+loss_eta, "classification": loss_class, "energy": loss_energy, "eta": loss_eta}
+    loss_phi = term_weights['phi_regression'] * F.mse_loss(output['phi_regression'], Variable((data['phi'] - data['recoPhi']).cuda()))
+    return {"total": loss_class+loss_energy+loss_eta+loss_phi, "classification": loss_class, "energy": loss_energy, "eta": loss_eta, "phi": loss_phi}
 
 def classificationOnlyLossFunction(output, data, term_weights):
     # classification loss: cross entropy

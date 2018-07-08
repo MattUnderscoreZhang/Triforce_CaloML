@@ -42,7 +42,7 @@ class Classifier_Net(nn.Module):
         self.outputs = []
         for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
-        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
+        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION), ("phi_regression", REGRESSION)]
 
         # first layers: convolutions
         self.convECAL = nn.Conv3d(1, nfiltECAL, (kernelxyECAL, kernelxyECAL, kernelzECAL))
@@ -65,12 +65,12 @@ class Classifier_Net(nn.Module):
         for i in range(self.nHiddenLayers):
             if i == 0:
                 # first layer after convolutions
-                self.hidden.append(nn.Linear(size_ECAL_flat+size_HCAL_flat+2, hiddenLayerNeurons))
+                self.hidden.append(nn.Linear(size_ECAL_flat+size_HCAL_flat+4, hiddenLayerNeurons))
             else:
                 self.hidden.append(nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons))
             self.dropout.append(nn.Dropout(p = options['dropoutProb']))
 
-        self.finalLayer = nn.Linear(hiddenLayerNeurons+2, len(self.outputs))
+        self.finalLayer = nn.Linear(hiddenLayerNeurons+4, len(self.outputs))
         # initialize weights for energy sums in energy output to 1: assume close to identity
         energy_index = self.outputs.index(("energy_regression", REGRESSION))
         output_params = self.finalLayer.weight.data
@@ -94,6 +94,10 @@ class Classifier_Net(nn.Module):
         HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
         HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1)
 
+        # get reco angles from event
+        recoEta = Variable(data["recoEta"].cuda()).view(-1,1)
+        recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1)
+
         # ECAL convolutions
         branchECAL = self.convECAL(ECAL)
         branchECAL = F.relu(branchECAL)
@@ -108,14 +112,14 @@ class Classifier_Net(nn.Module):
         # flatten
         branchHCAL = branchHCAL.view(branchHCAL.size(0), -1)
 
-        # join the two branches and energy sums
-        x = torch.cat((branchECAL, branchHCAL, ECAL_sum, HCAL_sum), 1) 
+        # join the two branches and angles, energy sums
+        x = torch.cat((branchECAL, branchHCAL, recoPhi, recoEta, ECAL_sum, HCAL_sum), 1)
         # fully connected layers
         for i in range(self.nHiddenLayers):
             x = F.relu(self.hidden[i](x))
             x = self.dropout[i](x)
-        # cat energy sums back in before final layer
-        x = torch.cat([x, ECAL_sum, HCAL_sum], 1)
+        # cat angles / energy sums back in before final layer
+        x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
         x = self.finalLayer(x)
 
         # preparing output

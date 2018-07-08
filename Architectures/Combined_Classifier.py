@@ -22,7 +22,7 @@ class Classifier_Net(nn.Module):
         self.outputs = []
         for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
-        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
+        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION), ("phi_regression", REGRESSION)]
         # layers
         self.input = nn.Linear(self.windowSize * self.windowSize * 25, hiddenLayerNeurons)
         self.hidden = nn.ModuleList()
