@@ -26,4 +26,4 @@ def classificationOnlyLossFunction(output, data, term_weights):
     # classification loss: cross entropy
     loss_class = term_weights['classification'] * F.cross_entropy(output['classification'], Variable(data['classID'].cuda()))
     zero = Variable(torch.from_numpy(np.array([0])))
-    return {"total": loss_class, "classification": loss_class, "energy": zero, "eta": zero}
+    return {"total": loss_class, "classification": loss_class, "energy": zero, "eta": zero, "phi": zero}
