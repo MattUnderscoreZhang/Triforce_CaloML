@@ -1,0 +1,23 @@
+How to run BDT analysis
+
+There are several options you can change in the script before running:
+
+    basePath is the folder that samples or sample subfolders are in.
+
+    samplePath is a list pointing to the samples to be used for each class.
+
+    target_names are the class names.
+
+    classPdgID are the class pdgIDs.
+
+    All features in the input samples are automatically found and added to the
+        analysis, but you can mark the features which you don’t want to be in the BDT
+        by altering the badKeys list.
+
+BDT.py takes a number of inputs:
+
+    python BDT.py <output_folder> <max_depth> <n_estimators> <learning_rate>
+
+All plots, learning curves, and feature rankings should be saved to the
+specified output directory.
+
