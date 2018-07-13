@@ -28,7 +28,7 @@ class Classifier_Net(nn.Module):
         lowerBound = 26 - int(math.ceil(self.windowSize/2))
         upperBound = lowerBound + self.windowSize
         try: 
-            x = x[:, lowerBound:upperBound, lowerBound:upperBound]
+            x = x['ECAL'][:, lowerBound:upperBound, lowerBound:upperBound]
         except: 
             pdb.set_trace()
         x = x.contiguous().view(-1, self.windowSize * self.windowSize * 25)
