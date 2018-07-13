@@ -367,9 +367,22 @@ def class_reg_training():
 
         if end_training: break
 
-print('Training Classifier and Regressor')
-class_reg_training()
-print('-------------------------------')
+
+# train or skip training class+reg network. 
+if options['skipClassRegTrain']:
+    print('Loading Classifier and Regressor')
+    # check if there is a state_dict of a trained model. 
+    if os.path.exists(options['outPath']+"saved_classifier.pt"):
+        combined_classifier.load_state_dict(torch.load(options['outPath']+"saved_classifier.pt")) 
+    else: 
+        print('WARNING: Found no trained models. Please check skipClassRegTrain flag in options file.')
+        sys.exit()
+    print('-------------------------------')
+else: 
+    print('Training Classifier and Regressor')
+    class_reg_training() 
+    print('-------------------------------')
+
 
 ################
 # GAN Training #
@@ -403,10 +416,15 @@ for stat in range(len(stat_name)):
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
             test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
-if options['saveFinalModel']:
-    torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
-    if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
-    if generator != None: torch.save(generator.net, options['outPath']+"saved_generator.pt")
+if options['saveFinalModel']: 
+    # save the the state_dicts instead of entire models. 
+    torch.save(combined_classifier.state_dict(), options['outPath']+"saved_classifier.pt")
+    if discriminator != None: torch.save(discriminator.state_dict(), options['outPath']+"saved_discriminator.pt")
+    if generator != None: torch.save(generator.state_dict(), options['outPath']+"saved_generator.pt")
+
+    # torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
+    # if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
+    # if generator != None: torch.save(generator.net, options['outPath']+"saved_generator.pt")
 
 print('Getting Validation Results')
 final_val_results = {}

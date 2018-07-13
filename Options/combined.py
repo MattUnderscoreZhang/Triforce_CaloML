@@ -29,7 +29,8 @@ options['nTrainMax'] = 5
 options['nTestMax'] = 5
 options['nValidationMax'] = -1
 
-# ADD FLAG FOR WHETHER TO TRAIN CLASS+REG NET FIRST, OR TO LOAD A SAVED ONE
+
+options['skipClassRegTrain'] = False #skips training class+reg network and loads already trained net instead. 
 
 # options['nEpochs'] = 1 # break after this number of epochs
 # options['nTrainMax'] = 20
