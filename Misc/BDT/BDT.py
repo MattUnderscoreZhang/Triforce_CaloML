@@ -12,23 +12,20 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.metrics import roc_curve, auc
 import cPickle
+options={}
 
 ###############
 # Set options #
 ###############
 
-# basePath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/V4/Original/EleChPi/"
-# samplePath = [basePath + "ChPiEscan/ChPiEscan_*.h5", basePath + "EleEscan/EleEscan_*.h5"]
-# target_names = ['charged pion', 'electron']
-# classPdgID = [211, 11] # absolute IDs corresponding to paths above
-basePath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/V4/Original/GammaPi0/"
-samplePath = [basePath + "Pi0Escan/Pi0Escan_*.h5", basePath + "GammaEscan/GammaEscan_*.h5"]
-target_names = ['neutral pion', 'photon']
-classPdgID = [111, 22] # absolute IDs corresponding to paths above
+basePath = "/data/LCD/NewSamples/Fixed/"
+options['samplePath'] = [basePath + "Pi0Escan*/Pi0Escan_*.h5", basePath + "GammaEscan*/GammaEscan_*.h5"]
+options['target_names'] = ['charged pion', 'electron']
+options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 
-badKeys = ['ECALmomentX1', 'ECALmomentY1', 'HCALmomentX1', 'HCALmomentY1', 'ECAL/ECAL', 'HCAL/HCAL', 'Event/conversion', 'Event/energy', 'Event/px', 'Event/py', 'Event/pz', 'N_Subjettiness/bestJets1', 'N_Subjettiness/bestJets2'] # leave pdgID for now - needed below
+badKeys = ['ECAL', 'HCAL', 'conversion', 'energy', 'openingAngle'] # leave pdgID for now - needed below
 
-OutPath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/SubmissionScripts/BDT/"+sys.argv[1]
+OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/" + sys.argv[1]
 max_depth = int(sys.argv[2]) # 3
 n_estimators = int(sys.argv[3]) # 800
 learning_rate = float(sys.argv[4]) # 0.5
@@ -40,7 +37,7 @@ learning_rate = float(sys.argv[4]) # 0.5
 # load files
 print "Loading files"
 dataFileNames = []
-for particlePath in samplePath:
+for particlePath in options['samplePath']:
     dataFileNames += glob.glob(particlePath)
 
 dataFiles = []
@@ -77,7 +74,7 @@ for count, feature in enumerate(features):
         newFeature = np.concatenate((newFeature, dataFiles[fileN][feature]))
     if feature == 'pdgID':
         y = newFeature
-        for i, ID in enumerate(classPdgID):
+        for i, ID in enumerate(options['classPdgID']):
             y[y==ID] = i
     else:
         data.append(newFeature);
@@ -98,10 +95,9 @@ X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.33, random
 # Train BDT #
 #############
 
-bdt = GradientBoostingClassifier(max_depth=max_depth,
+bdt = AdaBoostClassifier(
         n_estimators=n_estimators,
         learning_rate=learning_rate,
-        verbose=True,
         random_state=492)
 
 print "Training BDT"
@@ -109,7 +105,7 @@ bdt.fit(X_train, y_train)
 print "Analyzing BDT results"
 y_predicted = bdt.predict(X_test)
 decisions = bdt.decision_function(X_test)
-print (classification_report(y_test, y_predicted, target_names=target_names, digits=4))
+print (classification_report(y_test, y_predicted, target_names=options['target_names'], digits=4))
 print ("Area under ROC curve: %.4f"%(roc_auc_score(y_test, decisions)))
 
 ################
