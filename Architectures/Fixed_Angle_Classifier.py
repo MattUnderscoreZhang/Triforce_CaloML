@@ -25,7 +25,10 @@ class Classifier_Net(nn.Module):
     def forward(self, x):
         lowerBound = 26 - int(math.ceil(self.windowSize/2))
         upperBound = lowerBound + self.windowSize
-        x = x[:, lowerBound:upperBound, lowerBound:upperBound]
+        try: 
+            x = x[:, lowerBound:upperBound, lowerBound:upperBound]
+        except: 
+            pdb.set_trace()
         x = x.contiguous().view(-1, self.windowSize * self.windowSize * 25)
         x = self.input(x)
         for i in range(self.nHiddenLayers-1):
