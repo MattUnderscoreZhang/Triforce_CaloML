@@ -381,12 +381,7 @@ for stat in range(len(stat_name)):
     if not stat_name[stat] in print_metrics: continue
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
-<<<<<<< HEAD
-            out_file.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
-
-=======
             test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
->>>>>>> master
 if options['saveFinalModel']:
     torch.save(classifier.net, options['outPath']+"saved_classifier.pt")
     if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
