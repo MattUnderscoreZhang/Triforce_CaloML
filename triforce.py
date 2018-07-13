@@ -16,6 +16,7 @@ import glob, os, sys, shutil, socket
 import numpy as np
 import h5py as h5
 import Loader.loader as loader
+from Loader import transforms
 import Options
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
 import pdb
@@ -48,7 +49,7 @@ for optionName in requiredOptionNames:
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
+defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nWorkers':0, 'calculate_loss_per_n_batches':20, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0, 'train_class_reg_separately':False}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -175,7 +176,7 @@ class historyData(list):
 history = historyData()
 
 # enumerate parts of the data structure
-stat_name = ['class_reg_loss', 'class_acc', 'class_prediction', 'class_truth', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std']
+stat_name = ['class_reg_loss', 'class_loss', 'reg_energy_loss', 'reg_eta_loss', 'reg_phi_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std', 'reg_phi_diff', 'reg_phi_std']
 # stat metrics to print out every N batches
 print_metrics = options['print_metrics']
 CLASS_LOSS, CLASS_ACC = 0, 1
@@ -207,6 +208,7 @@ def sgl_bkgd_acc(predicted, truth):
         correct_bkgd_frac = float(correct_bkgd / truth_bkgd.shape[0])
     return correct_sgl_frac, correct_bkgd_frac # signal acc, bkg acc
 
+train_classification = True
 def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     if do_training:
         combined_classifier.net.train()
@@ -219,38 +221,58 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     class_reg_loss = combined_classifier.lossFunction(outputs, event_data, options['lossTermWeights'])
     if do_training:
         combined_classifier.optimizer.zero_grad()
-        class_reg_loss["total"].backward()
+        if (options["train_class_reg_separately"]):
+            global train_classification
+            if (train_classification):
+                class_reg_loss["classification"].backward()
+            else:
+                class_reg_loss["energy"].backward()
+            train_classification = ~train_classification
+        else:
+            class_reg_loss["total"].backward()
         combined_classifier.optimizer.step()
     _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
     class_sig_acc, class_bkg_acc = sgl_bkgd_acc(predicted_class.data, truth_class.data)
-    # regression
-    truth_energy = Variable(event_data["energy"].cuda())
-    reldiff_energy = 100.0*(truth_energy.data - outputs['energy_regression'].data)/truth_energy.data
-    truth_eta = Variable(event_data["eta"].cuda())
-    diff_eta = truth_eta.data - outputs['eta_regression'].data
+    # regression outputs. move first to cpu
+    pred_energy = transforms.pred_energy_from_reg(outputs['energy_regression'].data.cpu(), event_data)
+    truth_energy = event_data["energy"]
+    reldiff_energy = 100.0*(truth_energy - pred_energy)/truth_energy
+    pred_eta = transforms.pred_eta_from_reg(outputs['eta_regression'].data.cpu(), event_data)
+    diff_eta = event_data["eta"] - pred_eta
+    pred_phi = transforms.pred_phi_from_reg(outputs['phi_regression'].data.cpu(), event_data)
+    diff_phi = event_data["phi"] - pred_phi
     # return values
     return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0]
+    return_event_data["class_loss"] = class_reg_loss["classification"].data[0]
+    return_event_data["reg_energy_loss"] = class_reg_loss["energy"].data[0]
+    return_event_data["reg_eta_loss"] = class_reg_loss["eta"].data[0]
+    return_event_data["reg_phi_loss"] = class_reg_loss["phi"].data[0]
     return_event_data["class_acc"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
-    return_event_data["class_prediction"] = predicted_class.data
-    return_event_data["class_truth"] = truth_class.data
+    return_event_data["class_prediction"] = predicted_class.data.cpu().numpy()
+    return_event_data["class_truth"] = truth_class.data.cpu().numpy()
     return_event_data["class_sig_acc"] = class_sig_acc
     return_event_data["class_bkg_acc"] = class_bkg_acc
     return_event_data["reg_energy_bias"] = torch.mean(reldiff_energy)
     return_event_data["reg_energy_res"] = torch.std(reldiff_energy)
     return_event_data["reg_eta_diff"] = torch.mean(diff_eta)
     return_event_data["reg_eta_std"] = torch.std(diff_eta)
+    return_event_data["reg_phi_diff"] = torch.mean(diff_phi)
+    return_event_data["reg_phi_std"] = torch.std(diff_phi)
     return_event_data["energy"] = event_data["energy"].numpy()
     return_event_data["eta"] = event_data["eta"].numpy()
+    return_event_data["openingAngle"] = event_data["openingAngle"].numpy()
     if store_reg_results:
-        return_event_data["reg_energy_truth"] = truth_energy.data
-        return_event_data["reg_energy_prediction"] = outputs['energy_regression'].data
-        return_event_data["reg_eta_truth"] = truth_eta.data
-        return_event_data["reg_eta_prediction"] = outputs['eta_regression'].data
+        return_event_data["reg_energy_prediction"] = pred_energy.numpy()
+        return_event_data["reg_eta_prediction"] = pred_eta.numpy()
+        return_event_data["reg_phi_prediction"] = pred_phi.numpy()
         ECAL = event_data["ECAL"]
-        return_event_data["reg_raw_ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1)
+        return_event_data["ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1).numpy()
         HCAL = event_data["HCAL"]
-        return_event_data["reg_raw_HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1)
-        return_event_data["pdgID"] = event_data["pdgID"]
+        return_event_data["HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1).numpy()
+        return_event_data["pdgID"] = event_data["pdgID"].numpy()
+        return_event_data["phi"] = event_data["phi"].numpy()
+        return_event_data["recoEta"] = event_data["recoEta"].numpy()
+        return_event_data["recoPhi"] = event_data["recoPhi"].numpy()
     return return_event_data
 
 def class_reg_train(event_data):
@@ -353,49 +375,53 @@ print('Finished Training')
 # Save results #
 ################
 
-print('Saving Results')
-out_file = h5.File(options['outPath']+"training_results.h5", 'w')
+print('Saving Training Results')
+test_train_history = h5.File(options['outPath']+"training_results.h5", 'w')
 for stat in range(len(stat_name)):
     if not stat_name[stat] in print_metrics: continue
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
+<<<<<<< HEAD
             out_file.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
 
+=======
+            test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
+>>>>>>> master
 if options['saveFinalModel']:
     torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
     if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
     if generator != None: torch.save(generator.net, options['outPath']+"saved_generator.pt")
 
+print('Getting Validation Results')
+final_val_results = {}
+for sample in validationLoader:
+    sample_results = class_reg_eval(sample, store_reg_results=True)
+    for key,data in sample_results.items():
+        # cat together numpy array outputs
+        if 'array' in str(type(data)):
+            if key in final_val_results:
+                final_val_results[key] = np.concatenate([final_val_results[key], data], axis=0)
+            else:
+                final_val_results[key] = data
+        # put scalar outputs into a list
+        else:
+            final_val_results.setdefault(key, []).append(sample_results[key])
+
+print('Saving Validation Results')
+if len(options['val_outputs']) > 0:
+    val_file = h5.File(options['outPath']+"validation_results.h5", 'w')
+    for key,data in final_val_results.items():
+        if not key in options['val_outputs']: continue
+        val_file.create_dataset(key,data=np.asarray(data))
+val_file.close()
+
 ##########################
 # Analyze and make plots #
 ##########################
 
-print('Getting Validation Results')
-classifier_test_results = {}
-for sample in validationLoader:
-    sample_results = class_reg_eval(sample, store_reg_results=True)
-    for key,data in sample_results.items():
-        # cat together tensor outputs
-        if 'Tensor' in str(type(data)):
-            if key in classifier_test_results:
-                classifier_test_results[key] = torch.cat([classifier_test_results[key], data], dim=0)
-            else:
-                classifier_test_results[key] = data
-        # put other outputs into a list
-        else:
-            classifier_test_results.setdefault(key, []).append(sample_results[key])
-
-# save validation output
-if len(options['val_outputs']) > 0:
-    val_file = h5.File(options['outPath']+"validation_results.h5", 'w')
-    for key,data in classifier_test_results.items():
-        if not key in options['val_outputs']: continue
-        val_file.create_dataset(key,data=np.asarray(data))
-    val_file.close()
-
 print('Making Plots')
-analyzer.analyze([combined_classifier, discriminator, generator], classifier_test_results, out_file)
-out_file.close()
+analyzer.analyze([combined_classifier, discriminator, generator], test_train_history, final_val_results)
+test_train_history.close()
 
 end = timer()
 print('Total time taken: %.2f minutes'%(float(end - start)/60.))

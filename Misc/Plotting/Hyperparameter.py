@@ -12,10 +12,10 @@ import pdb
 files = glob.glob("Data/*.txt")
 
 # Options
-parameter_names = ["Hidden Layers", "Neurons per Hidden Layer", "Learning Rate", "Dropout Probability", "Window Size"]
-parameter_space = [[3, 4, 5, 6, 7], [64, 128, 256, 512, 1024], [0.0001, 0.0005, 0.001], [0.2, 0.3, 0.4, 0.5], [11, 21, 31, 41, 51]]
+parameter_names = ["Hidden Layers", "Neurons per Hidden Layer", "Learning Rate", "Dropout Probability"]
+parameter_space = [[1, 2, 3, 4, 5], [256, 512, 1024, 2048, 4096], [0.0001, 0.0005, 0.001], [0.05, 0.1, 0.15, 0.2, 0.25]]
 parameter_shape = [len(dimension) for dimension in parameter_space]
-baseline_parameters = (1, 2, 2, 3, 4)
+baseline_parameters = (1, 2, 1, 1)
 
 # Extract losses and accuracies
 losses = np.zeros(parameter_shape)
@@ -24,11 +24,15 @@ for file_name in files:
     # get classifier test loss and accuracy
     with open(file_name) as current_file:
         lines = current_file.readlines()
-    results = lines[-2].rstrip().replace(';', '')
-    results = results.split(" ")
-    classifier_indices = [i for i, x in enumerate(results) if x == '(C)']
-    test_loss = results[classifier_indices[0]+1]
-    test_accuracy = results[classifier_indices[1]+1]
+    # results = lines[-3].rstrip().replace(';', '')
+    results = lines[-3].rstrip().replace(' ',  '')
+    results = results.replace(":", ";").split(";")
+    classifier_indices = [i.replace('.','',1).isdigit() for i in results]
+    results = [i for (i,j) in zip(results, classifier_indices) if j]
+    if len(results) == 0:
+        continue
+    test_loss = results[0]
+    test_accuracy = results[1]
     # parse filename
     file_name = file_name.split("/")[-1]
     file_name = file_name.split(".log")[0]
@@ -36,8 +40,8 @@ for file_name in files:
     parameters = [float(i) for i in parameters]
     # store values
     p = [parameter_space[i].index(x) for i, x in enumerate(parameters)]
-    losses[p[0]][p[1]][p[2]][p[3]][p[4]] = test_loss
-    accuracies[p[0]][p[1]][p[2]][p[3]][p[4]] = test_accuracy
+    losses[tuple(p)] = test_loss
+    accuracies[tuple(p)] = test_accuracy
 
 # Plot 1D scans
 for parameter_i in range(len(parameter_space)):
@@ -62,7 +66,7 @@ for parameter_i in range(len(parameter_space)):
     # plt.show()
 
 # Plot 2D scans
-combinations = list(itr.combinations(range(5), 2))
+combinations = list(itr.combinations(range(len(parameter_shape)), 2))
 for k in combinations:
     x = k[0]
     y = k[1]

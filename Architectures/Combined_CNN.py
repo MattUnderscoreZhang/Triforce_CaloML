@@ -38,11 +38,14 @@ class Classifier_Net(nn.Module):
         nfiltHCAL, kernelxyHCAL, kernelzHCAL = options['nfiltHCAL'], options['kernelxyHCAL'], options['kernelzHCAL']
         maxpoolkernelECAL = options['maxpoolkernelECAL']
         maxpoolkernelHCAL = options['maxpoolkernelHCAL']
+        self.inputScaleSumE = options['inputScaleSumE']
+        self.inputScaleEta = options['inputScaleEta']
+        self.inputScalePhi = options['inputScalePhi']
         
         self.outputs = []
         for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
-        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION)]
+        self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION), ("phi_regression", REGRESSION)]
 
         # first layers: convolutions
         self.convECAL = nn.Conv3d(1, nfiltECAL, (kernelxyECAL, kernelxyECAL, kernelzECAL))
@@ -65,17 +68,12 @@ class Classifier_Net(nn.Module):
         for i in range(self.nHiddenLayers):
             if i == 0:
                 # first layer after convolutions
-                self.hidden.append(nn.Linear(size_ECAL_flat+size_HCAL_flat+2, hiddenLayerNeurons))
+                self.hidden.append(nn.Linear(size_ECAL_flat+size_HCAL_flat+4, hiddenLayerNeurons))
             else:
                 self.hidden.append(nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons))
             self.dropout.append(nn.Dropout(p = options['dropoutProb']))
 
-        self.finalLayer = nn.Linear(hiddenLayerNeurons+2, len(self.outputs))
-        # initialize weights for energy sums in energy output to 1: assume close to identity
-        energy_index = self.outputs.index(("energy_regression", REGRESSION))
-        output_params = self.finalLayer.weight.data
-        output_params[energy_index][-1] = 1.0
-        output_params[energy_index][-2] = 1.0
+        self.finalLayer = nn.Linear(hiddenLayerNeurons+4, len(self.outputs))
 
     def forward(self, data):
 
@@ -84,15 +82,19 @@ class Classifier_Net(nn.Module):
         lowerBound = 26 - int(math.ceil(self.windowSizeECAL/2))
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
-        ECAL = ECAL.view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
-        ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim = 1).view(-1, 1)
+        ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
+        ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim = 1).view(-1, 1) * self.inputScaleSumE
 
         HCAL = Variable(data["HCAL"].cuda())
         lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
         upperBound = lowerBound + self.windowSizeHCAL
         HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
-        HCAL = HCAL.view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
-        HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1)
+        HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
+        HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1) * self.inputScaleSumE
+
+        # get reco angles from event
+        recoEta = Variable(data["recoEta"].cuda()).view(-1,1) * self.inputScaleEta
+        recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1) * self.inputScalePhi
 
         # ECAL convolutions
         branchECAL = self.convECAL(ECAL)
@@ -108,14 +110,14 @@ class Classifier_Net(nn.Module):
         # flatten
         branchHCAL = branchHCAL.view(branchHCAL.size(0), -1)
 
-        # join the two branches and energy sums
-        x = torch.cat((branchECAL, branchHCAL, ECAL_sum, HCAL_sum), 1) 
+        # join the two branches and angles, energy sums
+        x = torch.cat((branchECAL, branchHCAL, recoPhi, recoEta, ECAL_sum, HCAL_sum), 1)
         # fully connected layers
         for i in range(self.nHiddenLayers):
             x = F.relu(self.hidden[i](x))
             x = self.dropout[i](x)
-        # cat energy sums back in before final layer
-        x = torch.cat([x, ECAL_sum, HCAL_sum], 1)
+        # cat angles / energy sums back in before final layer
+        x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
         x = self.finalLayer(x)
 
         # preparing output
