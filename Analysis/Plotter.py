@@ -47,8 +47,10 @@ class Analyzer():
     # ROC CURVE #
     #############
 
-    def plot_ROC(self, scores, truth, filename):
+    def plot_ROC(self, final_val_results, filename):
 
+        truth = final_val_results['class_truth']
+        scores = final_val_results['class_raw_prediction']
         fpr, tpr, thresholds = metrics.roc_curve(truth, scores)
         roc_auc = metrics.auc(fpr, tpr)
         plt.figure()
@@ -147,6 +149,8 @@ class Analyzer():
         test_train_history.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
 
         folder = test_train_history.filename[:test_train_history.filename.rfind('/')]
+
+        self.plot_ROC(final_val_results, folder+"/ROC.png")
 
         self.plot_accuracy_bins('energy', final_val_results, folder+"/accuracy_vs_energy.png")
         self.plot_accuracy_bins('eta', final_val_results, folder+"/accuracy_vs_eta.png")

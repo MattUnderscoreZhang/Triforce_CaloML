@@ -19,14 +19,14 @@ options['trainRatio'] = 0.90
 options['relativeDeltaLossThreshold'] = 0.0 # break if change in loss falls below this threshold over an entire epoch, or...
 options['relativeDeltaLossNumber'] = 5 # ...for this number of test losses in a row
 options['earlyStopping'] = False
-options['batchSize'] = 200 # 1000
-options['saveFinalModel'] = 1 # takes a lot of space
+options['batchSize'] = 200
+options['saveFinalModel'] = 0 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
 options['nEpochs'] = 1 # break after this number of epochs
-options['nTrainMax'] = 1
-options['nTestMax'] = 1
+options['nTrainMax'] = 5
+options['nTestMax'] = 5
 options['nValidationMax'] = -1
 
 # options['nEpochs'] = 1 # break after this number of epochs
@@ -36,7 +36,8 @@ options['nValidationMax'] = -1
 
 ## relative weight to assign to each type of output
 ## set to 0 to ignore a type of output
-options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 0.0, 'phi_regression': 0.0}
+options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0, 'eta_regression': 0.0, 'phi_regression': 0.0}
+# options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 0.0, 'phi_regression': 0.0}
 #options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 500.0, 'phi_regression': 100.0}
 
 #################
@@ -62,7 +63,7 @@ options['filters'] = []
 options['print_metrics'] = ['class_reg_loss', 'class_loss', 'reg_energy_loss', 'reg_eta_loss', 'reg_phi_loss', 'class_acc', 'class_sig_acc', 'class_bkg_acc', 'reg_energy_bias', 'reg_energy_res', 'reg_eta_diff', 'reg_eta_std', 'reg_phi_diff', 'reg_phi_std']
 
 # options['val_outputs'] = []
-options['val_outputs'] = ['energy', 'eta', 'phi', 'recoEta', 'recoPhi', 'ECAL_E', 'HCAL_E', 'pdgID', 'reg_energy_prediction', 'reg_eta_prediction', 'reg_phi_prediction']
+options['val_outputs'] = ['energy', 'eta', 'phi', 'recoEta', 'recoPhi', 'ECAL_E', 'HCAL_E', 'pdgID', 'class_raw_prediction', 'class_prediction', 'class_truth', 'reg_energy_prediction', 'reg_eta_prediction', 'reg_phi_prediction']
 
 ################
 # Choose tools #
@@ -95,7 +96,7 @@ options['inputScaleSumE'] = 0.01
 options['inputScaleEta'] = 10.0
 options['inputScalePhi'] = 10.0
 
-combined_classifier = Combined_DNN.Net(options)
+combined_classifier = Combined_CNN.Net(options)
 discriminator = None
 generator = None
 analyzer = Plotter.Analyzer()
