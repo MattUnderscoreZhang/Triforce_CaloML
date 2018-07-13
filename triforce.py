@@ -211,16 +211,16 @@ def sgl_bkgd_acc(predicted, truth):
 train_classification = True
 def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     if do_training:
-        combined_classifier.net.train()
+        classifier.net.train()
     else:
-        combined_classifier.net.eval()
-    outputs = combined_classifier.net(event_data)
+        classifier.net.eval()
+    outputs = classifier.net(event_data)
     return_event_data = {}
     # classification
     truth_class = Variable(event_data["classID"].cuda())
-    class_reg_loss = combined_classifier.lossFunction(outputs, event_data, options['lossTermWeights'])
+    class_reg_loss = classifier.lossFunction(outputs, event_data, options['lossTermWeights'])
     if do_training:
-        combined_classifier.optimizer.zero_grad()
+        classifier.optimizer.zero_grad()
         if (options["train_class_reg_separately"]):
             global train_classification
             if (train_classification):
@@ -230,7 +230,7 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
             train_classification = ~train_classification
         else:
             class_reg_loss["total"].backward()
-        combined_classifier.optimizer.step()
+        classifier.optimizer.step()
     _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
     class_sig_acc, class_bkg_acc = sgl_bkgd_acc(predicted_class.data, truth_class.data)
     # regression outputs. move first to cpu
@@ -360,7 +360,7 @@ def class_reg_training():
         # save results
         if options['saveFinalModel'] and (options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0):
             if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
-            torch.save(combined_classifier.net, options['outPath']+"saved_classifier_epoch_"+str(epoch)+".pt")
+            torch.save(classifier.net, options['outPath']+"saved_classifier_epoch_"+str(epoch)+".pt")
             if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator_epoch_"+str(epoch)+".pt")
             if generator != None: torch.save(generator.net, options['outPath']+"saved_generator_epoch_"+str(epoch)+".pt")
 
@@ -388,7 +388,7 @@ for stat in range(len(stat_name)):
             test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
 >>>>>>> master
 if options['saveFinalModel']:
-    torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
+    torch.save(classifier.net, options['outPath']+"saved_classifier.pt")
     if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")
     if generator != None: torch.save(generator.net, options['outPath']+"saved_generator.pt")
 
@@ -420,7 +420,7 @@ val_file.close()
 ##########################
 
 print('Making Plots')
-analyzer.analyze([combined_classifier, discriminator, generator], test_train_history, final_val_results)
+analyzer.analyze([classifier, discriminator, generator], test_train_history, final_val_results)
 test_train_history.close()
 
 end = timer()
