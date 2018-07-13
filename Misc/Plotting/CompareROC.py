@@ -18,6 +18,8 @@ roc_auc = metrics.auc(fpr, tpr)
 plt.plot(fpr, tpr, color='green', lw=2, label='CNN (area = %0.2f)' % roc_auc)
 
 data = h5.File("BDT_Results.h5")
+fpr = data['fpr']
+tpr = data['tpr']
 roc_auc = metrics.auc(data['fpr'], data['tpr'])
 plt.plot(fpr, tpr, color='blue', lw=2, label='BDT (area = %0.2f)' % roc_auc)
 
