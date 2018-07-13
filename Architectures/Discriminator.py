@@ -4,7 +4,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 ##################
-# Classification #
+# Discriminator #
 ##################
 
 class Classifier_Net(nn.Module):

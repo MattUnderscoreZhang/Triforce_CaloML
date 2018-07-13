@@ -29,6 +29,8 @@ options['nTrainMax'] = 5
 options['nTestMax'] = 5
 options['nValidationMax'] = -1
 
+# ADD FLAG FOR WHETHER TO TRAIN CLASS+REG NET FIRST, OR TO LOAD A SAVED ONE
+
 # options['nEpochs'] = 1 # break after this number of epochs
 # options['nTrainMax'] = 20
 # options['nTestMax'] = 20
@@ -96,7 +98,9 @@ options['inputScaleSumE'] = 0.01
 options['inputScaleEta'] = 10.0
 options['inputScalePhi'] = 10.0
 
+# ADD GAN OPTIONS
+
 combined_classifier = Combined_CNN.Net(options)
-discriminator = None
-generator = None
+discriminator = Discriminator.Net(options)
+generator = Generator.Net(options)
 analyzer = Plotter.Analyzer()

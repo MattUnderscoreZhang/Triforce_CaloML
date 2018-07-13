@@ -367,10 +367,30 @@ def class_reg_training():
 
         if end_training: break
 
-print('Training')
+print('Training Classifier and Regressor')
 class_reg_training()
 print('-------------------------------')
-print('Finished Training')
+
+################
+# GAN Training #
+################
+
+# def GAN_training():
+
+    # load classification+regression net if only training GAN
+    # combined_classifier
+
+    # for (n_training_steps):
+        # set generator weights fixed
+        # train discriminator
+
+        # set discriminator weights fixed
+        # train generator
+
+# print('Training GAN')
+# GAN_training()
+# print('-------------------------------')
+# print('Finished Training')
 
 ################
 # Save results #
