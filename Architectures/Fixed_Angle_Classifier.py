@@ -22,7 +22,7 @@ class Classifier_Net(nn.Module):
             self.dropout[i] = nn.Dropout(p = dropoutProb)
             self.dropout[i].cuda()
         self.output = nn.Linear(hiddenLayerNeurons, 2)
-    def forward(self, x, _):
+    def forward(self, x):
         lowerBound = 26 - int(math.ceil(self.windowSize/2))
         upperBound = lowerBound + self.windowSize
         x = x[:, lowerBound:upperBound, lowerBound:upperBound]
