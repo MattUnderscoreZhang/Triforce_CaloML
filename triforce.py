@@ -75,7 +75,8 @@ else:
         shutil.rmtree(options['outPath'])
         os.makedirs(options['outPath'])
     else:
-        sys.exit()
+        # sys.exit()
+        print("Trained nets may be overwritten")
 
 # copy code to output directory for logging purposes
 optionsFilePath = Options.__file__[:Options.__file__.rfind('/')]
@@ -376,7 +377,7 @@ if options['skipClassRegTrain']:
     print('Loading Classifier and Regressor')
     # check if there is a state_dict of a trained model. 
     if os.path.exists(options['outPath']+"saved_classifier.pt"):
-        combined_classifier.load_state_dict(torch.load(options['outPath']+"saved_classifier.pt")) 
+        combined_classifier.net.load_state_dict(torch.load(options['outPath']+"saved_classifier.pt")) 
     else: 
         print('WARNING: Found no trained models. Please check skipClassRegTrain flag in options file.')
         sys.exit()
@@ -392,15 +393,15 @@ else:
 
 def GAN_training():
 
-    load classification+regression net if only training GAN
-    combined_classifier
+    for epoch in range(options['nEpochs']):
 
-    for (n_training_steps):
-        set generator weights fixed
-        train discriminator
-
-        set discriminator weights fixed
-        train generator
+        for data_train in trainLoader:
+            discriminator.net.train()
+            outputs = discriminator.net(data_train)
+            disc_loss = discriminator.lossFunction(outputs, torch.Tensor([1]))
+            discriminator.optimizer.zero_grad()
+            disc_loss.backward()
+            discriminator.optimizer.step()
 
 print('Training GAN')
 GAN_training()

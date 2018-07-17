@@ -29,8 +29,7 @@ options['nTrainMax'] = 5
 options['nTestMax'] = 5
 options['nValidationMax'] = -1
 
-
-options['skipClassRegTrain'] = False #skips training class+reg network and loads already trained net instead. 
+options['skipClassRegTrain'] = True #skips training class+reg network and loads already trained net instead. 
 
 # options['nEpochs'] = 1 # break after this number of epochs
 # options['nTrainMax'] = 20
@@ -103,5 +102,5 @@ options['inputScalePhi'] = 10.0
 
 combined_classifier = Combined_CNN.Net(options)
 discriminator = Discriminator.Net(options)
-generator = Generator.Net(options)
+# generator = Generator.Net(options)
 analyzer = Plotter.Analyzer()
