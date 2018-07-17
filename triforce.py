@@ -367,6 +367,9 @@ def class_reg_training():
 
         if end_training: break
 
+###############################
+# Load or Train Class+Reg Net #
+###############################
 
 # train or skip training class+reg network. 
 if options['skipClassRegTrain']:
@@ -383,27 +386,26 @@ else:
     class_reg_training() 
     print('-------------------------------')
 
-
 ################
 # GAN Training #
 ################
 
-# def GAN_training():
+def GAN_training():
 
-    # load classification+regression net if only training GAN
-    # combined_classifier
+    load classification+regression net if only training GAN
+    combined_classifier
 
-    # for (n_training_steps):
-        # set generator weights fixed
-        # train discriminator
+    for (n_training_steps):
+        set generator weights fixed
+        train discriminator
 
-        # set discriminator weights fixed
-        # train generator
+        set discriminator weights fixed
+        train generator
 
-# print('Training GAN')
-# GAN_training()
-# print('-------------------------------')
-# print('Finished Training')
+print('Training GAN')
+GAN_training()
+print('-------------------------------')
+print('Finished Training')
 
 ################
 # Save results #
