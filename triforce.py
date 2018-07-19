@@ -360,6 +360,7 @@ def class_reg_training():
         if should_i_stop(EPOCH): end_training = True
 
         # save results
+        # should these be state_dicts?
         if options['saveFinalModel'] and (options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0):
             if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
             torch.save(combined_classifier.net, options['outPath']+"saved_classifier_epoch_"+str(epoch)+".pt")
@@ -371,8 +372,7 @@ def class_reg_training():
 ###############################
 # Load or Train Class+Reg Net #
 ###############################
-
-# train or skip training class+reg network. 
+ 
 if options['skipClassRegTrain']:
     print('Loading Classifier and Regressor')
     # check if there is a state_dict of a trained model. 
@@ -421,9 +421,9 @@ for stat in range(len(stat_name)):
             test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
 if options['saveFinalModel']: 
     # save the the state_dicts instead of entire models. 
-    torch.save(combined_classifier.state_dict(), options['outPath']+"saved_classifier.pt")
-    if discriminator != None: torch.save(discriminator.state_dict(), options['outPath']+"saved_discriminator.pt")
-    if generator != None: torch.save(generator.state_dict(), options['outPath']+"saved_generator.pt")
+    torch.save(combined_classifier.net.state_dict(), options['outPath']+"saved_classifier.pt")
+    if discriminator != None: torch.save(discriminator.net.state_dict(), options['outPath']+"saved_discriminator.pt")
+    if generator != None: torch.save(generator.net.state_dict(), options['outPath']+"saved_generator.pt")
 
     # torch.save(combined_classifier.net, options['outPath']+"saved_classifier.pt")
     # if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator.pt")

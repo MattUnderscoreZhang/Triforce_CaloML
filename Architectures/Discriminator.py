@@ -20,6 +20,9 @@ class Discriminator_Net(nn.Module):
         self.batchnorm_3 = nn.BatchNorm3d(32)
         self.maxpool = nn.AvgPool3d((2, 2, 2))
         self.fake = nn.Linear(20, 1)
+
+        ## what is aux doing? Just seems to be the output of the network 
+        # without the sigmoid activation function. 
         self.aux = nn.Linear(20, 1)
 
     def forward(self, data):
@@ -32,14 +35,14 @@ class Discriminator_Net(nn.Module):
         ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
         ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim = 1).view(-1, 1) * self.inputScaleSumE
 
-        HCAL = Variable(data["HCAL"].cuda())
-        lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
-        upperBound = lowerBound + self.windowSizeHCAL
-        HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
-        HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
-        HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1) * self.inputScaleSumE
+        # HCAL = Variable(data["HCAL"].cuda())
+        # lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
+        # upperBound = lowerBound + self.windowSizeHCAL
+        # HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
+        # HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
+        # HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1) * self.inputScaleSumE
 
-	# net
+	    # net
         x = ECAL
         x = nn.LeakyReLU(self.conv_1(x))
         x = self.dropout(x)
@@ -54,6 +57,7 @@ class Discriminator_Net(nn.Module):
         x = self.dropout(x)
         x = self.maxpool(x)
         x1 = F.sigmoid(self.fake(x))
+        ### what is the purpose of aux ###
         # x2 = self.aux(x)
         # return x1, x2
         return x1
@@ -63,4 +67,4 @@ class Net():
         self.net = Discriminator_Net(options)
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=options['learningRate'], weight_decay=options['decayRate'])
-        self.lossFunction = nn.CrossEntropyLoss()
+        self.lossFunction = nn.CrossEntropyLoss() 
