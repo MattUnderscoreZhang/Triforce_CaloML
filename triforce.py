@@ -214,7 +214,10 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
         classifier.net.train()
     else:
         classifier.net.eval()
+    # try: 
     outputs = classifier.net(event_data)
+    # except: 
+    #     pdb.set_trace()
     return_event_data = {}
     # classification
     truth_class = Variable(event_data["classID"].cuda())
@@ -343,6 +346,7 @@ def class_reg_training():
         for data_train in trainLoader:
             total_batch_n += 1
             data_test = next(iter(testLoader))
+            pdb.set_trace()
             update_batch_history(data_train, data_test, saved_batch_n, total_batch_n)
             if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
                 print('-------------------------------')

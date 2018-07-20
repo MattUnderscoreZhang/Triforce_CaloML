@@ -25,9 +25,9 @@ options['saveFinalModel'] = 1 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
-options['nEpochs'] = 20 # break after this number of epochs
-options['nTrainMax'] = -1
-options['nTestMax'] = -1
+options['nEpochs'] = 1 # break after this number of epochs
+options['nTrainMax'] = 1
+options['nTestMax'] = 1
 options['nValidationMax'] = -1
 
 options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0.0, 'eta_regression': 0.0}
@@ -69,8 +69,16 @@ _learningRate = float(sys.argv[4])
 _dropoutProb = float(sys.argv[5])
 _windowSize = int(sys.argv[6])
 
+options['decayRate'] = _decayRate
+options['nHiddenLayers'] = _nHiddenLayers
+options['hiddenLayerNeurons'] = _hiddenLayerNeurons
+options['learningRate'] = _learningRate
+options['dropoutProb'] = _dropoutProb
+options['windowSize'] = _windowSize
+
 # classifier = GoogLeNet.Classifier(_learningRate, _decayRate)
-classifier = Fixed_Angle_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate, _windowSize)
+# classifier = Fixed_Angle_Classifier.Classifier(_hiddenLayerNeurons, _nHiddenLayers, _dropoutProb, _learningRate, _decayRate, _windowSize)
+classifier = Fixed_Angle_Classifier.Classifier(options)
 regressor = None # NIPS_Regressor.Regressor(_learningRate, _decayRate)
 generator = None
 # analyzer = Default_Analyzer.Analyzer()
