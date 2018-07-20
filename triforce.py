@@ -208,16 +208,75 @@ def sgl_bkgd_acc(predicted, truth):
         correct_bkgd_frac = float(correct_bkgd / truth_bkgd.shape[0])
     return correct_sgl_frac, correct_bkgd_frac # signal acc, bkg acc
 
+def class_eval(event_data, do_training=False, store_reg_results=False):
+    if do_training:
+        classifier.net.train()
+    else:
+        classifier.net.eval()
+
+    outputs = classifier.net(event_data)
+    
+    return_event_data = {}
+    # classification
+    truth_class = Variable(event_data["classID"].cuda())
+    class_reg_loss = classifier.lossFunction(outputs, event_data, options['lossTermWeights'])
+    if do_training:
+        classifier.optimizer.zero_grad()
+        class_reg_loss["classification"].backward()
+        classifier.optimizer.step()
+    _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
+    class_sig_acc, class_bkg_acc = sgl_bkgd_acc(predicted_class.data, truth_class.data)
+    # regression outputs. move first to cpu
+    pred_energy = transforms.pred_energy_from_reg(outputs['energy_regression'].data.cpu(), event_data)
+    truth_energy = event_data["energy"]
+    reldiff_energy = 100.0*(truth_energy - pred_energy)/truth_energy
+    pred_eta = transforms.pred_eta_from_reg(outputs['eta_regression'].data.cpu(), event_data)
+    diff_eta = event_data["eta"] - pred_eta
+    pred_phi = transforms.pred_phi_from_reg(outputs['phi_regression'].data.cpu(), event_data)
+    diff_phi = event_data["phi"] - pred_phi
+    # return values
+    return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0]
+    return_event_data["class_loss"] = class_reg_loss["classification"].data[0]
+    return_event_data["reg_energy_loss"] = class_reg_loss["energy"].data[0]
+    return_event_data["reg_eta_loss"] = class_reg_loss["eta"].data[0]
+    return_event_data["reg_phi_loss"] = class_reg_loss["phi"].data[0]
+    return_event_data["class_acc"] = (predicted_class.data == truth_class.data).sum()/truth_class.shape[0]
+    return_event_data["class_prediction"] = predicted_class.data.cpu().numpy()
+    return_event_data["class_truth"] = truth_class.data.cpu().numpy()
+    return_event_data["class_sig_acc"] = class_sig_acc
+    return_event_data["class_bkg_acc"] = class_bkg_acc
+    return_event_data["reg_energy_bias"] = torch.mean(reldiff_energy)
+    return_event_data["reg_energy_res"] = torch.std(reldiff_energy)
+    return_event_data["reg_eta_diff"] = torch.mean(diff_eta)
+    return_event_data["reg_eta_std"] = torch.std(diff_eta)
+    return_event_data["reg_phi_diff"] = torch.mean(diff_phi)
+    return_event_data["reg_phi_std"] = torch.std(diff_phi)
+    return_event_data["energy"] = event_data["energy"].numpy()
+    return_event_data["eta"] = event_data["eta"].numpy()
+    return_event_data["openingAngle"] = event_data["openingAngle"].numpy()
+    if store_reg_results:
+        return_event_data["reg_energy_prediction"] = pred_energy.numpy()
+        return_event_data["reg_eta_prediction"] = pred_eta.numpy()
+        return_event_data["reg_phi_prediction"] = pred_phi.numpy()
+        ECAL = event_data["ECAL"]
+        return_event_data["ECAL_E"] = torch.sum(ECAL.view(ECAL.shape[0], -1), dim=1).view(-1).numpy()
+        HCAL = event_data["HCAL"]
+        return_event_data["HCAL_E"] = torch.sum(HCAL.view(HCAL.shape[0], -1), dim=1).view(-1).numpy()
+        return_event_data["pdgID"] = event_data["pdgID"].numpy()
+        return_event_data["phi"] = event_data["phi"].numpy()
+        return_event_data["recoEta"] = event_data["recoEta"].numpy()
+        return_event_data["recoPhi"] = event_data["recoPhi"].numpy()
+    return return_event_data
+
 train_classification = True
 def class_reg_eval(event_data, do_training=False, store_reg_results=False):
     if do_training:
         classifier.net.train()
     else:
         classifier.net.eval()
-    # try: 
+
     outputs = classifier.net(event_data)
-    # except: 
-    #     pdb.set_trace()
+
     return_event_data = {}
     # classification
     truth_class = Variable(event_data["classID"].cuda())
@@ -278,6 +337,9 @@ def class_reg_eval(event_data, do_training=False, store_reg_results=False):
         return_event_data["recoPhi"] = event_data["recoPhi"].numpy()
     return return_event_data
 
+def class_train(event_data): 
+    return class_eval(event_data, do_training=True)
+
 def class_reg_train(event_data):
     return class_reg_eval(event_data, do_training=True)
 
@@ -285,12 +347,26 @@ def class_reg_train(event_data):
 # Perform Training for Combined Classifier #
 ############################################
 
-def update_batch_history(data_train, data_test, saved_batch_n, total_batch_n):
+def if_only_class(dic): 
+    """check if only doing classification"""
+    summ = 0.0
+    for key in dic.keys(): 
+        if key != 'classification': 
+            summ += dic[key]
+    return (summ == 0.0)
+
+def update_batch_history(data_train, data_test, saved_batch_n, total_batch_n): 
     for split in [TRAIN, TEST]:
-        if split == TRAIN:
-            eval_results = class_reg_train(data_train)
+        if split == TRAIN: 
+            if if_only_class(options['lossTermWeights']): 
+                eval_results = class_train(data_train)
+            else: 
+                eval_results = class_reg_train(data_train)
         else:
-            eval_results = class_reg_eval(data_test)
+            if if_only_class(options['lossTermWeights']): 
+                eval_results = class_eval(data_test)
+            else: 
+                eval_results = class_reg_eval(data_test)
         for stat in range(len(stat_name)):
             history[stat][split][BATCH][saved_batch_n] += eval_results[stat_name[stat]] 
             if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
