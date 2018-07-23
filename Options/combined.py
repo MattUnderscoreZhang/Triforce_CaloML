@@ -102,5 +102,5 @@ options['inputScalePhi'] = 10.0
 
 combined_classifier = Combined_CNN.Net(options)
 discriminator = Discriminator.Net(options)
-# generator = Generator.Net(options)
+generator = Generator.Net(options)
 analyzer = Plotter.Analyzer()

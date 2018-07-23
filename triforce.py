@@ -32,7 +32,7 @@ if 'culture-plate' in socket.gethostname():
 # Set options file #
 ####################
 
-optionsFileName = "fixed_angle_new_samples"
+optionsFileName = "combined"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -149,6 +149,7 @@ testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
 validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
+print('-------------------------------')
 
 ################################################
 # Data structures for holding training results #
@@ -424,7 +425,6 @@ def class_reg_training():
         for data_train in trainLoader:
             total_batch_n += 1
             data_test = next(iter(testLoader))
-            pdb.set_trace()
             update_batch_history(data_train, data_test, saved_batch_n, total_batch_n)
             if total_batch_n % options['calculate_loss_per_n_batches'] == 0:
                 print('-------------------------------')
@@ -459,13 +459,24 @@ if options['skipClassRegTrain']:
     if os.path.exists(options['outPath']+"saved_classifier.pt"):
         combined_classifier.net.load_state_dict(torch.load(options['outPath']+"saved_classifier.pt")) 
     else: 
-        print('WARNING: Found no trained models. Please check skipClassRegTrain flag in options file.')
+        print('WARNING: Found no trained models. Train a new model (y/n)?')
+        valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+        while True:
+            choice = input().lower()
+            if choice in valid:
+                overwrite = valid[choice]
+                break
+            else:
+                print("Please respond with 'yes' or 'no'")
+    if overwrite:
+        print('Training Classifier and Regressor')
+        class_reg_training() 
+    else:
         sys.exit()
-    print('-------------------------------')
 else: 
     print('Training Classifier and Regressor')
     class_reg_training() 
-    print('-------------------------------')
+print('-------------------------------')
 
 ################
 # GAN Training #
