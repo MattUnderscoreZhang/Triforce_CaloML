@@ -7,6 +7,8 @@ import math, pdb
 from Architectures import LossFunctions
 import numpy as np
 
+import pdb
+
 ##################
 # Classification #
 ##################
@@ -101,8 +103,8 @@ class GoogLeNet(nn.Module):
         self.b5 = Inception(832, 384, 192, 384, 48, 128, 128)
 
         self.avgpool = nn.AvgPool3d(7, stride=1)
-        # self.linear = nn.Linear(1024, 2) # window size of 25
-        self.linear = nn.Linear(50176, 2) # window size of 51
+        self.linear = nn.Linear(1024, 2) # window size of 25
+        # self.linear = nn.Linear(50176, 2) # window size of 51
 
     def forward(self, data):
 
