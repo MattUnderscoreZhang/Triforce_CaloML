@@ -1,19 +1,28 @@
 import h5py as h5
 import numpy as np
-import pdb
+import sys
 
-data = h5.File("/data/LCD/NewSamples/RandomAngle/ChPiEscan_RandomAngle_MERGED/ChPiEscan_RandomAngle_1_10.h5")
-ecal = data['ECAL']
-print("Starting conversion")
-indices = np.transpose(np.nonzero(ecal))
-indices = [list(i) for i in indices]
-print("Number of non-zero values:", len(indices))
+def sparsify(in_file_name, out_file_name):
 
-out_file = h5.File('sparse_data.h5')
-dtype = h5.special_dtype(vlen=np.dtype('float'))
-dset = out_file.create_dataset('ECAL', (len(ecal),), dtype=dtype)
+    data = h5.File(in_file_name)
+    ecal = data['ECAL']
+    print("Starting conversion")
+    indices = np.transpose(np.nonzero(ecal))
+    indices = [list(i) for i in indices]
+    print("Number of non-zero values:", len(indices))
 
-for i, index in enumerate(indices):
-    if (i%10000==0): print(i, "out of", len(indices))
-    a = np.append(dset[index[0]], index+[ecal[tuple(index)]])
-    dset[index[0]] = np.append(dset[index[0]], index+[ecal[tuple(index)]])
+    out_file = h5.File(out_file_name)
+    dtype = h5.special_dtype(vlen=np.dtype('float'))
+    dset = out_file.create_dataset('ECAL', (len(ecal),), dtype=dtype)
+
+    for i, index in enumerate(indices):
+        if (i%10000==0): print(i, "out of", len(indices))
+        a = np.append(dset[index[0]], index+[ecal[tuple(index)]])
+        dset[index[0]] = np.append(dset[index[0]], index+[ecal[tuple(index)]])
+
+if __name__ == "__main__":
+
+    in_file_name = sys.argv[1]
+    out_file_name = sys.argv[2]
+    print("Sparsifying", in_file_name, "and storing to", out_file_name)
+    sparsify(in_file_name, out_file_name)
