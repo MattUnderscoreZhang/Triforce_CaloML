@@ -20,6 +20,9 @@ def sparsify(in_file_name, out_file_name):
         a = np.append(dset[index[0]], index+[ecal[tuple(index)]])
         dset[index[0]] = np.append(dset[index[0]], index+[ecal[tuple(index)]])
 
+    # indices = [index+[ecal[tuple(index)]] for index in indices]
+    # pdb.set_trace()
+
 if __name__ == "__main__":
 
     in_file_name = sys.argv[1]
