@@ -150,6 +150,7 @@ testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
 validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
+print('-------------------------------')
 
 ################################################
 # Data structures for holding training results #
@@ -390,11 +391,13 @@ if options['skipClassRegTrain']:
             else:
                 print("Please respond with 'yes' or 'no'")
         if overwrite:
+            print('-------------------------------')
             print('Training Classifier and Regressor')
             class_reg_training() 
         else:
             sys.exit()
 else: 
+    print('-------------------------------')
     print('Training Classifier and Regressor')
     class_reg_training() 
 print('-------------------------------')
