@@ -74,6 +74,10 @@ class GoogLeNet(nn.Module):
 
         super().__init__()
         self.windowSizeECAL = options['windowSizeECAL']
+        self.windowSizeHCAL = options['windowSizeHCAL']
+        self.inputScaleSumE = options['inputScaleSumE']
+        self.inputScaleEta = options['inputScaleEta']
+        self.inputScalePhi = options['inputScalePhi']
         self.outputs = []
         for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
@@ -103,7 +107,8 @@ class GoogLeNet(nn.Module):
         self.b5 = Inception(832, 384, 192, 384, 48, 128, 128)
 
         self.avgpool = nn.AvgPool3d(7, stride=1)
-        self.linear = nn.Linear(1024, 2) # window size of 25
+        self.dense = nn.Linear(1024 + 4, 1024) # window size of 25, plus reco angles and energy sums
+        self.linear = nn.Linear(1024 + 4, len(self.outputs)) # output layer
         # self.linear = nn.Linear(50176, 2) # window size of 51
 
     def forward(self, data):
@@ -113,7 +118,23 @@ class GoogLeNet(nn.Module):
         lowerBound = 26 - int(math.ceil(self.windowSizeECAL/2))
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
-        x = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
+        ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
+        ECAL_sum = torch.sum(ECAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+        # HCAL slice to get energy sum
+        if (self.windowSizeHCAL > 0):
+            HCAL = Variable(data["HCAL"].cuda())
+            lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
+            upperBound = lowerBound + self.windowSizeHCAL
+            HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
+            HCAL = HCAL.contiguous().view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60)
+            HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+        else:
+            HCAL_sum = Variable(torch.zeros(ECAL_sum.size()).cuda())
+        # reco angles
+        recoEta = Variable(data["recoEta"].cuda()).view(-1,1) * self.inputScaleEta
+        recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1) * self.inputScaleEta
+
+        x = ECAL
         # net
         x = self.norm(x)
         x = self.pre_layers(x)
@@ -130,18 +151,23 @@ class GoogLeNet(nn.Module):
         x = self.b5(x)
         x = self.avgpool(x)
         x = x.view(x.size(0), -1)
+        # cat angles / energy sums in before dense layer
+        x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
+        x = F.relu(self.dense(x))
+        # cat angles / energy sums back in before final layer
+        x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
         x = self.linear(x)
         # preparing output
         return_data = {}
         for i, (label, activation) in enumerate(self.outputs):
             if activation == CLASSIFICATION:
                 if 'classification' in return_data.keys():
-                    return_data['classification'] = torch.stack((return_data['classification'], x[:, i].type(torch.DoubleTensor)))
+                    return_data['classification'] = torch.stack((return_data['classification'], x[:, i]))
                 else:
-                    return_data['classification'] = x[:, i].type(torch.DoubleTensor)
+                    return_data['classification'] = x[:, i]
             else:
-                return_data[label] = Variable(torch.from_numpy(np.array([0]*ECAL.size(0))).type(torch.FloatTensor)).cuda() # no regression
-        return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1).cuda()
+                return_data[label] = x[:, i]
+        return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
         return return_data
 
 class Net():
