@@ -22,6 +22,8 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 import pdb
 from timeit import default_timer as timer
 
+os.environ['CUDA_VISIBLE_DEVICES'] = '6, 7, 8, 9'
+
 start = timer()
 
 # for running at caltech
