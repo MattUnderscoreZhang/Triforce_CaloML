@@ -17,12 +17,9 @@ output_data = {} # data to be written out
 
 for input_file in input_files:
 
-    # get info about input file
+    # append input info to output database
     input_file = h5.File(input_file,'r')
-    input_file_keys = list(input_file.keys())
-
-    # append info to output file
-    for key in input_file_keys:
+    for key in list(input_file.keys()):
         input_data = input_file[key][:]
         if key not in output_data.keys():
             output_data[key] = input_data
