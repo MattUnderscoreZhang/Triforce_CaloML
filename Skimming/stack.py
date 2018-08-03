@@ -19,7 +19,6 @@ for input_file in input_files:
 
     # get info about input file
     input_file = h5.File(input_file,'r')
-    input_file_n_events = input_file['ECAL'].shape[0]
     input_file_keys = list(input_file.keys())
 
     # append info to output file
