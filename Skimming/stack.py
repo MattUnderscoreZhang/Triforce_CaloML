@@ -1,96 +1,51 @@
-# Combine multiple h5 files into a single file
-# Author: W. Wei
-# python stack.py <Path1> <Path2>
+# Reshape H5 files into N events per file
+# Author: W. Wei, M. Zhang
+# python stack.py <Path1> <Path2> <events_per_output_file>
 # Path1 is a file search string, such as <Path>/Pi0*.h5
 # Path2 is output files, with names <Path2>_0.h5 etc.
 
-import h5py
+import h5py as h5
 import numpy as np
-import sys
-import glob
+import sys, glob
 
-Path1=sys.argv[1]
-Path2=sys.argv[2]
+input_files = glob.glob(sys.argv[1])
+output_path = sys.argv[2]
+events_per_output_file = sys.argv[3]
 
-Files=glob.glob(Path1)
+output_file_counter = 0 # how many files we've written
+output_event_counter = 0 # how many events we've added to the output file
+output_data = {} # data to be written out
 
-Keys=[]
+for input_file in input_files:
 
-MAX_EVENTS=10000
+    # get info about input file
+    input_file = h5.File(input_file,'r')
+    input_file_n_events = input_file['ECAL'].shape[0]
+    input_file_keys = list(input_file.keys())
 
-FilePointer=0
-FileCounter=0
-EventPointer=0
-EventCounter=0
-
-while(FilePointer<len(Files)):
-    outfile=h5py.File(Path2+"_"+str(FileCounter)+".h5",'w')
-    for i in range(FilePointer, len(Files)):
-        try:
-            infile=h5py.File(Files[i],'r')
-            #print "Processing "+Files[i]
-        except IOError:
-            print "Fail to open "+Files[i]
+    # append info to output file
+    for key in input_file_keys:
+        input_data = input_file[key][:]
+        if key not in output_data.keys():
+            output_data[key] = input_data
         else:
-            # recursively list all datasets in sample subgroups
-            # visits each group, subgroup, and dataset in the file and adds unique dataset names to a list
-            datasets = []
-            def appendName(name):
-                if isinstance(infile[name], h5py.Dataset):
-                    if name not in datasets: datasets.append(name)
-                return None
-            infile.visit(appendName)
+            output_data[key] = np.concatenate(output_data[key], input_data)
 
-            #print "(", FileCounter, FilePointer, EventCounter, EventPointer, ") ",
-            if(EventCounter<MAX_EVENTS and EventCounter+infile['ECAL/ECAL'].shape[0]-EventPointer<=MAX_EVENTS):
-                for key in datasets:
-                    if key in Keys:
-                        OldDataset=infile[key][EventPointer:]
-                        exec(key+"=np.concatenate(("+key+",OldDataset),axis=0)")
-                    else:
-                        OldDataset=infile[key][EventPointer:]
-                        Keys.append(key)
-                        exec(key+"=OldDataset[:]")
-                EventCounter+=infile['ECAL'].shape[0]-EventPointer
-                infile.close()
-    
-                if(EventPointer):
-                    EventPointer=0
-                
-                if(EventCounter==MAX_EVENTS):
-                    for key in Keys:
-                        exec("outfile.create_dataset(key, data="+key+")")
-    
-                    outfile.close()
-                    FileCounter+=1
-                    EventCounter=0
-                    FilePointer=i+1
-                    Keys=[]
-                    break
-    
-            elif(EventCounter<MAX_EVENTS and EventCounter+infile['ECAL/ECAL'].shape[0]-EventPointer>MAX_EVENTS):
-                EventPointerPre=EventPointer
-                EventPointer=MAX_EVENTS-EventCounter+EventPointerPre
-                for key in datasets:
-                    if key in Keys:
-                        OldDataset=infile[key][EventPointerPre:EventPointer]
-                        exec(key+"=np.concatenate(("+key+",OldDataset),axis=0)")
-                    else:
-                        OldDataset=infile[key][EventPointerPre:EventPointer]
-                        Keys.append(key)
-                        exec(key+"=OldDataset[:]")
-                EventCounter=MAX_EVENTS
-                infile.close()
-                for key in Keys:
-                    exec("outfile.create_dataset(key, data="+key+")")
-    
-                outfile.close()
-                FileCounter+=1
-                EventCounter=0
-                FilePointer=i
-                Keys=[]
-                break
+    # see how many events we've read in now
+    output_event_counter += input_file_n_events
 
-    if (EventCounter):
-        print EventCounter, " events remaining, not written."
-        break
+    # if we have enough events, write output files
+    while output_event_counter >= events_per_output_file:
+        output_file = h5.File(output_path + "_" + str(output_file_counter) + ".h5" , 'w')
+        for key in output_data.keys():
+            output_file.create_dataset(key, data=output_data[key][:events_per_output_file])
+            output_data[key] = output_data[key][events_per_output_file:]
+        output_file.close()
+        output_file_counter += 1
+        output_event_counter -= events_per_output_file
+
+    # go to the next file
+    input_file.close()
+
+if (output_data['ECAL'].shape[0] > 0):
+    print output_data['ECAL'].shape[0], " events remaining, not written."
