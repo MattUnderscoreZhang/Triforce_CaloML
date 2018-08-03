@@ -10,7 +10,7 @@ import sys, glob
 
 input_files = glob.glob(sys.argv[1])
 output_path = sys.argv[2]
-events_per_output_file = sys.argv[3]
+events_per_output_file = int(sys.argv[3])
 
 output_file_counter = 0 # how many files we've written
 output_data = {} # data to be written out
