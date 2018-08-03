@@ -31,8 +31,7 @@ for input_file in input_files:
             output_data[key] = np.concatenate(output_data[key], input_data)
 
     # if we have enough events, write output files
-    n_ready_events = output_data['ECAL'].shape[0]
-    while n_ready_events >= events_per_output_file:
+    while output_data['ECAL'].shape[0] >= events_per_output_file:
         output_file = h5.File(output_path + "_" + str(output_file_counter) + ".h5" , 'w')
         for key in output_data.keys():
             output_file.create_dataset(key, data=output_data[key][:events_per_output_file])
