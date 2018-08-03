@@ -1,4 +1,6 @@
 import tracemalloc
+import os
+import linecache
 
 def display_top(snapshot, key_type='lineno', limit=3):
     snapshot = snapshot.filter_traces((
