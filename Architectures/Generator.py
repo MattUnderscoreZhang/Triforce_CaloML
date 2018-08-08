@@ -29,30 +29,9 @@ class Generator_Net(nn.Module):
         init.xavier_uniform(self.conv_4.weight)
 
 
-    def forward(self, data):
-
-        # # window slice and energy sums
-        # ECAL = Variable(data["ECAL"].cuda())
-        # lowerBound = 26 - int(math.ceil(self.windowSizeECAL/2))
-        # upperBound = lowerBound + self.windowSizeECAL
-        # ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
-        # ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
-        # ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim = 1).view(-1, 1) * self.inputScaleSumE
-
-        # HCAL = Variable(data["HCAL"].cuda())
-        # lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
-        # upperBound = lowerBound + self.windowSizeHCAL
-        # HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
-        # HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
-        # HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1) * self.inputScaleSumE
-
-        # net 
-        # should not take ECAL, just noise. 
-        # x = ECAL
-        # x = (1024, )
-
-        x = torch.rand((1024,)) #place holder. shoud be noise sampled from a normal distrirbution. 
-        x = Variable(x) # place holder.  
+    def forward(self, x):
+        # Here x should be sapmled from a random distribution.  
+        x = Variable(x)   
         x = self.dense_1(x)
         x = x.view(-1,8,7,7,8)
         x = F.leaky_relu(self.conv_1(x)) 
