@@ -19,6 +19,8 @@ import Loader.loader as loader
 from Loader import transforms
 import Options
 sys.dont_write_bytecode = True # prevent the creation of .pyc files
+import Thread
+from Queue import Empty, Full, Queue
 import pdb
 from timeit import default_timer as timer
 
@@ -141,16 +143,68 @@ if options['validationRatio'] == 0:
     validationFiles = testFiles
 
 # prepare the generators
-print('Defining training dataset')
-trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['filters'])
-print('Defining validation dataset')
-validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'])
-print('Defining test dataset')
-testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'])
-trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
-validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
-testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
-print('-------------------------------')
+trainLoader = loader.ThreadedLoader(trainFiles, options['batchSize'], options['classPdgID'], options['filters'])
+validationLoader = loader.ThreadedLoader(validationFiles, options['batchSize'], options['classPdgID'], options['filters'])
+testLoader = loader.ThreadedLoader(testFiles, options['batchSize'], options['classPdgID'], options['filters'])
+
+########################
+# File reading threads #
+########################
+
+class ThreadKiller(object):
+    def __init__(self):
+        self.kill = False
+    def __call__(self):
+        return self.kill
+    def toggle_kill(self, kill):
+        self.kill = kill
+    
+def threaded_batches_feeder(thread_killer, batches_queue, loader):
+    while thread_killer() == False:
+        for batch, data in enumerate(loader):
+            batches_queue.put((batch, data), block=True)
+ 
+def threaded_cuda_batches(thread_killer, cuda_batches_queue, loader):
+    while thread_killer() == False:
+        batch, data = loader.get(block=True)
+        cuda_batches_queue.put((batch, data), block=True)
+ 
+if __name__ =='__main__':
+
+    train_batches_queue = Queue(maxsize=12)
+    train_thread_killer = ThreadKiller()
+    train_thread_killer.toggle_kill(False)
+    preprocess_workers = 4
+    for _ in range(preprocess_workers):
+        t = Thread(target=threaded_batches_feeder, args=(train_thread_killer, train_batches_queue, trainLoader))
+        t.start()
+
+    cuda_batches_queue = Queue(maxsize=3)
+    cuda_transfers_thread_killer = ThreadKiller()
+    cuda_transfers_thread_killer.toggle_kill(False)
+    cudathread = Thread(target=threaded_cuda_batches, args=(cuda_transfers_thread_killer, cuda_batches_queue, train_batches_queue))
+    cudathread.start()
+    
+    #We let queue to get filled before we start the training
+    time.sleep(8)
+
+    for epoch in range(num_epoches):
+        for batch in range(batches_per_epoch):
+            #We fetch a GPU batch in 0's due to the queue mechanism
+            _, (batch_images, batch_labels) = cuda_batches_queue.get(block=True)
+            #train batch is the method for your training step.
+            #no need to pin_memory due to diminished cuda transfers using queues.
+            loss, accuracy = train_batch(batch_images, batch_labels)
+ 
+    train_thread_killer.toggle_kill(True)
+    cuda_transfers_thread_killer.toggle_kill(True)    
+    for _ in range(preprocess_workers):
+        try:
+            #Enforcing thread shutdown
+            train_batches_queue.get(block=True,timeout=1)
+                  cuda_batches_queue.get(block=True,timeout=1)    
+        except Empty:
+            pass
 
 ################################################
 # Data structures for holding training results #
