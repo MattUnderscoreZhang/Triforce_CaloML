@@ -21,7 +21,7 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
         # (default) load full ECAL / HCAL arrays and standard features
         if loadMinimalFeatures is None:
             return_data['ECAL'] = np.empty((200, 51, 51, 25), dtype='float32')
-            print(f['ECAL'].shape)
+            # print(f['ECAL'].shape)
             f['ECAL'].read_direct(return_data['ECAL'])
             n_events = len(return_data['ECAL'])
             return_data['HCAL'] = f['HCAL'][:].astype(np.float32)
@@ -47,7 +47,7 @@ class HDF5Dataset(data.Dataset):
         num_per_file: number of events in each data file
     """
     
-    def __init__(self, dataname_tuples, pdgIDs,  nWorkers, filters=[], num_loaders=50):
+    def __init__(self, dataname_tuples, pdgIDs,  nWorkers, num_loaders, filters=[]):
         self.dataname_tuples = sorted(dataname_tuples)
         self.nClasses = len(dataname_tuples[0])
         self.total_files = len(dataname_tuples) # per class
@@ -112,17 +112,16 @@ class HDF5Dataset(data.Dataset):
             print('total events passing filters:',sum(self.num_per_file))
 
     def load_file(self, dataname, index, mem_offset): 
-        # print(dataname)
-#         print("Process: %d"%(index+mem_offset))
-        file_data = load_hdf5(dataname, self.pdgIDs)
-        # apply any filters here
-        if not self.filters is None:
-            for filt in self.filters: filt.filter(file_data)
-        for key in file_data.keys():
-            if key in self.data.keys(): 
-                # do something about the 200 hard coded number
-                self.data[key][200*(index-1) + mem_offset:200*index + mem_offset] = file_data[key][:] 
-                # 200 is a weak assumption.
+        if dataname != "-1".encode('utf-8'):
+            file_data = load_hdf5(dataname, self.pdgIDs)
+            # apply any filters here
+            if not self.filters is None:
+                for filt in self.filters: filt.filter(file_data)
+            for key in file_data.keys():
+                if key in self.data.keys(): 
+                    # do something about the 200 hard coded number
+                    self.data[key][200*(index-1) + mem_offset:200*index + mem_offset] = file_data[key][:] 
+                    # 200 is a weak assumption.
     
     def init_worker(self, worker_id):
         # write description for function.
@@ -138,8 +137,8 @@ class HDF5Dataset(data.Dataset):
                     # gather files for loaders
                     if self.total_files - self.fileInMemory.value < self.num_loaders:
                         file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:]]
-                        for _ in range(len(self.num_loaders - (self.total_files - self.fileInMemory.value))):
-                            file_names.append("")
+                        for _ in range(self.num_loaders - (self.total_files - self.fileInMemory.value)):
+                            file_names.append("-1")
                     else:
                         file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:self.fileInMemory.value+self.num_loaders]]
                     # share file names with loaders

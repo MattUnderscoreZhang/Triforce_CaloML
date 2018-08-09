@@ -17,7 +17,7 @@ options['eventsPerFile'] = 200 #1000
 # Job options #
 ###############
 options['importGPU'] = True 
-options['nWorkers'] = 71 # has to be > 2
+options['nWorkers'] = 53 # has to be > 2
 options['nLoaders'] = 50 # has to be less than nWorkers by at least 2. 
 options['trainRatio'] = 1
 options['validationRatio'] = 0
