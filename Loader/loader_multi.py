@@ -112,7 +112,7 @@ class HDF5Dataset(data.Dataset):
             print('total events passing filters:',sum(self.num_per_file))
 
     def load_file(self, dataname, index, mem_offset): 
-        print(dataname)
+        # print(dataname)
 #         print("Process: %d"%(index+mem_offset))
         file_data = load_hdf5(dataname, self.pdgIDs)
         # apply any filters here
@@ -125,7 +125,7 @@ class HDF5Dataset(data.Dataset):
                 # 200 is a weak assumption.
     
     def init_worker(self, worker_id):
-        # write discribtion for function.
+        # write description for function.
         if worker_id == 0: #proxy worker for old implementation. 
             while self.fileInMemory.value < self.total_files: 
                 # periodically check if file needs to be loaded
