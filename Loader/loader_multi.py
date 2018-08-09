@@ -112,17 +112,16 @@ class HDF5Dataset(data.Dataset):
             print('total events passing filters:',sum(self.num_per_file))
 
     def load_file(self, dataname, index, mem_offset): 
-        # print(dataname)
-#         print("Process: %d"%(index+mem_offset))
-        file_data = load_hdf5(dataname, self.pdgIDs)
-        # apply any filters here
-        if not self.filters is None:
-            for filt in self.filters: filt.filter(file_data)
-        for key in file_data.keys():
-            if key in self.data.keys(): 
-                # do something about the 200 hard coded number
-                self.data[key][200*(index-1) + mem_offset:200*index + mem_offset] = file_data[key][:] 
-                # 200 is a weak assumption.
+        if dataname != "-1".encode('utf-8'):
+            file_data = load_hdf5(dataname, self.pdgIDs)
+            # apply any filters here
+            if not self.filters is None:
+                for filt in self.filters: filt.filter(file_data)
+            for key in file_data.keys():
+                if key in self.data.keys(): 
+                    # do something about the 200 hard coded number
+                    self.data[key][200*(index-1) + mem_offset:200*index + mem_offset] = file_data[key][:] 
+                    # 200 is a weak assumption.
     
     def init_worker(self, worker_id):
         # write description for function.
@@ -139,7 +138,7 @@ class HDF5Dataset(data.Dataset):
                     if self.total_files - self.fileInMemory.value < self.num_loaders:
                         file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:]]
                         for _ in range(self.num_loaders - (self.total_files - self.fileInMemory.value)):
-                            file_names.append("")
+                            file_names.append("-1")
                     else:
                         file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:self.fileInMemory.value+self.num_loaders]]
                     # share file names with loaders
