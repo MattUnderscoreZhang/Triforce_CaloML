@@ -135,9 +135,14 @@ class HDF5Dataset(data.Dataset):
                     if self.mem_index.value: 
                         self.mem_index.value = 0
                     else: self.mem_index.value = 1
-#                     print(self.mem_index)
-                    file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:self.fileInMemory.value+self.num_loaders]]
-#                     print(file_names)
+                    # gather files for loaders
+                    if self.total_files - self.fileInMemory < self.num_loaders:
+                        file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:]]
+                        for _ in range(len(self.num_loaders - (self.total_files - self.fileInMemory))):
+                            file_names.append("")
+                    else:
+                        file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:self.fileInMemory.value+self.num_loaders]]
+                    # share file names with loaders
                     for ind in range(len(file_names)):
                         # files to load using file loader workers. 
                         self.worker_files[ind].value = file_names[ind].encode('utf-8') # convert to bytes to store in RawArray 
