@@ -86,8 +86,8 @@ class HDF5Dataset(data.Dataset):
         for i, ID in enumerate(pdgIDs):
             self.pdgIDs[ID] = i
         self.countEvents()
-        print(self.num_per_file)
-        print(len(self.num_per_file))
+        # print(self.num_per_file)
+        # print(len(self.num_per_file))
         
 
     def countEvents(self): # counter will be wrong. Need to redesign this to accomodate new files system
