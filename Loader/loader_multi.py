@@ -62,7 +62,7 @@ class HDF5Dataset(data.Dataset):
         self.loadFile = Event()
         self.load_barrier = Barrier(self.num_loaders+1)
         self.batch_barrier = Barrier(nWorkers - (self.num_loaders+1))
-        self.worker_files = [RawArray(ctypes.c_char, 100) for _ in range(self.num_loaders)] # 100 chars is a weak assumption
+        self.worker_files = [RawArray(ctypes.c_char, len(dataname[0][0])+50) for _ in range(self.num_loaders)]
         self.data = {}
         ###########################################
         # prepare memory to share with workers #
