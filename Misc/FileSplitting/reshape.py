@@ -7,6 +7,7 @@
 import h5py as h5
 import numpy as np
 import sys, glob
+import pdb
 
 input_files = glob.glob(sys.argv[1])
 output_path = sys.argv[2]
@@ -29,17 +30,26 @@ for input_file in input_files:
         if key not in output_data.keys():
             output_data[key] = input_data
         else:
+<<<<<<< HEAD
+            output_data[key] = np.concatenate([output_data[key], input_data])
+
+=======
             output_data[key] = np.concatenate(output_data[key], input_data)
     print(output_data['ECAL'].shape[0])
+>>>>>>> ca0d2e12383155210a04ea1c8a6b1f858c143bc5
     # if we have enough events, write output files
     while output_data['ECAL'].shape[0] >= events_per_output_file:
         print("hey")
         output_file = h5.File(output_path + "_" + str(output_file_counter) + ".h5" , 'w')
         for key in output_data.keys():
+<<<<<<< HEAD
+            output_file.create_dataset(key, data=output_data[key][:events_per_output_file], compression="gzip", compression_opts=9)
+=======
             new_shape = list(output_data[key].shape)
             new_shape[0] = 10
             print(new_shape)
             output_file.create_dataset(key, data=output_data[key][:events_per_output_file], compression="gzip", compression_opts=1, chunks=tuple(new_shape)) 
+>>>>>>> ca0d2e12383155210a04ea1c8a6b1f858c143bc5
             output_data[key] = output_data[key][events_per_output_file:]
             print(output_data['ECAL'].shape[0])
         output_file.close()

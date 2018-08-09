@@ -5,8 +5,8 @@ options = {}
 # Choose samples #
 ##################
 
-basePath = "/data/LCD/NewSamples/Fixed/"
-options['samplePath'] = [basePath + "Pi0Escan*/Pi0Escan_*.h5", basePath + "GammaEscan*/GammaEscan_*.h5"]
+basePath = "/data/LCD/NewSamples/Fixed/Split/"
+options['samplePath'] = [basePath + "Pi0*.h5", basePath + "Gamma*.h5"]
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 # options['samplePath'] = [basePath + "ChPiEscan_1_MERGED/ChPiEscan_*.h5", basePath + "EleEscan_1_MERGED/EleEscan_*.h5"]
 # options['classPdgID'] = [211, 11] # [ChPi, Ele]
@@ -15,11 +15,13 @@ options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 # Job options #
 ###############
 
+options['nWorkers'] = 71 # has to be > 2
+options['nLoaders'] = 50 # has to be less than nWorkers by at least 2. 
 options['trainRatio'] = 0.90
 options['relativeDeltaLossThreshold'] = 0.0 # break if change in loss falls below this threshold over an entire epoch, or...
 options['relativeDeltaLossNumber'] = 5 # ...for this number of test losses in a row
 options['earlyStopping'] = False
-options['batchSize'] = 20
+options['batchSize'] = 1000
 options['saveFinalModel'] = 0 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
@@ -99,8 +101,8 @@ options['inputScaleEta'] = 10.0
 options['inputScalePhi'] = 10.0
 
 # ADD GAN OPTIONS
-combined_classifier = GoogLeNet.Net(options)
-# combined_classifier = Combined_CNN.Net(options)
+# combined_classifier = GoogLeNet.Net(options)
+combined_classifier = Combined_DNN.Net(options)
 discriminator = Discriminator.Net(options)
 generator = Generator.Net(options)
 analyzer = Plotter.Analyzer()
