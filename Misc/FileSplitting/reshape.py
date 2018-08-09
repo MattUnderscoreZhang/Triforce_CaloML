@@ -17,21 +17,31 @@ output_data = {} # data to be written out
 
 for input_file in input_files:
 
-    # append input info to output database
+    # get info about input file
     input_file = h5.File(input_file,'r')
-    for key in list(input_file.keys()):
+    print("file")
+    input_file_n_events = input_file['ECAL'].shape[0]
+    input_file_keys = list(input_file.keys())
+
+    # append info to output file
+    for key in input_file_keys:
         input_data = input_file[key][:]
         if key not in output_data.keys():
             output_data[key] = input_data
         else:
             output_data[key] = np.concatenate(output_data[key], input_data)
-
+    print(output_data['ECAL'].shape[0])
     # if we have enough events, write output files
     while output_data['ECAL'].shape[0] >= events_per_output_file:
+        print("hey")
         output_file = h5.File(output_path + "_" + str(output_file_counter) + ".h5" , 'w')
         for key in output_data.keys():
-            output_file.create_dataset(key, data=output_data[key][:events_per_output_file])
+            new_shape = list(output_data[key].shape)
+            new_shape[0] = 10
+            print(new_shape)
+            output_file.create_dataset(key, data=output_data[key][:events_per_output_file], compression="gzip", compression_opts=1, chunks=tuple(new_shape)) 
             output_data[key] = output_data[key][events_per_output_file:]
+            print(output_data['ECAL'].shape[0])
         output_file.close()
         output_file_counter += 1
 
