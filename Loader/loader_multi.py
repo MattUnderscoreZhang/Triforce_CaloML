@@ -47,7 +47,7 @@ class HDF5Dataset(data.Dataset):
         num_per_file: number of events in each data file
     """
     
-    def __init__(self, dataname_tuples, pdgIDs,  nWorkers, filters=[], num_loaders=50):
+    def __init__(self, dataname_tuples, pdgIDs,  nWorkers, num_loaders, filters=[]):
         self.dataname_tuples = sorted(dataname_tuples)
         self.nClasses = len(dataname_tuples[0])
         self.total_files = len(dataname_tuples) # per class
