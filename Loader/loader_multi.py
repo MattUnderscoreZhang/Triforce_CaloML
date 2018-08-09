@@ -21,7 +21,7 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
         # (default) load full ECAL / HCAL arrays and standard features
         if loadMinimalFeatures is None:
             return_data['ECAL'] = np.empty((200, 51, 51, 25), dtype='float32')
-            print(f['ECAL'].shape)
+            # print(f['ECAL'].shape)
             f['ECAL'].read_direct(return_data['ECAL'])
             n_events = len(return_data['ECAL'])
             return_data['HCAL'] = f['HCAL'][:].astype(np.float32)
