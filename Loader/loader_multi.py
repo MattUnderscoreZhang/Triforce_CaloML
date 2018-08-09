@@ -138,7 +138,7 @@ class HDF5Dataset(data.Dataset):
                     # gather files for loaders
                     if self.total_files - self.fileInMemory.value < self.num_loaders:
                         file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:]]
-                        for _ in range(len(self.num_loaders - (self.total_files - self.fileInMemory.value))):
+                        for _ in range(self.num_loaders - (self.total_files - self.fileInMemory.value)):
                             file_names.append("")
                     else:
                         file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:self.fileInMemory.value+self.num_loaders]]
