@@ -135,9 +135,10 @@ class HDF5Dataset(data.Dataset):
                         self.mem_index.value = 0
                     else: self.mem_index.value = 1
                     # gather files for loaders
-                    if self.total_files - self.fileInMemory.value < self.num_loaders:
+                    extra_loaders = self.num_loaders - (self.total_files - self.fileInMemory.value)
+                    if extra_loaders > 0:
                         file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:]]
-                        for _ in range(self.num_loaders - (self.total_files - self.fileInMemory.value)):
+                        for _ in range(extra_loaders):
                             file_names.append("-1")
                     else:
                         file_names = [file[i] for file in self.dataname_tuples[self.fileInMemory.value:self.fileInMemory.value+self.num_loaders]]
@@ -155,7 +156,8 @@ class HDF5Dataset(data.Dataset):
                 # update indicies
                 with self.lock:
                     self.fileInMemoryFirstIndex.value += int(self.fileInMemoryLastIndex.value+1)
-                    self.fileInMemoryLastIndex.value += sum(self.num_per_file[self.fileInMemory.value:self.fileInMemory.value+self.num_loaders])
+                    self.fileInMemoryLastIndex.value += sum(self.num_per_file[self.fileInMemory.value:self.fileInMemory.value+self.num_loaders-max(0, extra_loaders)])
+                    self.fileInMemory.value += self.num_loaders
                     self.fileInMemory.value += self.num_loaders
                 
                 self.loadNext.set()  
