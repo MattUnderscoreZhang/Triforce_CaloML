@@ -179,7 +179,7 @@ class HDF5Dataset(data.Dataset):
                 self.fileInMemoryFirstIndex.value = 0
                 self.fileInMemoryLastIndex.value = -1
         # if we started to look at a new file, read the file data
-        if(index > self.fileInMemoryLastIndex.value):
+        while (index > self.fileInMemoryLastIndex.value):
             self.batch_barrier.wait()
             with self.lock: 
                 self.loadNext.set()
