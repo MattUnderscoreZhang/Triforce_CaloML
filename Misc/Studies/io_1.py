@@ -164,7 +164,7 @@ for i, train_data in enumerate(trainLoader):
 end = timer()
 
 time = end - start
-print("Total time to load 10,000 events = %.3f"%time)
+print("Total time to load events = %.3f"%time)
 # outfile = open('output_compress1_split.txt','a+')
 # outfile.write("compress level - 1: %.3f"%time)
 # outfile.close()
