@@ -27,7 +27,10 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
         # minimal data load: only load specific features that are requested
         else:
             for feat in loadMinimalFeatures:
-                return_data[feat] = f[feat][:]
+                try: 
+                    return_data[feat] = f[feat][:]
+                except: 
+                    pdb.set_trace()
     return return_data
 
 class HDF5Dataset(data.Dataset):
