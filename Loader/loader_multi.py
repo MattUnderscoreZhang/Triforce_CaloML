@@ -201,7 +201,7 @@ class HDF5Dataset(data.Dataset):
     def __len__(self):
         return sum(self.num_per_file)
 
-class OrderedRandomSampler(object):
+class OrderedRandomSampler(data.sampler.Sampler):
 
     """Samples subset of elements randomly, without replacement.
     Arguments:
