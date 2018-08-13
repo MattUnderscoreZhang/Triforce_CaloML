@@ -195,7 +195,7 @@ BATCH, EPOCH = 0, 1
 class Trainer:
 
     def __init__(self):
-        self.microbatch_n = 0
+        self.reset()
 
     def reset(self):
         self.microbatch_n = 0
@@ -234,8 +234,6 @@ class Trainer:
             microbatch_norm_loss = {}
             for key in class_reg_loss:
                 microbatch_norm_loss[key] = class_reg_loss[key] / options['nMicroBatchesInMiniBatch']
-            if (self.microbatch_n == 0):
-                combined_classifier.optimizer.zero_grad()
             microbatch_norm_loss["total"].backward()
             self.microbatch_n += 1
             if (self.microbatch_n >= options['nMicroBatchesInMiniBatch']):
