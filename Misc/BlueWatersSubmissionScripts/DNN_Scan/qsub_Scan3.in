@@ -5,7 +5,7 @@
 ### No email notification
 #PBS -m n
 ### Job name
-#PBS -N DNN_Test
+#PBS -N DNN_Scan3
 ### Standard output and error
 #PBS -o Logs/DNN_Scan3.log
 #PBS -e Logs/DNN_Scan3.log

@@ -3,19 +3,17 @@
 # __getitem__ takes an index and returns that event. First it sees which file the indexed event would be in, and loads that file if it is not already in memory. It reads the entire ECAL, HCAL, and target information of that file into memory. Then it returns info for the requested event.
 # OrderedRandomSampler is used to pass indices to HDF5Dataset, but the indices are created in such a way that the first file is completely read first, and then the second file, then the third etc.
 
-import torch.utils.data as data
-from torch import from_numpy
+import torch
 import h5py as h5
 import numpy as np
 import threading, queue
-from time import sleep
 import pdb
 
 class HDF5Dataset():
 
-    def __init__(self, dataname_tuples, pdgIDs, batch_size, n_workers, filters=[]):
-        self.dataname_tuples = sorted(dataname_tuples)
-        self.nClasses = len(dataname_tuples[0])
+    def __init__(self, filename_tuples, pdgIDs, batch_size, n_workers, filters=[]):
+        self.filename_tuples = sorted(filename_tuples)
+        self.nClasses = len(filename_tuples[0])
         self.pdgIDs = {}
         for i, ID in enumerate(pdgIDs):
             self.pdgIDs[ID] = i
@@ -23,19 +21,19 @@ class HDF5Dataset():
         self.n_workers = n_workers
         self.filters = filters
         self.files_queue = queue.Queue()
-        for fileN in range(len(self.dataname_tuples)):
-            for dataname in self.dataname_tuples[fileN]:
-                self.files_queue.put(dataname)
+        for fileN in range(len(self.filename_tuples)):
+            for filename in self.filename_tuples[fileN]:
+                self.files_queue.put(filename)
         self.data_threads = []
         for _ in range(self.n_workers):
             t = threading.Thread(target=self.add_data, args=())
             t.start()
             self.data_threads.append(t)
-        self.data_queue = queue.Queue(maxsize=100000) # 10 files max
+        self.data_queue = queue.Queue(maxsize=20)
 
-    def load_hdf5(self, file, pdgIDs):
+    def load_hdf5(self, filename, pdgIDs):
         return_data = {}
-        with h5.File(file, 'r') as f:
+        with h5.File(filename, 'r') as f:
             return_data['ECAL'] = f['ECAL'][:].astype(np.float32)
             n_events = len(return_data['ECAL'])
             return_data['HCAL'] = f['HCAL'][:].astype(np.float32)
@@ -48,20 +46,23 @@ class HDF5Dataset():
         return return_data
 
     def add_data(self):
-        dataname = self.files_queue.get()
-        self.files_queue.task_done()
-        print("Loading file", dataname)
-        file_data = self.load_hdf5(dataname, self.pdgIDs)
-        print("Finished loading file", dataname)
-        for filt in self.filters:
-            filt.filter(file_data)
-        for i in range(0, file_data['ECAL'].shape[0]-self.batch_size, self.batch_size):
-            data = {}
-            for key in file_data.keys():
-                data[key] = file_data[key][i:i+self.batch_size]
-            self.data_queue.put(data)
-        print("Finished processing file", dataname)
-        self.files_queue.put(dataname)
+        while True:
+            filename = self.files_queue.get()
+            self.files_queue.task_done()
+            print("Loading file", filename)
+            file_data = self.load_hdf5(filename, self.pdgIDs)
+            print("Finished loading file", filename)
+            for filt in self.filters:
+                filt.filter(file_data)
+            for i in range(0, file_data['ECAL'].shape[0]-self.batch_size, self.batch_size):
+                data = {}
+                for key in file_data.keys():
+                    data[key] = torch.from_numpy(file_data[key][i:i+self.batch_size])
+                print("Adding data to queue")
+                self.data_queue.put(data)
+                print("Done adding data to queue")
+            print("Finished processing file", filename)
+            self.files_queue.put(filename)
 
     def __next__(self):
         print("Queue size is currently", self.data_queue.qsize())
