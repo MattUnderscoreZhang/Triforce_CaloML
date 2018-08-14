@@ -51,7 +51,7 @@ for optionName in requiredOptionNames:
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nMicroBatchesInMiniBatch':1, 'nWorkers':0, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
+defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nMicroBatchesInMiniBatch':1, 'nLoaders':1, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -141,15 +141,16 @@ if options['validationRatio'] == 0:
     validationFiles = testFiles
 
 # prepare the generators
-print('Defining training dataset')
-trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['filters'])
-print('Defining validation dataset')
-validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'])
-print('Defining test dataset')
-testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'])
-trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
-validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
-testLoader = data.DataLoader(dataset=testSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
+print('Starting loaders for training datasets')
+trainLoader = loader.HDF5Dataset(trainFiles, options['classPdgID'], batch_size=options['microBatchSize'], n_workers=options['nLoaders'], filters=options['filters'])
+print('Starting loaders for test datasets')
+testLoader = loader.HDF5Dataset(testFiles, options['classPdgID'], batch_size=options['microBatchSize'], n_workers=options['nLoaders'], filters=options['filters'])
+if options['validationRatio'] == 0:
+    print('Using test set for validation')
+    validationLoader = testLoader
+else:
+    print('Starting loaders for validation datasets')
+    validationLoader = loader.HDF5Dataset(validationFiles, options['classPdgID'], batch_size=options['microBatchSize'], n_workers=options['nLoaders'], filters=options['filters'])
 print('-------------------------------')
 
 ################################################
