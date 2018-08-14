@@ -30,6 +30,7 @@ class HDF5Dataset():
             t.start()
             self.data_threads.append(t)
         self.data_queue = queue.Queue(maxsize=20)
+        self.count = 0
 
     def load_hdf5(self, filename, pdgIDs):
         return_data = {}
@@ -43,30 +44,29 @@ class HDF5Dataset():
             for feat in other_features:
                 if feat in f.keys(): return_data[feat] = f[feat][:].astype(np.float32)
                 else: return_data[feat] = np.zeros(n_events, dtype=np.float32)
-        return return_data
+        self.count += 1
+        return (self.count, return_data)
 
     def add_data(self):
         while True:
             filename = self.files_queue.get()
             self.files_queue.task_done()
             print("Loading file", filename)
-            file_data = self.load_hdf5(filename, self.pdgIDs)
-            print("Finished loading file", filename)
+            count, file_data = self.load_hdf5(filename, self.pdgIDs)
+            print("Finished loading file", filename, "count", count)
             for filt in self.filters:
                 filt.filter(file_data)
             for i in range(0, file_data['ECAL'].shape[0]-self.batch_size, self.batch_size):
                 data = {}
                 for key in file_data.keys():
                     data[key] = torch.from_numpy(file_data[key][i:i+self.batch_size])
-                print("Adding data to queue")
-                self.data_queue.put(data)
-                print("Done adding data to queue")
+                self.data_queue.put((count, data))
             print("Finished processing file", filename)
             self.files_queue.put(filename)
 
     def __next__(self):
-        print("Queue size is currently", self.data_queue.qsize())
-        data = self.data_queue.get()
+        count, data = self.data_queue.get()
+        # print("Queue size is currently", self.data_queue.qsize(), ", using file", count)
         self.data_queue.task_done()
         return data
 
