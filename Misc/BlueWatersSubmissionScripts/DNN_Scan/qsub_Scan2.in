@@ -1,11 +1,11 @@
 ### Request GPU nodes with a single processing element each
 #PBS -l nodes=74:ppn=1:xk
 ### Max runtime
-#PBS -l walltime=5:00:00
+#PBS -l walltime=7:00:00
 ### No email notification
 #PBS -m n
 ### Job name
-#PBS -N DNN_Test
+#PBS -N DNN_Scan2
 ### Standard output and error
 #PBS -o Logs/DNN_Scan2.log
 #PBS -e Logs/DNN_Scan2.log
