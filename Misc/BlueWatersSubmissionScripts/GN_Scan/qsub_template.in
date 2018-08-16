@@ -1,0 +1,17 @@
+### Request GPU nodes with 1 processing element each
+#PBS -l nodes=378:ppn=1:xk
+### Max 20 hours runtime
+#PBS -l walltime=20:00:00
+### No email notification
+#PBS -m n
+### Job name
+#PBS -N GN_JOBNAME
+### Standard output and error
+#PBS -o Logs/GN_JOBNAME.log
+#PBS -e Logs/GN_JOBNAME.log
+### Use Ben's allocation
+#PBS -A bakx
+### I forget what these are
+#PBS -j oe
+module load bwpy
+cd /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce_GN/

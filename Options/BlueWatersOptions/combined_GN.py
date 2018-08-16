@@ -79,9 +79,9 @@ options['val_outputs'] = ['energy', 'eta', 'phi', 'recoEta', 'recoPhi', 'ECAL_E'
 from Architectures import Combined_DNN, Combined_CNN, GoogLeNet, Discriminator, Generator
 from Analysis import Plotter
 
-options['learningRate'] = float(sys.argv[1])
-options['decayRate'] = int(sys.argv[2])
-options['hiddenLayerNeurons'] = int(sys.argv[3])
+options['learningRate'] = float(sys.argv[2])
+options['decayRate'] = float(sys.argv[3])
+options['hiddenLayerNeurons'] = int(sys.argv[4])
 options['windowSizeECAL'] = 25
 options['windowSizeHCAL'] = 11
 
