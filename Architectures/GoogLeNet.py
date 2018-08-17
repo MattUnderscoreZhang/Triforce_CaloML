@@ -7,8 +7,6 @@ import math, pdb
 from Architectures import LossFunctions
 import numpy as np
 
-import pdb
-
 ##################
 # Classification #
 ##################
@@ -138,7 +136,6 @@ class GoogLeNet(nn.Module):
         x = ECAL
         # net
         x = self.norm(x)
-        pdb.set_trace()
         x = self.pre_layers(x)
         x = self.a3(x)
         x = self.b3(x)
