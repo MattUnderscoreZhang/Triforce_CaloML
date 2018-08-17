@@ -101,8 +101,8 @@ options['inputScaleEta'] = 10.0
 options['inputScalePhi'] = 10.0
 
 # ADD GAN OPTIONS
-# combined_classifier = GoogLeNet.Net(options)
-combined_classifier = Combined_DNN.Net(options)
+combined_classifier = GoogLeNet.Net(options)
+# combined_classifier = Combined_DNN.Net(options)
 discriminator = Discriminator.Net(options)
 generator = Generator.Net(options)
 analyzer = Plotter.Analyzer()

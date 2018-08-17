@@ -22,7 +22,7 @@ sys.dont_write_bytecode = True # prevent the creation of .pyc files
 import pdb
 from timeit import default_timer as timer
 
-os.environ['CUDA_VISIBLE_DEVICES'] = '6, 7, 8, 9'
+# torch.backends.cudnn.enabled = False
 
 start = timer()
 
@@ -142,11 +142,11 @@ if options['validationRatio'] == 0:
 
 # prepare the generators
 print('Defining training dataset')
-trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['nWorkers'], options['nLoaders'], options['filters'])
+trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['filters'])
 print('Defining validation dataset')
-validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['nWorkers'], options['nLoaders'], options['filters'])
+validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'])
 print('Defining test dataset')
-testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['nWorkers'], options['nLoaders'], options['filters'])
+testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'])
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
 validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['batchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])

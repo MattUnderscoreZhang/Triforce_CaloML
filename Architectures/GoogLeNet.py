@@ -13,8 +13,9 @@ import pdb
 # Classification #
 ##################
 
+torch.backends.cudnn.benchmark = False
 epsilon = 1e-07
-CLASSIFICATION, REGRESSION = 0, 1
+CLASSIFICATION, REGRESSION = 1, 0
 
 class Inception(nn.Module):
 
@@ -137,6 +138,7 @@ class GoogLeNet(nn.Module):
         x = ECAL
         # net
         x = self.norm(x)
+        pdb.set_trace()
         x = self.pre_layers(x)
         x = self.a3(x)
         x = self.b3(x)
