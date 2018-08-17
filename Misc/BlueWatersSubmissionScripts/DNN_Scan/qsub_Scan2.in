@@ -1,0 +1,109 @@
+### Request GPU nodes with a single processing element each
+#PBS -l nodes=74:ppn=1:xk
+### Max runtime
+#PBS -l walltime=7:00:00
+### No email notification
+#PBS -m n
+### Job name
+#PBS -N DNN_Scan2
+### Standard output and error
+#PBS -o Logs/DNN_Scan2.log
+#PBS -e Logs/DNN_Scan2.log
+### Use Ben's allocation
+#PBS -A bakx
+### I forget what these are
+#PBS -j oe
+module load bwpy
+cd /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce/
+
+### hidden layers vs. neurons per layer
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_1_128_0.0004_0.08_Scan2" 1 128 0.0004 0.08 > Output/Variable/DNN/Output_DNN_1_128_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_1_256_0.0004_0.08_Scan2" 1 256 0.0004 0.08 > Output/Variable/DNN/Output_DNN_1_256_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_1_512_0.0004_0.08_Scan2" 1 512 0.0004 0.08 > Output/Variable/DNN/Output_DNN_1_512_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_1_1024_0.0004_0.08_Scan2" 1 1024 0.0004 0.08 > Output/Variable/DNN/Output_DNN_1_1024_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_1_2048_0.0004_0.08_Scan2" 1 2048 0.0004 0.08 > Output/Variable/DNN/Output_DNN_1_2048_0.0004_0.08_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_2_128_0.0004_0.08_Scan2" 2 128 0.0004 0.08 > Output/Variable/DNN/Output_DNN_2_128_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_2_256_0.0004_0.08_Scan2" 2 256 0.0004 0.08 > Output/Variable/DNN/Output_DNN_2_256_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_2_512_0.0004_0.08_Scan2" 2 512 0.0004 0.08 > Output/Variable/DNN/Output_DNN_2_512_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_2_1024_0.0004_0.08_Scan2" 2 1024 0.0004 0.08 > Output/Variable/DNN/Output_DNN_2_1024_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_2_2048_0.0004_0.08_Scan2" 2 2048 0.0004 0.08 > Output/Variable/DNN/Output_DNN_2_2048_0.0004_0.08_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_128_0.0004_0.08_Scan2" 3 128 0.0004 0.08 > Output/Variable/DNN/Output_DNN_3_128_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_256_0.0004_0.08_Scan2" 3 256 0.0004 0.08 > Output/Variable/DNN/Output_DNN_3_256_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0004_0.08_Scan2" 3 512 0.0004 0.08 > Output/Variable/DNN/Output_DNN_3_512_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_1024_0.0004_0.08_Scan2" 3 1024 0.0004 0.08 > Output/Variable/DNN/Output_DNN_3_1024_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_2048_0.0004_0.08_Scan2" 3 2048 0.0004 0.08 > Output/Variable/DNN/Output_DNN_3_2048_0.0004_0.08_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_4_128_0.0004_0.08_Scan2" 4 128 0.0004 0.08 > Output/Variable/DNN/Output_DNN_4_128_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_4_256_0.0004_0.08_Scan2" 4 256 0.0004 0.08 > Output/Variable/DNN/Output_DNN_4_256_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_4_512_0.0004_0.08_Scan2" 4 512 0.0004 0.08 > Output/Variable/DNN/Output_DNN_4_512_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_4_1024_0.0004_0.08_Scan2" 4 1024 0.0004 0.08 > Output/Variable/DNN/Output_DNN_4_1024_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_4_2048_0.0004_0.08_Scan2" 4 2048 0.0004 0.08 > Output/Variable/DNN/Output_DNN_4_2048_0.0004_0.08_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_5_128_0.0004_0.08_Scan2" 5 128 0.0004 0.08 > Output/Variable/DNN/Output_DNN_5_128_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_5_256_0.0004_0.08_Scan2" 5 256 0.0004 0.08 > Output/Variable/DNN/Output_DNN_5_256_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_5_512_0.0004_0.08_Scan2" 5 512 0.0004 0.08 > Output/Variable/DNN/Output_DNN_5_512_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_5_1024_0.0004_0.08_Scan2" 5 1024 0.0004 0.08 > Output/Variable/DNN/Output_DNN_5_1024_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_5_2048_0.0004_0.08_Scan2" 5 2048 0.0004 0.08 > Output/Variable/DNN/Output_DNN_5_2048_0.0004_0.08_Scan2_log.txt &
+
+### learning rate vs. dropout rate
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0001_0.02_Scan2" 3 512 0.0001 0.02 > Output/Variable/DNN/Output_DNN_3_512_0.0001_0.02_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0001_0.04_Scan2" 3 512 0.0001 0.04 > Output/Variable/DNN/Output_DNN_3_512_0.0001_0.04_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0001_0.06_Scan2" 3 512 0.0001 0.06 > Output/Variable/DNN/Output_DNN_3_512_0.0001_0.06_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0001_0.08_Scan2" 3 512 0.0001 0.08 > Output/Variable/DNN/Output_DNN_3_512_0.0001_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0001_0.10_Scan2" 3 512 0.0001 0.10 > Output/Variable/DNN/Output_DNN_3_512_0.0001_0.10_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0001_0.12_Scan2" 3 512 0.0001 0.12 > Output/Variable/DNN/Output_DNN_3_512_0.0001_0.12_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0001_0.14_Scan2" 3 512 0.0001 0.14 > Output/Variable/DNN/Output_DNN_3_512_0.0001_0.14_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0002_0.02_Scan2" 3 512 0.0002 0.02 > Output/Variable/DNN/Output_DNN_3_512_0.0002_0.02_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0002_0.04_Scan2" 3 512 0.0002 0.04 > Output/Variable/DNN/Output_DNN_3_512_0.0002_0.04_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0002_0.06_Scan2" 3 512 0.0002 0.06 > Output/Variable/DNN/Output_DNN_3_512_0.0002_0.06_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0002_0.08_Scan2" 3 512 0.0002 0.08 > Output/Variable/DNN/Output_DNN_3_512_0.0002_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0002_0.10_Scan2" 3 512 0.0002 0.10 > Output/Variable/DNN/Output_DNN_3_512_0.0002_0.10_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0002_0.12_Scan2" 3 512 0.0002 0.12 > Output/Variable/DNN/Output_DNN_3_512_0.0002_0.12_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0002_0.14_Scan2" 3 512 0.0002 0.14 > Output/Variable/DNN/Output_DNN_3_512_0.0002_0.14_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0003_0.02_Scan2" 3 512 0.0003 0.02 > Output/Variable/DNN/Output_DNN_3_512_0.0003_0.02_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0003_0.04_Scan2" 3 512 0.0003 0.04 > Output/Variable/DNN/Output_DNN_3_512_0.0003_0.04_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0003_0.06_Scan2" 3 512 0.0003 0.06 > Output/Variable/DNN/Output_DNN_3_512_0.0003_0.06_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0003_0.08_Scan2" 3 512 0.0003 0.08 > Output/Variable/DNN/Output_DNN_3_512_0.0003_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0003_0.10_Scan2" 3 512 0.0003 0.10 > Output/Variable/DNN/Output_DNN_3_512_0.0003_0.10_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0003_0.12_Scan2" 3 512 0.0003 0.12 > Output/Variable/DNN/Output_DNN_3_512_0.0003_0.12_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0003_0.14_Scan2" 3 512 0.0003 0.14 > Output/Variable/DNN/Output_DNN_3_512_0.0003_0.14_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0004_0.02_Scan2" 3 512 0.0004 0.02 > Output/Variable/DNN/Output_DNN_3_512_0.0004_0.02_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0004_0.04_Scan2" 3 512 0.0004 0.04 > Output/Variable/DNN/Output_DNN_3_512_0.0004_0.04_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0004_0.06_Scan2" 3 512 0.0004 0.06 > Output/Variable/DNN/Output_DNN_3_512_0.0004_0.06_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0004_0.08_Scan2" 3 512 0.0004 0.08 > Output/Variable/DNN/Output_DNN_3_512_0.0004_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0004_0.10_Scan2" 3 512 0.0004 0.10 > Output/Variable/DNN/Output_DNN_3_512_0.0004_0.10_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0004_0.12_Scan2" 3 512 0.0004 0.12 > Output/Variable/DNN/Output_DNN_3_512_0.0004_0.12_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0004_0.14_Scan2" 3 512 0.0004 0.14 > Output/Variable/DNN/Output_DNN_3_512_0.0004_0.14_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0005_0.02_Scan2" 3 512 0.0005 0.02 > Output/Variable/DNN/Output_DNN_3_512_0.0005_0.02_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0005_0.04_Scan2" 3 512 0.0005 0.04 > Output/Variable/DNN/Output_DNN_3_512_0.0005_0.04_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0005_0.06_Scan2" 3 512 0.0005 0.06 > Output/Variable/DNN/Output_DNN_3_512_0.0005_0.06_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0005_0.08_Scan2" 3 512 0.0005 0.08 > Output/Variable/DNN/Output_DNN_3_512_0.0005_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0005_0.10_Scan2" 3 512 0.0005 0.10 > Output/Variable/DNN/Output_DNN_3_512_0.0005_0.10_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0005_0.12_Scan2" 3 512 0.0005 0.12 > Output/Variable/DNN/Output_DNN_3_512_0.0005_0.12_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0005_0.14_Scan2" 3 512 0.0005 0.14 > Output/Variable/DNN/Output_DNN_3_512_0.0005_0.14_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0006_0.02_Scan2" 3 512 0.0006 0.02 > Output/Variable/DNN/Output_DNN_3_512_0.0006_0.02_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0006_0.04_Scan2" 3 512 0.0006 0.04 > Output/Variable/DNN/Output_DNN_3_512_0.0006_0.04_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0006_0.06_Scan2" 3 512 0.0006 0.06 > Output/Variable/DNN/Output_DNN_3_512_0.0006_0.06_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0006_0.08_Scan2" 3 512 0.0006 0.08 > Output/Variable/DNN/Output_DNN_3_512_0.0006_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0006_0.10_Scan2" 3 512 0.0006 0.10 > Output/Variable/DNN/Output_DNN_3_512_0.0006_0.10_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0006_0.12_Scan2" 3 512 0.0006 0.12 > Output/Variable/DNN/Output_DNN_3_512_0.0006_0.12_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0006_0.14_Scan2" 3 512 0.0006 0.14 > Output/Variable/DNN/Output_DNN_3_512_0.0006_0.14_Scan2_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0007_0.02_Scan2" 3 512 0.0007 0.02 > Output/Variable/DNN/Output_DNN_3_512_0.0007_0.02_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0007_0.04_Scan2" 3 512 0.0007 0.04 > Output/Variable/DNN/Output_DNN_3_512_0.0007_0.04_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0007_0.06_Scan2" 3 512 0.0007 0.06 > Output/Variable/DNN/Output_DNN_3_512_0.0007_0.06_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0007_0.08_Scan2" 3 512 0.0007 0.08 > Output/Variable/DNN/Output_DNN_3_512_0.0007_0.08_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0007_0.10_Scan2" 3 512 0.0007 0.10 > Output/Variable/DNN/Output_DNN_3_512_0.0007_0.10_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0007_0.12_Scan2" 3 512 0.0007 0.12 > Output/Variable/DNN/Output_DNN_3_512_0.0007_0.12_Scan2_log.txt &
+aprun -n 1 python3 triforce.py "Variable/DNN/DNN_Output_3_512_0.0007_0.14_Scan2" 3 512 0.0007 0.14 > Output/Variable/DNN/Output_DNN_3_512_0.0007_0.14_Scan2_log.txt &
+
+wait

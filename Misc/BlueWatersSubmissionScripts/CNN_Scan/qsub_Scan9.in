@@ -1,0 +1,147 @@
+### Request GPU nodes with a single processing element each
+#PBS -l nodes=104:ppn=1:xk
+### Max runtime
+#PBS -l walltime=7:00:00
+### No email notification
+#PBS -m n
+### Job name
+#PBS -N CNN_Scan9
+### Standard output and error
+#PBS -o Logs/CNN_Scan9.log
+#PBS -e Logs/CNN_Scan9.log
+### Use Ben's allocation
+#PBS -A bakx
+### I forget what these are
+#PBS -j oe
+module load bwpy
+cd /u/sciteam/zhang10/Projects/DNNCalorimeter/V2/TriForce_CNN/
+
+### hidden layers vs. neurons per layer
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_1_128_0.0004_0.08_3_4_Scan9" 1 128 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_1_128_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_1_256_0.0004_0.08_3_4_Scan9" 1 256 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_1_256_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_1_512_0.0004_0.08_3_4_Scan9" 1 512 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_1_512_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_1_1024_0.0004_0.08_3_4_Scan9" 1 1024 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_1_1024_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_1_2048_0.0004_0.08_3_4_Scan9" 1 2048 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_1_2048_0.0004_0.08_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_2_128_0.0004_0.08_3_4_Scan9" 2 128 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_2_128_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_2_256_0.0004_0.08_3_4_Scan9" 2 256 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_2_256_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_2_512_0.0004_0.08_3_4_Scan9" 2 512 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_2_512_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_2_1024_0.0004_0.08_3_4_Scan9" 2 1024 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_2_1024_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_2_2048_0.0004_0.08_3_4_Scan9" 2 2048 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_2_2048_0.0004_0.08_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_128_0.0004_0.08_3_4_Scan9" 3 128 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_128_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_256_0.0004_0.08_3_4_Scan9" 3 256 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_256_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_3_4_Scan9" 3 512 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_1024_0.0004_0.08_3_4_Scan9" 3 1024 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_1024_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_2048_0.0004_0.08_3_4_Scan9" 3 2048 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_2048_0.0004_0.08_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_4_128_0.0004_0.08_3_4_Scan9" 4 128 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_4_128_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_4_256_0.0004_0.08_3_4_Scan9" 4 256 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_4_256_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_4_512_0.0004_0.08_3_4_Scan9" 4 512 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_4_512_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_4_1024_0.0004_0.08_3_4_Scan9" 4 1024 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_4_1024_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_4_2048_0.0004_0.08_3_4_Scan9" 4 2048 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_4_2048_0.0004_0.08_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_5_128_0.0004_0.08_3_4_Scan9" 5 128 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_5_128_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_5_256_0.0004_0.08_3_4_Scan9" 5 256 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_5_256_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_5_512_0.0004_0.08_3_4_Scan9" 5 512 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_5_512_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_5_1024_0.0004_0.08_3_4_Scan9" 5 1024 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_5_1024_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_5_2048_0.0004_0.08_3_4_Scan9" 5 2048 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_5_2048_0.0004_0.08_3_4_Scan9_log.txt &
+
+### learning rate vs. dropout rate
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0001_0.02_3_4_Scan9" 3 512 0.0001 0.02 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0001_0.02_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0001_0.04_3_4_Scan9" 3 512 0.0001 0.04 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0001_0.04_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0001_0.06_3_4_Scan9" 3 512 0.0001 0.06 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0001_0.06_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0001_0.08_3_4_Scan9" 3 512 0.0001 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0001_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0001_0.10_3_4_Scan9" 3 512 0.0001 0.10 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0001_0.10_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0001_0.12_3_4_Scan9" 3 512 0.0001 0.12 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0001_0.12_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0001_0.14_3_4_Scan9" 3 512 0.0001 0.14 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0001_0.14_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0002_0.02_3_4_Scan9" 3 512 0.0002 0.02 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0002_0.02_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0002_0.04_3_4_Scan9" 3 512 0.0002 0.04 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0002_0.04_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0002_0.06_3_4_Scan9" 3 512 0.0002 0.06 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0002_0.06_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0002_0.08_3_4_Scan9" 3 512 0.0002 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0002_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0002_0.10_3_4_Scan9" 3 512 0.0002 0.10 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0002_0.10_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0002_0.12_3_4_Scan9" 3 512 0.0002 0.12 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0002_0.12_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0002_0.14_3_4_Scan9" 3 512 0.0002 0.14 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0002_0.14_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0003_0.02_3_4_Scan9" 3 512 0.0003 0.02 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0003_0.02_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0003_0.04_3_4_Scan9" 3 512 0.0003 0.04 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0003_0.04_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0003_0.06_3_4_Scan9" 3 512 0.0003 0.06 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0003_0.06_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0003_0.08_3_4_Scan9" 3 512 0.0003 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0003_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0003_0.10_3_4_Scan9" 3 512 0.0003 0.10 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0003_0.10_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0003_0.12_3_4_Scan9" 3 512 0.0003 0.12 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0003_0.12_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0003_0.14_3_4_Scan9" 3 512 0.0003 0.14 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0003_0.14_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.02_3_4_Scan9" 3 512 0.0004 0.02 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.02_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.04_3_4_Scan9" 3 512 0.0004 0.04 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.04_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.06_3_4_Scan9" 3 512 0.0004 0.06 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.06_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_3_4_Scan9" 3 512 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.10_3_4_Scan9" 3 512 0.0004 0.10 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.10_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.12_3_4_Scan9" 3 512 0.0004 0.12 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.12_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.14_3_4_Scan9" 3 512 0.0004 0.14 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.14_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0005_0.02_3_4_Scan9" 3 512 0.0005 0.02 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0005_0.02_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0005_0.04_3_4_Scan9" 3 512 0.0005 0.04 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0005_0.04_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0005_0.06_3_4_Scan9" 3 512 0.0005 0.06 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0005_0.06_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0005_0.08_3_4_Scan9" 3 512 0.0005 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0005_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0005_0.10_3_4_Scan9" 3 512 0.0005 0.10 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0005_0.10_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0005_0.12_3_4_Scan9" 3 512 0.0005 0.12 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0005_0.12_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0005_0.14_3_4_Scan9" 3 512 0.0005 0.14 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0005_0.14_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0006_0.02_3_4_Scan9" 3 512 0.0006 0.02 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0006_0.02_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0006_0.04_3_4_Scan9" 3 512 0.0006 0.04 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0006_0.04_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0006_0.06_3_4_Scan9" 3 512 0.0006 0.06 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0006_0.06_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0006_0.08_3_4_Scan9" 3 512 0.0006 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0006_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0006_0.10_3_4_Scan9" 3 512 0.0006 0.10 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0006_0.10_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0006_0.12_3_4_Scan9" 3 512 0.0006 0.12 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0006_0.12_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0006_0.14_3_4_Scan9" 3 512 0.0006 0.14 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0006_0.14_3_4_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0007_0.02_3_4_Scan9" 3 512 0.0007 0.02 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0007_0.02_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0007_0.04_3_4_Scan9" 3 512 0.0007 0.04 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0007_0.04_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0007_0.06_3_4_Scan9" 3 512 0.0007 0.06 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0007_0.06_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0007_0.08_3_4_Scan9" 3 512 0.0007 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0007_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0007_0.10_3_4_Scan9" 3 512 0.0007 0.10 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0007_0.10_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0007_0.12_3_4_Scan9" 3 512 0.0007 0.12 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0007_0.12_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0007_0.14_3_4_Scan9" 3 512 0.0007 0.14 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0007_0.14_3_4_Scan9_log.txt &
+
+### learning rate vs. dropout rate
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_1_2_Scan9" 3 512 0.0004 0.08 1 2 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_1_2_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_1_3_Scan9" 3 512 0.0004 0.08 1 3 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_1_3_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_1_4_Scan9" 3 512 0.0004 0.08 1 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_1_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_1_5_Scan9" 3 512 0.0004 0.08 1 5 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_1_5_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_1_6_Scan9" 3 512 0.0004 0.08 1 6 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_1_6_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_2_2_Scan9" 3 512 0.0004 0.08 2 2 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_2_2_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_2_3_Scan9" 3 512 0.0004 0.08 2 3 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_2_3_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_2_4_Scan9" 3 512 0.0004 0.08 2 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_2_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_2_5_Scan9" 3 512 0.0004 0.08 2 5 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_2_5_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_2_6_Scan9" 3 512 0.0004 0.08 2 6 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_2_6_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_3_2_Scan9" 3 512 0.0004 0.08 3 2 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_3_2_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_3_3_Scan9" 3 512 0.0004 0.08 3 3 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_3_3_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_3_4_Scan9" 3 512 0.0004 0.08 3 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_3_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_3_5_Scan9" 3 512 0.0004 0.08 3 5 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_3_5_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_3_6_Scan9" 3 512 0.0004 0.08 3 6 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_3_6_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_4_2_Scan9" 3 512 0.0004 0.08 4 2 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_4_2_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_4_3_Scan9" 3 512 0.0004 0.08 4 3 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_4_3_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_4_4_Scan9" 3 512 0.0004 0.08 4 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_4_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_4_5_Scan9" 3 512 0.0004 0.08 4 5 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_4_5_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_4_6_Scan9" 3 512 0.0004 0.08 4 6 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_4_6_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_5_2_Scan9" 3 512 0.0004 0.08 5 2 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_5_2_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_5_3_Scan9" 3 512 0.0004 0.08 5 3 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_5_3_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_5_4_Scan9" 3 512 0.0004 0.08 5 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_5_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_5_5_Scan9" 3 512 0.0004 0.08 5 5 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_5_5_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_5_6_Scan9" 3 512 0.0004 0.08 5 6 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_5_6_Scan9_log.txt &
+
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_6_2_Scan9" 3 512 0.0004 0.08 6 2 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_6_2_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_6_3_Scan9" 3 512 0.0004 0.08 6 3 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_6_3_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_6_4_Scan9" 3 512 0.0004 0.08 6 4 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_6_4_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_6_5_Scan9" 3 512 0.0004 0.08 6 5 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_6_5_Scan9_log.txt &
+aprun -n 1 python3 triforce.py "Variable/CNN/CNN_Output_3_512_0.0004_0.08_6_6_Scan9" 3 512 0.0004 0.08 6 6 > Output/Variable/CNN/Output_CNN_3_512_0.0004_0.08_6_6_Scan9_log.txt &
+
+wait

@@ -116,6 +116,7 @@ class OrderedRandomSampler(data.Sampler):
     """Samples subset of elements randomly, without replacement.
     Arguments:
         data_source (Dataset): dataset to sample from
+        Note: argument 'data.Sampler' for PyTorch-0.4.1 / 'object' for PyTorch-0.3.1
     """
 
     def __init__(self, data_source):
