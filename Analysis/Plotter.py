@@ -141,12 +141,12 @@ class Analyzer():
         [combined_classifier, discriminator, generator] = tools
 
         try: 
-            classifier_test_loss = mean(final_val_results['class_reg_loss'])
+            classifier_test_loss = mean([item.item() for item in final_val_results['class_reg_loss']])
         except: 
             print('classifier_test_loss fetching crashed!')
             pdb.set_trace()
         try: 
-            classifier_test_accuracy = mean(final_val_results['class_acc'])
+            classifier_test_accuracy = mean([item.item() for item in final_val_results['class_acc']])
         except: 
             print('classifier_test_accuracy fetching crashed!')
             pdb.set_trace()

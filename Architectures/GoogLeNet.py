@@ -13,7 +13,7 @@ import pdb
 # Classification #
 ##################
 
-epsilon = 1e-07
+epsilon = 1e-05
 CLASSIFICATION, REGRESSION = 0, 1
 
 class Inception(nn.Module):
