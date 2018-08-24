@@ -9,13 +9,13 @@ import itertools as itr
 import pdb
 
 # Files
-files = glob.glob("Data/*.txt")
+files = glob.glob("/data/LCD/NewSamples/HyperparameterResults/DNN/*.txt")
 
 # Options
 parameter_names = ["Hidden Layers", "Neurons per Hidden Layer", "Learning Rate", "Dropout Probability"]
-parameter_space = [[1, 2, 3, 4, 5], [256, 512, 1024, 2048, 4096], [0.0001, 0.0005, 0.001], [0.05, 0.1, 0.15, 0.2, 0.25]]
+parameter_space = [[1, 2, 3, 4, 5], [128, 256, 512, 1024, 2048], [0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0006, 0.0007], [0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14]]
 parameter_shape = [len(dimension) for dimension in parameter_space]
-baseline_parameters = (1, 2, 1, 1)
+baseline_parameters = (2, 2, 3, 3)
 
 # Extract losses and accuracies
 losses = np.zeros(parameter_shape)
