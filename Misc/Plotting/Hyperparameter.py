@@ -9,7 +9,7 @@ import itertools as itr
 import pdb
 
 # Files
-files = glob.glob("/data/LCD/NewSamples/HyperparameterResults/DNN/*.txt")
+files = glob.glob("/Users/mattzhang/Dropbox/Projects/Data/HyperparameterResults/DNN/*.txt")
 
 # Options
 parameter_names = ["Hidden Layers", "Neurons per Hidden Layer", "Learning Rate", "Dropout Probability"]
@@ -18,8 +18,10 @@ parameter_shape = [len(dimension) for dimension in parameter_space]
 baseline_parameters = (2, 2, 3, 3)
 
 # Extract losses and accuracies
-losses = np.zeros(parameter_shape)
-accuracies = np.zeros(parameter_shape)
+losses = np.empty(shape=(parameter_shape), dtype=object)
+losses.fill(-1)
+accuracies = np.empty(shape=(parameter_shape), dtype=object)
+accuracies.fill(-1)
 for file_name in files:
     # get classifier test loss and accuracy
     with open(file_name) as current_file:
@@ -28,7 +30,7 @@ for file_name in files:
     results = lines[-3].rstrip().replace(' ',  '')
     results = results.replace(":", ";").split(";")
     classifier_indices = [i.replace('.','',1).isdigit() for i in results]
-    results = [i for (i,j) in zip(results, classifier_indices) if j]
+    results = [float(i) for (i,j) in zip(results, classifier_indices) if j]
     if len(results) == 0:
         continue
     test_loss = results[0]
@@ -36,24 +38,29 @@ for file_name in files:
     # parse filename
     file_name = file_name.split("/")[-1]
     file_name = file_name.split(".log")[0]
-    parameters = file_name.split("_")[1:-1]
+    parameters = file_name.split("_")[2:-2]
     parameters = [float(i) for i in parameters]
+    split = int(file_name.split("_")[-2][4:])
     # store values
     p = [parameter_space[i].index(x) for i, x in enumerate(parameters)]
-    losses[tuple(p)] = test_loss
-    accuracies[tuple(p)] = test_accuracy
+    if losses[tuple(p)] == -1:
+        losses[tuple(p)] = [test_loss]
+        accuracies[tuple(p)] = [test_accuracy]
+    else:
+        losses[tuple(p)].append(test_loss)
+        accuracies[tuple(p)].append(test_accuracy)
 
-# Plot 1D scans
-for parameter_i in range(len(parameter_space)):
-    losses_1D = np.empty(parameter_shape[parameter_i])
-    accuracy_1D = np.empty(parameter_shape[parameter_i])
-    index = baseline_parameters
-    for i in range(parameter_shape[parameter_i]):
-        index = list(index)
-        index[parameter_i] = i
-        index = tuple(index)
-        losses_1D[i] = losses[index]
-        accuracy_1D[i] = accuracies[index]
+# # Plot 1D scans
+# for parameter_i in range(len(parameter_space)):
+    # losses_1D = np.empty(parameter_shape[parameter_i])
+    # accuracy_1D = np.empty(parameter_shape[parameter_i])
+    # index = baseline_parameters
+    # for i in range(parameter_shape[parameter_i]):
+        # index = list(index)
+        # index[parameter_i] = i
+        # index = tuple(index)
+        # losses_1D[i] = losses[index]
+        # accuracy_1D[i] = accuracies[index]
     # plt.plot(parameter_space[parameter_i],accuracy_1D, 'b+-', linewidth = 1, markersize=18)
     # plt.xlabel(parameter_names[parameter_i])
     # plt.ylabel("accuracy")
@@ -70,20 +77,28 @@ combinations = list(itr.combinations(range(len(parameter_shape)), 2))
 for k in combinations:
     x = k[0]
     y = k[1]
-    lossesx = np.empty([parameter_shape[x],parameter_shape[y]])
-    accuracyx = np.empty([parameter_shape[x],parameter_shape[y]])
+    losses_mean = np.empty([parameter_shape[x],parameter_shape[y]])
+    losses_std = np.empty([parameter_shape[x],parameter_shape[y]])
+    losses_label = np.empty([parameter_shape[x],parameter_shape[y]], dtype=object)
+    accuracy_mean = np.empty([parameter_shape[x],parameter_shape[y]])
+    accuracy_std = np.empty([parameter_shape[x],parameter_shape[y]])
+    accuracy_label = np.empty([parameter_shape[x],parameter_shape[y]], dtype=object)
     for i in range(parameter_shape[x]):
         for j in range(parameter_shape[y]):
             index = list(baseline_parameters)
             index[x] = i
             index[y] = j
             index = tuple(index)
-            lossesx[i][j] = losses[index]
-            accuracyx[i][j] = accuracies[index]
-    acc = pd.DataFrame(accuracyx, index = parameter_space[x], columns = parameter_space[y])
-    loss = pd.DataFrame(lossesx, index = parameter_space[x], columns = parameter_space[y])
+            losses_mean[i][j] = np.mean(losses[index])
+            losses_std[i][j] = np.std(losses[index])
+            losses_label[i][j] = str(losses_mean[i][j])[:6] + "\n+/-\n" + str(losses_std[i][j])[:6]
+            accuracy_mean[i][j] = np.mean(accuracies[index])
+            accuracy_std[i][j] = np.std(accuracies[index])
+            accuracy_label[i][j] = str(accuracy_mean[i][j])[:6] + "\n+/-\n" + str(accuracy_std[i][j])[:6]
+    acc = pd.DataFrame(accuracy_mean, index = parameter_space[x], columns = parameter_space[y])
+    loss = pd.DataFrame(losses_mean, index = parameter_space[x], columns = parameter_space[y])
     plt.clf()
-    ax = sns.heatmap(acc, annot = True, fmt = "")
+    ax = sns.heatmap(acc, annot = accuracy_label, fmt = "", annot_kws={"size": 7})
     plt.xlabel(parameter_names[y])
     plt.ylabel(parameter_names[x])
     plt.title("Accuracy")
