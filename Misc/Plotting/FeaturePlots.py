@@ -33,7 +33,7 @@ for key, range in zip(keys, ranges):
     # weights = np.ones_like(data[key])/float(len(data[key]))
     # plt.hist(np.clip(data[key], bins[0], bins[-1]), bins=bins, weights=weights, histtype='step', linewidth=1)
     plt.hist(np.clip(data[key], bins[0], bins[-1]), bins=bins, normed=True, histtype='step', linewidth=1)
-    plt.title(key)
+    plt.title(key.capitalize())
     plt.xlabel(key)
     plt.ylabel('Normalized Fraction')
     plt.savefig(key+'.png')
