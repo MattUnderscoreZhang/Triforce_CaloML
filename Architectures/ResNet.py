@@ -45,8 +45,8 @@ class ResNet(nn.Module):
         self.conv1 = nn.Conv3d(32, 64, 3, stride=2)
         self.conv2 = nn.Conv3d(64, 96, 3, stride=2, padding=1)
         self.conv3 = nn.Conv3d(96, 128, 3, stride=2, padding=1)
-        # self.conv4 = nn.Conv3d(128, 192, 3, stride=1) # window size 25
-        self.conv4 = nn.Conv3d(128, 192, (7, 7, 3), stride=1) # window size 51
+        self.conv4 = nn.Conv3d(128, 192, 3, stride=1) # window size 25
+        # self.conv4 = nn.Conv3d(128, 192, (7, 7, 3), stride=1) # window size 51
         self.fc1 = nn.Linear(192, 192)
         self.fc2 = nn.Linear(192, 2)
         self.selu0 = nn.SELU()
