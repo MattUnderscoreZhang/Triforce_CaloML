@@ -33,11 +33,11 @@ class Classifier_Net(nn.Module):
         self.windowSizeECAL = options['windowSizeECAL']
         self.windowSizeHCAL = options['windowSizeHCAL']
         self.nHiddenLayers = options['nHiddenLayers']
-        hiddenLayerNeurons = options['hiddenLayerNeurons']
-        nfiltECAL, kernelxyECAL, kernelzECAL = options['nfiltECAL'], options['kernelxyECAL'], options['kernelzECAL']
-        nfiltHCAL, kernelxyHCAL, kernelzHCAL = options['nfiltHCAL'], options['kernelxyHCAL'], options['kernelzHCAL']
-        maxpoolkernelECAL = options['maxpoolkernelECAL']
-        maxpoolkernelHCAL = options['maxpoolkernelHCAL']
+        self.hiddenLayerNeurons = options['hiddenLayerNeurons']
+        self.nfiltECAL, self.kernelxyECAL, self.kernelzECAL = options['nfiltECAL'], options['kernelxyECAL'], options['kernelzECAL']
+        self.nfiltHCAL, self.kernelxyHCAL, self.kernelzHCAL = options['nfiltHCAL'], options['kernelxyHCAL'], options['kernelzHCAL']
+        self.maxpoolkernelECAL = options['maxpoolkernelECAL']
+        self.maxpoolkernelHCAL = options['maxpoolkernelHCAL']
         self.inputScaleSumE = options['inputScaleSumE']
         self.inputScaleEta = options['inputScaleEta']
         self.inputScalePhi = options['inputScalePhi']
@@ -48,19 +48,19 @@ class Classifier_Net(nn.Module):
         self.outputs += [("energy_regression", REGRESSION), ("eta_regression", REGRESSION), ("phi_regression", REGRESSION)]
 
         # first layers: convolutions
-        self.convECAL = nn.Conv3d(1, nfiltECAL, (kernelxyECAL, kernelxyECAL, kernelzECAL))
-        self.maxpoolECAL = nn.MaxPool3d(maxpoolkernelECAL)
-        self.convHCAL = nn.Conv3d(1, nfiltHCAL, (kernelxyHCAL, kernelxyHCAL, kernelzHCAL))
-        self.maxpoolHCAL = nn.MaxPool3d(maxpoolkernelHCAL)
+        self.convECAL = nn.Conv3d(1, self.nfiltECAL, (self.kernelxyECAL, self.kernelxyECAL, self.kernelzECAL))
+        self.maxpoolECAL = nn.MaxPool3d(self.maxpoolkernelECAL)
+        self.convHCAL = nn.Conv3d(1, self.nfiltHCAL, (self.kernelxyHCAL, self.kernelxyHCAL, self.kernelzHCAL))
+        self.maxpoolHCAL = nn.MaxPool3d(self.maxpoolkernelHCAL)
 
         # compute sizes for first dense layer
-        sizes_ECAL = size_Conv3d([self.windowSizeECAL, self.windowSizeECAL, 25], [kernelxyECAL, kernelxyECAL, kernelzECAL])
-        sizes_ECAL = size_MaxPool3d(sizes_ECAL, 3*[maxpoolkernelECAL])
-        size_ECAL_flat = reduce(lambda x, y: x*y, sizes_ECAL) * nfiltECAL
+        sizes_ECAL = size_Conv3d([self.windowSizeECAL, self.windowSizeECAL, 25], [self.kernelxyECAL, self.kernelxyECAL, self.kernelzECAL])
+        sizes_ECAL = size_MaxPool3d(sizes_ECAL, 3*[self.maxpoolkernelECAL])
+        size_ECAL_flat = reduce(lambda x, y: x*y, sizes_ECAL) * self.nfiltECAL
 
-        sizes_HCAL = size_Conv3d([self.windowSizeHCAL, self.windowSizeHCAL, 60], [kernelxyHCAL, kernelxyHCAL, kernelzHCAL])
-        sizes_HCAL = size_MaxPool3d(sizes_HCAL, 3*[maxpoolkernelHCAL])
-        size_HCAL_flat = reduce(lambda x, y: x*y, sizes_HCAL) * nfiltHCAL
+        sizes_HCAL = size_Conv3d([self.windowSizeHCAL, self.windowSizeHCAL, 60], [self.kernelxyHCAL, self.kernelxyHCAL, self.kernelzHCAL])
+        sizes_HCAL = size_MaxPool3d(sizes_HCAL, 3*[self.maxpoolkernelHCAL])
+        size_HCAL_flat = reduce(lambda x, y: x*y, sizes_HCAL) * self.nfiltHCAL
 
         # dense layers
         self.hidden = nn.ModuleList()
@@ -68,12 +68,12 @@ class Classifier_Net(nn.Module):
         for i in range(self.nHiddenLayers):
             if i == 0:
                 # first layer after convolutions
-                self.hidden.append(nn.Linear(size_ECAL_flat+size_HCAL_flat+4, hiddenLayerNeurons))
+                self.hidden.append(nn.Linear(size_ECAL_flat+size_HCAL_flat+4, self.hiddenLayerNeurons))
             else:
-                self.hidden.append(nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons))
+                self.hidden.append(nn.Linear(self.hiddenLayerNeurons, self.hiddenLayerNeurons))
             self.dropout.append(nn.Dropout(p = options['dropoutProb']))
 
-        self.finalLayer = nn.Linear(hiddenLayerNeurons+4, len(self.outputs))
+        self.finalLayer = nn.Linear(self.hiddenLayerNeurons+4, len(self.outputs))
 
     def forward(self, data):
 
