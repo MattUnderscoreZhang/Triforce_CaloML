@@ -6,8 +6,7 @@
 
 import h5py as h5
 import numpy as np
-import sys, glob
-import pdb
+import sys, glob, pdb
 
 input_files = glob.glob(sys.argv[1])
 output_path = sys.argv[2]
@@ -30,7 +29,8 @@ for input_file in input_files:
         if key not in output_data.keys():
             output_data[key] = input_data
         else:
-            output_data[key] = np.concatenate([output_data[key], input_data])
+            output_data[key] = np.concatenate((output_data[key], input_data))
+
     # if we have enough events, write output files
     while output_data['ECAL'].shape[0] >= events_per_output_file:
         print("hey")
