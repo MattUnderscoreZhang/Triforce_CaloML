@@ -250,11 +250,11 @@ class Trainer:
         pred_phi = transforms.pred_phi_from_reg(outputs['phi_regression'].data.cpu(), event_data)
         diff_phi = event_data["phi"] - pred_phi
         # return values
-        return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0].item()
-        return_event_data["class_loss"] = class_reg_loss["classification"].data[0].item()
-        return_event_data["reg_energy_loss"] = class_reg_loss["energy"].data[0].item()
-        return_event_data["reg_eta_loss"] = class_reg_loss["eta"].data[0].item()
-        return_event_data["reg_phi_loss"] = class_reg_loss["phi"].data[0].item()
+        return_event_data["class_reg_loss"] = class_reg_loss["total"].item()
+        return_event_data["class_loss"] = class_reg_loss["classification"].item()
+        return_event_data["reg_energy_loss"] = class_reg_loss["energy"].item()
+        return_event_data["reg_eta_loss"] = class_reg_loss["eta"].item()
+        return_event_data["reg_phi_loss"] = class_reg_loss["phi"].item()
         return_event_data["class_acc"] = float((predicted_class.data == truth_class.data).sum())/truth_class.shape[0]
         return_event_data["class_raw_prediction"] = outputs['classification'].data.cpu().numpy()[:,1] # getting the second number for 2-class classification
         return_event_data["class_prediction"] = predicted_class.data.cpu().numpy()
