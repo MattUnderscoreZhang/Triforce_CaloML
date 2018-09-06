@@ -34,7 +34,7 @@ if 'culture-plate' in socket.gethostname():
 # Set options file #
 ####################
 
-optionsFileName = "combined"
+optionsFileName = "combined_resnet"
 
 ######################################################
 # Import options & warn if options file has problems #

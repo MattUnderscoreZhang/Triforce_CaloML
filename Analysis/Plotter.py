@@ -140,26 +140,10 @@ class Analyzer():
 
         [combined_classifier, discriminator, generator] = tools
 
-        try: 
-            classifier_test_loss = mean([item.item() for item in final_val_results['class_reg_loss']])
-        except: 
-            print('classifier_test_loss fetching crashed!')
-            pdb.set_trace()
-        try: 
-            classifier_test_accuracy = mean([item.item() for item in final_val_results['class_acc']])
-        except: 
-            print('classifier_test_accuracy fetching crashed!')
-            pdb.set_trace()
-        try: 
-            classifier_test_scores = final_val_results['class_prediction']
-        except: 
-            print('classifier_test_scores fetching crashed!')
-            pdb.set_trace()
-        try: 
-            classifier_test_truth = final_val_results['class_truth']
-        except: 
-            print('classifier_test_truth fetching crashed!')
-            pdb.set_trace()
+        classifier_test_loss = mean(final_val_results['class_reg_loss'])
+        classifier_test_accuracy = mean(final_val_results['class_acc'])
+        classifier_test_scores = final_val_results['class_prediction']
+        classifier_test_truth = final_val_results['class_truth']
 
         print('test loss: %8.4f; test accuracy: %8.4f' % (classifier_test_loss, classifier_test_accuracy))
         test_train_history.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
