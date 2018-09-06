@@ -5,10 +5,12 @@ options = {}
 # Choose samples #
 ##################
 
-basePath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/"
-options['samplePath'] = [basePath + "Pi0Escan*/Pi0Escan_*.h5", basePath + "GammaEscan*/GammaEscan_*.h5"]
+# basePath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/"
+# options['samplePath'] = [basePath + "Pi0Escan*/Pi0Escan_*.h5", basePath + "GammaEscan*/GammaEscan_*.h5"]
 # basePath = "/u/sciteam/zhang10/Projects/DNNCalorimeter/Data/NewSamples/Fixed/Split/"
 # options['samplePath'] = [basePath + "Pi0*.h5", basePath + "Gamma*.h5"]
+basePath = "/data/LCD/NewSamples/RandomAngle/"
+options['samplePath'] = [basePath + "Pi0*/Pi0*.h5", basePath + "Gamma*/Gamma*.h5"]
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 # options['samplePath'] = [basePath + "ChPiEscan_1_MERGED/ChPiEscan_*.h5", basePath + "EleEscan_1_MERGED/EleEscan_*.h5"]
 # options['classPdgID'] = [211, 11] # [ChPi, Ele]
@@ -21,15 +23,15 @@ options['trainRatio'] = 0.90
 options['relativeDeltaLossThreshold'] = 0.0 # break if change in loss falls below this threshold over an entire epoch, or...
 options['relativeDeltaLossNumber'] = 5 # ...for this number of test losses in a row
 options['earlyStopping'] = False
-options['microBatchSize'] = 10 # number of events at a time on the GPU
-options['nMicroBatchesInMiniBatch'] = 100 # total # in minibatch = nMiniBatches * batchSize
+options['microBatchSize'] = 1000 # number of events at a time on the GPU
+options['nMicroBatchesInMiniBatch'] = 1 # total # in minibatch = nMiniBatches * batchSize
 options['saveFinalModel'] = 0 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
-options['nEpochs'] = 5 # break after this number of epochs
-options['nTrainMax'] = 1
-options['nTestMax'] = 1
+options['nEpochs'] = 3 # break after this number of epochs
+options['nTrainMax'] = 20
+options['nTestMax'] = 20
 options['nValidationMax'] = 1
 
 options['skipClassRegTrain'] = False #skips training class+reg network and loads already trained net instead. 
@@ -41,9 +43,9 @@ options['skipClassRegTrain'] = False #skips training class+reg network and loads
 
 ## relative weight to assign to each type of output
 ## set to 0 to ignore a type of output
-# options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 0, 'eta_regression': 0.0, 'phi_regression': 0.0}
+options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 1.0, 'eta_regression': 10.0, 'phi_regression': 0.0}
 # options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 0.0, 'phi_regression': 0.0}
-options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 500.0, 'phi_regression': 100.0}
+# options['lossTermWeights'] = {'classification': 1.0, 'energy_regression': 200.0, 'eta_regression': 500.0, 'phi_regression': 100.0}
 
 #################
 # Input filters #
@@ -82,7 +84,7 @@ options['nHiddenLayers'] = int(sys.argv[2])
 options['hiddenLayerNeurons'] = int(sys.argv[3])
 options['learningRate'] = float(sys.argv[4])
 options['dropoutProb'] = float(sys.argv[5])
-options['windowSizeECAL'] = int(sys.argv[6])
+options['windowSizeECAL'] = 25
 options['windowSizeHCAL'] = 11
 
 # options specific to CNN
@@ -103,7 +105,7 @@ options['inputScalePhi'] = 10.0
 
 # ADD GAN OPTIONS
 # combined_classifier = GoogLeNet.Net(options)
-combined_classifier = Combined_CNN.Net(options)
+combined_classifier = Combined_DNN.Net(options)
 discriminator = Discriminator.Net(options)
 generator = Generator.Net(options)
 analyzer = Plotter.Analyzer()
