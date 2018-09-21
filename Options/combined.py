@@ -29,9 +29,9 @@ options['saveFinalModel'] = 0 # takes a lot of space
 options['saveModelEveryNEpochs'] = 0 # 0 to only save at end
 options['outPath'] = os.getcwd()+"/Output/"+sys.argv[1]+"/"
 
-options['nEpochs'] = 10 # break after this number of epochs
-options['nTrainMax'] = 20
-options['nTestMax'] = 20
+options['nEpochs'] = 100 # break after this number of epochs
+options['nTrainMax'] = 30
+options['nTestMax'] = 30
 options['nValidationMax'] = 1
 
 options['skipClassRegTrain'] = False #skips training class+reg network and loads already trained net instead. 

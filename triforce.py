@@ -342,6 +342,8 @@ def should_i_stop(timescale):
 
 def class_reg_training():
 
+    train_data = None
+    test_data = None
     minibatch_n = 0
     end_training = False
 
@@ -355,11 +357,12 @@ def class_reg_training():
             trainer.reset()
             for _ in range(options['nMicroBatchesInMiniBatch']):
                 try:
+                    train_data = next(trainIter)
+                    test_data = next(testIter)
                     if train_or_test == TRAIN:
-                        data = next(trainIter)
+                        update_batch_history(train_data, train_or_test, minibatch_n)
                     else:
-                        data = next(testIter)
-                    update_batch_history(data, train_or_test, minibatch_n)
+                        update_batch_history(test_data, train_or_test, minibatch_n)
                 except StopIteration:
                     break_loop = True
             if break_loop:
@@ -379,6 +382,8 @@ def class_reg_training():
         update_epoch_history()
         print('-------------------------------')
         print_stats(EPOCH)
+        # plot every epoch
+        analyzer.analyze_online(history, options['outPath'])
         if should_i_stop(EPOCH): end_training = True
 
         # save results
