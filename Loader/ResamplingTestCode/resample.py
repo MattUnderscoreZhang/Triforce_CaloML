@@ -1,6 +1,16 @@
 import h5py as h5
 import numpy as np
 
+def plot_ECAL(ECAL, save_name):
+    x,y,z = ECAL.nonzero() 
+    fig = plt.figure() 
+    ax = fig.add_subplot(111, projection='3d') 
+    ax.scatter(x, y, -z, marker='.', zdir='z', c=ECAL[x,y,z], cmap='jet', alpha=0.3) 
+    ax.set_xlabel('X') 
+    ax.set_ylabel('Y') 
+    ax.set_zlabel('Z') 
+    plt.savefig(save_name)
+
 def spoof_ATLAS_geometry(ECAL):
     # geometry conversion
     new_ECAL = np.empty_like(ECAL)
@@ -24,6 +34,6 @@ ECAL = data['ECAL']
 for i, ECAL_event in enumerate(ECAL):
     if i > 10:
         break
-    # save plot of original ECAL
+    plot_ECAL(ECAL_event, "Plots/ECAL_"+str(i)+"_before.png"
     new_ECAL = spoof_CMS_geometry(ECAL_event)
-    # save plot of new ECAL 
+    plot_ECAL(new_ECAL, "Plots/ECAL_"+str(i)+"_after.png"

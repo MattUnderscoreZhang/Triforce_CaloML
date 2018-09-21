@@ -30,12 +30,12 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
                 return_data[feat] = f[feat][:]
     return return_data
 
-def spoof_ATLAS_geometry(ECAL, HCAL):
+def spoof_ATLAS_geometry(ECAL):
     # geometry conversion
-    return new_ECAL, new_HCAL
+    return new_ECAL
 
-def spoof_CMS_geometry(ECAL, HCAL):
-    return None, None
+def spoof_CMS_geometry(ECAL):
+    return None
 
 class HDF5Dataset(data.Dataset):
 
@@ -108,9 +108,9 @@ class HDF5Dataset(data.Dataset):
                         self.data[key] = file_data[key]
             # spoof detector geometry
             if self.geometry == 'ATLAS':
-                self.data['ECAL'], self.data['HCAL'] = spoof_ATLAS_geometry(self.data['ECAL'], self.data['HCAL'])
+                self.data['ECAL'] = spoof_ATLAS_geometry(self.data['ECAL'])
             elif self.geometry == 'CMS':
-                self.data['ECAL'], self.data['HCAL'] = spoof_CMS_geometry(self.data['ECAL'], self.data['HCAL'])
+                self.data['ECAL'] = spoof_CMS_geometry(self.data['ECAL'])
         # return the correct sample
         indexInFile = index - self.fileInMemoryFirstIndex
         return_data = {}
