@@ -353,27 +353,31 @@ def class_reg_training():
         trainIter = iter(trainLoader)
         testIter = iter(testLoader)
         break_loop = False
-        while True:
-            trainer.reset()
+        while True: # loop through all training events until we run out (one epoch)
+            trainer.reset() # zeros gradients and gets ready for a new batch
             for _ in range(options['nMicroBatchesInMiniBatch']):
-                try:
-                    train_data = next(trainIter)
-                    test_data = next(testIter)
-                    if train_or_test == TRAIN:
+                if train_or_test == TRAIN:
+                    try:
+                        train_data = next(trainIter)
                         update_batch_history(train_data, train_or_test, minibatch_n)
-                    else:
-                        update_batch_history(test_data, train_or_test, minibatch_n)
-                except StopIteration:
-                    break_loop = True
+                    except StopIteration:
+                        break_loop = True
+                else:
+                    try:
+                        test_data = next(testIter)
+                    except StopIteration:
+                        testIter = iter(testLoader)
+                        test_data = next(testIter)
+                    update_batch_history(test_data, train_or_test, minibatch_n)
             if break_loop:
                 break
-            if train_or_test == TEST:
+            if train_or_test == TEST: # print batch history after each (train, test) pair
                 print('-------------------------------')
                 print('epoch %d, batch %d' % (epoch+1, minibatch_n))
                 print_stats(BATCH)
                 minibatch_n += 1
             if should_i_stop(BATCH): end_training = True
-            if train_or_test == TEST:
+            if train_or_test == TEST: # flip between training and test batches
                 train_or_test = TRAIN
             else:
                 train_or_test = TEST
