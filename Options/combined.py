@@ -34,6 +34,8 @@ options['nTrainMax'] = 30
 options['nTestMax'] = 30
 options['nValidationMax'] = 1
 
+options['detectorGeometry'] = 'LCD'
+
 options['skipClassRegTrain'] = False #skips training class+reg network and loads already trained net instead. 
 
 # options['nEpochs'] = 1 # break after this number of epochs

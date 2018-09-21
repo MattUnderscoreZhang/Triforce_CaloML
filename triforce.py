@@ -44,11 +44,14 @@ optionsFileName = "combined"
 exec("from Options." + optionsFileName + " import *")
 
 # options file must have these parameters set
-requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs', 'microBatchSize', 'outPath']
+requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs', 'microBatchSize', 'outPath', 'detectorGeometry']
 for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
+if options['detectorGeometry'] not in ['LCD', 'ATLAS', 'CMS']:
+    print("ERROR: detector geometry not recognized. Check options file.")
+    sys.exit()
 
 # if these parameters are not set, give them default values
 defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nMicroBatchesInMiniBatch':1, 'nWorkers':0, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
@@ -142,11 +145,11 @@ if options['validationRatio'] == 0:
 
 # prepare the generators
 print('Defining training dataset')
-trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['filters'])
+trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['filters'], options['detectorGeometry'])
 print('Defining validation dataset')
-validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'])
+validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'], options['detectorGeometry'])
 print('Defining test dataset')
-testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'])
+testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'], options['detectorGeometry'])
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
 validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
