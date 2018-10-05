@@ -34,11 +34,20 @@ class Analyzer():
         plt.title(title)
         plt.grid('on', linestyle='--')
         if loss:
-            plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Loss", alpha=0.5)
-            plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Loss", alpha=0.5)
+            if train.shape[0] > 100 or test.shape[0] > 100: 
+                plt.plot(range(1, train.shape[0]+1), train, '-', color="g", label="Training Loss", alpha=0.5)
+                plt.plot(range(1, test.shape[0]+1), test, '-', color="r", label="Test Loss", alpha=0.5)
+            else: 
+                plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Loss", alpha=0.5)
+                plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Loss", alpha=0.5)
         else:
-            plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Accuracy", alpha=0.5)
-            plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Accuracy", alpha=0.5)
+            plt.ylim(ymax=1.0)
+            if train.shape[0] > 100 or test.shape[0] > 100: 
+                plt.plot(range(1, train.shape[0]+1), train, '-', color="g", label="Training Accuracy", alpha=0.5)
+                plt.plot(range(1, test.shape[0]+1), test, '-', color="r", label="Test Accuracy", alpha=0.5)
+            else: 
+                plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Accuracy", alpha=0.5)
+                plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Accuracy", alpha=0.5)
         plt.legend(loc="best")
         plt.savefig(filename)
         plt.clf()
@@ -159,7 +168,7 @@ class Analyzer():
         self.plot_history(test_train_history['class_reg_loss_train_batch'], test_train_history['class_reg_loss_test_batch'], loss=True, batch=True, filename=folder+"/loss_batches.png")
         self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/accuracy_batches.png")
         self.plot_history(test_train_history['class_reg_loss_train_epoch'], test_train_history['class_reg_loss_test_epoch'], loss=True, batch=False, filename=folder+"/loss_epoches.png")
-        self.plot_history(test_train_history['class_acc_train_epoch'], test_train_history['class_acc_test_epoch'], loss=False, batch=False, filename=folder+"/loss_epoches.png")
+        self.plot_history(test_train_history['class_acc_train_epoch'], test_train_history['class_acc_test_epoch'], loss=False, batch=False, filename=folder+"/accuracy_epoches.png")
 
         # regression plots
         if 'reg_energy_prediction' in final_val_results.keys():
@@ -176,3 +185,16 @@ class Analyzer():
                                       [folder+'/reg_bias_eta_vs_eta.png', folder+'/reg_res_eta_vs_eta.png'])
             self.plot_regression_bins('phi', 'eta', final_val_results,
                                       [folder+'/reg_bias_eta_vs_phi.png', folder+'/reg_res_eta_vs_phi.png'])
+
+    def analyze_online(self, history, folder): 
+        """
+        Online plotting tool for classifier results representation
+        """
+        TRAIN, _, TEST = 0, 1, 2
+        # ['class_reg_loss', ..., 'class_acc'] = [0, ..., 5]
+        BATCH, EPOCH = 0, 1
+        self.plot_history(np.array(history[0][0][0]), np.array(history[0][2][0]), loss=True, batch=True, filename=folder+"/loss_batches.png")
+        self.plot_history(np.array(history[5][0][0]), np.array(history[5][2][0]), loss=False, batch=True, filename=folder+"/accuracy_batches.png")
+        self.plot_history(np.array(history[0][0][1]), np.array(history[0][2][1]), loss=True, batch=False, filename=folder+"/loss_epoches.png")
+        self.plot_history(np.array(history[5][0][1]), np.array(history[5][2][1]), loss=False, batch=False, filename=folder+"/accuracy_epoches.png")
+

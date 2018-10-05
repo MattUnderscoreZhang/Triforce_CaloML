@@ -44,11 +44,14 @@ optionsFileName = "combined_resnet"
 exec("from Options." + optionsFileName + " import *")
 
 # options file must have these parameters set
-requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs', 'microBatchSize', 'outPath']
+requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs', 'microBatchSize', 'outPath', 'detectorGeometry']
 for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
+if options['detectorGeometry'] not in ['LCD', 'ATLAS', 'CMS']:
+    print("ERROR: detector geometry not recognized. Check options file.")
+    sys.exit()
 
 # if these parameters are not set, give them default values
 defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nMicroBatchesInMiniBatch':1, 'nWorkers':0, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
@@ -142,11 +145,11 @@ if options['validationRatio'] == 0:
 
 # prepare the generators
 print('Defining training dataset')
-trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['filters'])
+trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['filters'], options['detectorGeometry'])
 print('Defining validation dataset')
-validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'])
+validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'], options['detectorGeometry'])
 print('Defining test dataset')
-testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'])
+testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'], options['detectorGeometry'])
 trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
 validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
 testLoader = data.DataLoader(dataset=testSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
@@ -250,11 +253,11 @@ class Trainer:
         pred_phi = transforms.pred_phi_from_reg(outputs['phi_regression'].data.cpu(), event_data)
         diff_phi = event_data["phi"] - pred_phi
         # return values
-        return_event_data["class_reg_loss"] = class_reg_loss["total"].data[0].item()
-        return_event_data["class_loss"] = class_reg_loss["classification"].data[0].item()
-        return_event_data["reg_energy_loss"] = class_reg_loss["energy"].data[0].item()
-        return_event_data["reg_eta_loss"] = class_reg_loss["eta"].data[0].item()
-        return_event_data["reg_phi_loss"] = class_reg_loss["phi"].data[0].item()
+        return_event_data["class_reg_loss"] = class_reg_loss["total"].item()
+        return_event_data["class_loss"] = class_reg_loss["classification"].item()
+        return_event_data["reg_energy_loss"] = class_reg_loss["energy"].item()
+        return_event_data["reg_eta_loss"] = class_reg_loss["eta"].item()
+        return_event_data["reg_phi_loss"] = class_reg_loss["phi"].item()
         return_event_data["class_acc"] = float((predicted_class.data == truth_class.data).sum())/truth_class.shape[0]
         return_event_data["class_raw_prediction"] = outputs['classification'].data.cpu().numpy()[:,1] # getting the second number for 2-class classification
         return_event_data["class_prediction"] = predicted_class.data.cpu().numpy()
@@ -342,6 +345,8 @@ def should_i_stop(timescale):
 
 def class_reg_training():
 
+    train_data = None
+    test_data = None
     minibatch_n = 0
     end_training = False
 
@@ -351,26 +356,31 @@ def class_reg_training():
         trainIter = iter(trainLoader)
         testIter = iter(testLoader)
         break_loop = False
-        while True:
-            trainer.reset()
+        while True: # loop through all training events until we run out (one epoch)
+            trainer.reset() # zeros gradients and gets ready for a new batch
             for _ in range(options['nMicroBatchesInMiniBatch']):
-                try:
-                    if train_or_test == TRAIN:
-                        data = next(trainIter)
-                    else:
-                        data = next(testIter)
-                    update_batch_history(data, train_or_test, minibatch_n)
-                except StopIteration:
-                    break_loop = True
+                if train_or_test == TRAIN:
+                    try:
+                        train_data = next(trainIter)
+                        update_batch_history(train_data, train_or_test, minibatch_n)
+                    except StopIteration:
+                        break_loop = True
+                else:
+                    try:
+                        test_data = next(testIter)
+                    except StopIteration:
+                        testIter = iter(testLoader)
+                        test_data = next(testIter)
+                    update_batch_history(test_data, train_or_test, minibatch_n)
             if break_loop:
                 break
-            if train_or_test == TEST:
+            if train_or_test == TEST: # print batch history after each (train, test) pair
                 print('-------------------------------')
                 print('epoch %d, batch %d' % (epoch+1, minibatch_n))
                 print_stats(BATCH)
                 minibatch_n += 1
             if should_i_stop(BATCH): end_training = True
-            if train_or_test == TEST:
+            if train_or_test == TEST: # flip between training and test batches
                 train_or_test = TRAIN
             else:
                 train_or_test = TEST
@@ -379,6 +389,8 @@ def class_reg_training():
         update_epoch_history()
         print('-------------------------------')
         print_stats(EPOCH)
+        # plot every epoch
+        analyzer.analyze_online(history, options['outPath'])
         if should_i_stop(EPOCH): end_training = True
 
         # save results

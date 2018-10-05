@@ -33,6 +33,13 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
                     pdb.set_trace()
     return return_data
 
+def spoof_ATLAS_geometry(ECAL):
+    # geometry conversion
+    return new_ECAL
+
+def spoof_CMS_geometry(ECAL):
+    return None
+
 class HDF5Dataset(data.Dataset):
 
     """Creates a dataset from a set of H5 files.
@@ -42,7 +49,7 @@ class HDF5Dataset(data.Dataset):
         num_per_file: number of events in each data file
     """
 
-    def __init__(self, dataname_tuples, pdgIDs, filters=[]):
+    def __init__(self, dataname_tuples, pdgIDs, filters=[], geometry='LCD'):
         self.dataname_tuples = sorted(dataname_tuples)
         self.nClasses = len(dataname_tuples[0])
         self.num_per_file = len(dataname_tuples) * [0]
@@ -52,6 +59,7 @@ class HDF5Dataset(data.Dataset):
         self.data = {}
         self.pdgIDs = {}
         self.filters = filters
+        self.geometry = geometry
         for i, ID in enumerate(pdgIDs):
             self.pdgIDs[ID] = i
         self.countEvents()
@@ -101,6 +109,11 @@ class HDF5Dataset(data.Dataset):
                         self.data[key] = np.append(self.data[key], file_data[key], axis=0)
                     else:
                         self.data[key] = file_data[key]
+            # spoof detector geometry
+            if self.geometry == 'ATLAS':
+                self.data['ECAL'] = spoof_ATLAS_geometry(self.data['ECAL'])
+            elif self.geometry == 'CMS':
+                self.data['ECAL'] = spoof_CMS_geometry(self.data['ECAL'])
         # return the correct sample
         indexInFile = index - self.fileInMemoryFirstIndex
         return_data = {}
