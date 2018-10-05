@@ -18,14 +18,16 @@ options={}
 # Set options #
 ###############
 
-basePath = "/data/LCD/NewSamples/Fixed/"
+basePath = "/data/LCD/NewSamples/RandomAngle/"
 options['samplePath'] = [basePath + "Pi0Escan*/Pi0Escan_*.h5", basePath + "GammaEscan*/GammaEscan_*.h5"]
-options['target_names'] = ['charged pion', 'electron']
+options['target_names'] = ['neutral pion', 'photon']
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
+# options['classPdgID'] = [211, 11] # [ChPi, Ele]
 
 badKeys = ['ECAL', 'HCAL', 'conversion', 'energy', 'openingAngle'] # leave pdgID for now - needed below
+badKeys += ['eta', 'phi', 'theta'] # leave the reco versions of these variables
 
-OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/" + sys.argv[1]
+OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/" + sys.argv[1]
 max_depth = int(sys.argv[2]) # 3
 n_estimators = int(sys.argv[3]) # 800
 learning_rate = float(sys.argv[4]) # 0.5

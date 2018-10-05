@@ -53,14 +53,6 @@ plot_history(test_train_history['class_acc_train_batch'], test_train_history['cl
 # ROC Curves #
 ##############
 
-# final_val_results = h5.File("/data/LCD/NewSamples/HyperparameterResults/DNN/DNN_Output_4_512_0.0002_0.04_Scan1/validation_results.h5")
-final_val_results = h5.File("/data/LCD/NewSamples/HyperparameterResults/DNN/DNN_Output_4_512_0.0004_0.08_Scan1/validation_results.h5")
-truth = final_val_results['class_truth']
-scores = final_val_results['class_raw_prediction']
-fpr, tpr, thresholds = metrics.roc_curve(truth, scores)
-roc_auc = metrics.auc(fpr, tpr)
-plt.plot(fpr, tpr, color='darkorange', lw=2, label='DNN (area = %0.2f)' % roc_auc)
-
 # final_val_results = h5.File("/data/LCD/NewSamples/HyperparameterResults/CNN/CNN_Output_4_512_0.0004_0.12_6_6_Scan1/validation_results.h5")
 final_val_results = h5.File("/data/LCD/NewSamples/HyperparameterResults/CNN/CNN_Output_3_512_0.0004_0.08_6_6_Scan1/validation_results.h5")
 truth = final_val_results['class_truth']
@@ -76,11 +68,19 @@ fpr, tpr, thresholds = metrics.roc_curve(truth, scores)
 roc_auc = metrics.auc(fpr, tpr)
 plt.plot(fpr, tpr, color='red', lw=2, label='GN (area = %0.2f)' % roc_auc)
 
-# data = h5.File("BDT_Results.h5")
-# fpr = data['fpr']
-# tpr = data['tpr']
-# roc_auc = metrics.auc(data['fpr'], data['tpr'])
-# plt.plot(fpr, tpr, color='blue', lw=2, label='BDT (area = %0.2f)' % roc_auc)
+# final_val_results = h5.File("/data/LCD/NewSamples/HyperparameterResults/DNN/DNN_Output_4_512_0.0002_0.04_Scan1/validation_results.h5")
+final_val_results = h5.File("/data/LCD/NewSamples/HyperparameterResults/DNN/DNN_Output_4_512_0.0004_0.08_Scan1/validation_results.h5")
+truth = final_val_results['class_truth']
+scores = final_val_results['class_raw_prediction']
+fpr, tpr, thresholds = metrics.roc_curve(truth, scores)
+roc_auc = metrics.auc(fpr, tpr)
+plt.plot(fpr, tpr, color='darkorange', lw=2, label='DNN (area = %0.2f)' % roc_auc)
+
+data = h5.File("/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/GammaPi0Results.h5")
+fpr = data['fpr']
+tpr = data['tpr']
+roc_auc = metrics.auc(data['fpr'], data['tpr'])
+plt.plot(fpr, tpr, color='blue', lw=2, label='BDT (area = %0.2f)' % roc_auc)
 
 plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
 plt.xlim([0.0, 1.0])
