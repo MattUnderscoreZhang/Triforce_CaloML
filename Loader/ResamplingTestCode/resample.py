@@ -101,7 +101,7 @@ def resample_3D(ECAL, x_scale, y_scale, z_scale):
     print(new_ECAL)
 
 def spoof_ATLAS_geometry(ECAL):
-    # geometry conversion
+    # geometry taken from https://indico.cern.ch/event/693870/contributions/2890799/attachments/1597965/2532270/CaloMeeting-Feb-09-18.pdf
     new_ECAL = np.empty_like(ECAL)
     x, y, z = ECAL.shape
     for i in range(x):
@@ -111,7 +111,7 @@ def spoof_ATLAS_geometry(ECAL):
     return new_ECAL
 
 def spoof_CMS_geometry(ECAL):
-    # CLIC and CMS values
+    # geometry taken from https://indico.cern.ch/event/693870/contributions/2890799/attachments/1597965/2532270/CaloMeeting-Feb-09-18.pdf
     CLIC_Moliere = 0.9327 # cm
     CMS_Moliere = 1.959
     CLIC_radiation = 0.3504
