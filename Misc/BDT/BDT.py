@@ -20,12 +20,12 @@ options={}
 
 basePath = "/data/LCD/NewSamples/RandomAngle/"
 
-options['samplePath'] = [basePath + "Pi0Escan*/Pi0Escan_*.h5", basePath + "GammaEscan*/GammaEscan_*.h5"]
+options['samplePath'] = [basePath + "Pi0Escan_RandomAngle_MERGED/Pi0Escan_*.h5", basePath + "GammaEscan_RandomAngle_MERGED/GammaEscan_*.h5"]
 options['target_names'] = ['neutral pion', 'photon']
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/GammaPi0/"
 
-# options['samplePath'] = [basePath + "ChPiEscan*/ChPiEscan_*.h5", basePath + "EleEscan*/EleEscan_*.h5"]
+# options['samplePath'] = [basePath + "ChPiEscan_RandomAngle_MERGED/ChPiEscan_*.h5", basePath + "EleEscan_RandomAngle_MERGED/EleEscan_*.h5"]
 # options['target_names'] = ['charged pion', 'electron']
 # options['classPdgID'] = [211, 11] # [ChPi, Ele]
 # OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/EleChPi/"
