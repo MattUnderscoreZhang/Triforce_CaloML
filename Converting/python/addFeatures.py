@@ -8,6 +8,7 @@ from __future__ import division
 import numpy as np
 import numpy.core.umath_tests as umath
 import scipy.stats
+from skimage.util.shape import view_as_windows
 import sys
 import ast
 import h5py as h5
@@ -129,6 +130,11 @@ def convertFile(inFile, outFile):
         HCAL_momentZ = safeDivide(umath.inner1d(HCALprojZ, moments), totalE)
         if i==0: HCAL_midZ = HCAL_momentZ.transpose()
         newFile.create_dataset("HCALmomentZ" + str(i+1), data=HCAL_momentZ, compression='gzip')
+
+    # R9
+    ECAL_z = np.sum(ECAL, axis=3) # sum in z
+    R9 = [view_as_windows(event, (3,3)).sum(axis=(-2,-1)).max()/event.sum() if event.sum()>0 else 0 for event in ECAL_z]
+    newFile.create_dataset("R9", data=np.array(R9), compression='gzip')
     
     newFile.close()
         
