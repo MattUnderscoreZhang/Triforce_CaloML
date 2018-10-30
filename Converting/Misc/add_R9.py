@@ -9,18 +9,11 @@ import pdb
 # File reading and writing #
 ############################
 
-def convertFile(inFile, outFile):
+def convertFile(inFile):
 
     # open file and extract events
     oldFile = h5.File(inFile)
-    newFile = h5.File(outFile, "w")
     ECAL = oldFile["ECAL"][()]
-
-    # copy over all other existing arrays from the old file
-    for key in oldFile.keys():
-        if key in ['ECAL','HCAL']: continue
-        newFile.create_dataset(key, data=oldFile[key][()], compression='gzip')
-    oldFile.close()
 
     ########################
     # Calculating features #
@@ -30,8 +23,8 @@ def convertFile(inFile, outFile):
     R9 = [view_as_windows(event, (3,3)).sum(axis=(-2,-1)).max()/event.sum() if event.sum()>0 else 0 for event in ECAL_z]
 
     # save features to h5 file
-    newFile.create_dataset("R9", data=np.array(R9), compression='gzip')
-    newFile.close()
+    oldFile.create_dataset("R9", data=np.array(R9), compression='gzip')
+    oldFile.close()
     
 #################
 # Main function #
@@ -40,5 +33,4 @@ def convertFile(inFile, outFile):
 if __name__ == "__main__":
     import sys
     inFile = sys.argv[1]
-    outFile = sys.argv[2]
-    convertFile(inFile, outFile)
+    convertFile(inFile)
