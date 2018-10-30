@@ -27,7 +27,7 @@ def convertFile(inFile, outFile):
     ########################
 
     ECAL_z = np.sum(ECAL, axis=3) # sum in z
-    R9 = [view_as_windows(event, (3,3)).sum(axis=(-2,-1)).max()/event.sum() for event in ECAL_z]
+    R9 = [view_as_windows(event, (3,3)).sum(axis=(-2,-1)).max()/event.sum() if event.sum()>0 else 0 for event in ECAL_z]
 
     # save features to h5 file
     newFile.create_dataset("R9", data=np.array(R9), compression='gzip')
