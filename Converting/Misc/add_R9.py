@@ -4,6 +4,7 @@ from skimage.util.shape import view_as_windows
 import sys
 import h5py as h5
 import pdb
+import os.path
 
 ############################
 # File reading and writing #
@@ -12,6 +13,9 @@ import pdb
 def convertFile(inFile):
 
     # open file and extract events
+    if not os.path.isfile(inFile):
+        print(inFile + " does not exist")
+        return
     oldFile = h5.File(inFile)
     ECAL = oldFile["ECAL"][()]
 
