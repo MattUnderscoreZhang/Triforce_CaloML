@@ -23,7 +23,7 @@ basePath = "/data/LCD/NewSamples/RandomAngle/"
 options['samplePath'] = [basePath + "Pi0Escan_RandomAngle_MERGED/Pi0Escan_*.h5", basePath + "GammaEscan_RandomAngle_MERGED/GammaEscan_*.h5"]
 options['target_names'] = ['neutral pion', 'photon']
 options['classPdgID'] = [111, 22] # [Pi0, Gamma]
-OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/GammaPi0/"
+OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/GammaPi0_WithR9_Ranking/"
 
 # options['samplePath'] = [basePath + "ChPiEscan_RandomAngle_MERGED/ChPiEscan_*.h5", basePath + "EleEscan_RandomAngle_MERGED/EleEscan_*.h5"]
 # options['target_names'] = ['charged pion', 'electron']
@@ -36,6 +36,8 @@ badKeys += ['eta', 'phi', 'theta'] # leave the reco versions of these variables
 max_depth = 3
 n_estimators = 800
 learning_rate = 0.5
+
+nEvents = -1 # subset of events, -1 for all
 
 ##########################
 # Load and prepare files #
@@ -92,6 +94,11 @@ features = features.astype(str)
 X = np.column_stack(data)
 y = y[np.isfinite(X).all(axis=1)]
 X = X[np.isfinite(X).all(axis=1)]
+
+# subset of data
+if nEvents > -1:
+    y = y[:nEvents]
+    X = X[:nEvents]
 
 # split test and train
 # X_dev, X_eval, y_dev, y_eval = train_test_split(X, y, test_size=0.33, random_state=42)
@@ -190,7 +197,7 @@ with open(OutPath+'bdt.pkl', 'wb') as pickleFile:
 
 # feature rankings
 importances = bdt.feature_importances_
-std = np.std([tree[0].feature_importances_ for tree in bdt.estimators_], axis=0)
+std = np.std([tree.feature_importances_ for tree in bdt.estimators_], axis=0)
 indices = np.argsort(importances)[::-1]
 
 file.create_dataset("features", data=features)
