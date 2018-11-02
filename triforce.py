@@ -34,7 +34,7 @@ if 'culture-plate' in socket.gethostname():
 # Set options file #
 ####################
 
-optionsFileName = "combined_resnet"
+optionsFileName = "combine"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -319,6 +319,16 @@ def print_stats(timescale):
                 print('  ' + stat_name[stat] + ':\t %8.4f' % (history[stat][split][timescale][-1]))
         print()
 
+def save_intermediate_results():
+    if os.path.isfile(options['outPath']+"intermediate_training_results.h5"): 
+        os.remove(options['outPath']+"intermediate_training_results.h5")
+    with h5.File(options['outPath']+"intermediate_training_results.h5", 'a') as hf:
+        for stat in range(len(stat_name)):
+            if not stat_name[stat] in print_metrics: continue
+            for split in range(len(split_name)):
+                for timescale in range(len(timescale_name)):
+                    hf.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
+
 # early stopping
 previous_total_test_loss = 0
 previous_epoch_total_test_loss = 0
@@ -387,6 +397,7 @@ def class_reg_training():
 
         # end of epoch
         update_epoch_history()
+        save_intermediate_results()
         print('-------------------------------')
         print_stats(EPOCH)
         # plot every epoch
