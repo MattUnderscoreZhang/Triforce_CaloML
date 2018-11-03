@@ -118,8 +118,8 @@ class GoogLeNet(nn.Module):
         lowerBound = 26 - int(math.ceil(self.windowSizeECAL/2))
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
-        x = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
-        ECAL_sum = torch.sum(x.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim = 1).view(-1, 1) * self.inputScaleSumE
+        ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
+        ECAL_sum = torch.sum(ECAL, dim = 1).view(-1, 1) * self.inputScaleSumE
         # HCAL slice to get energy sum
         if (self.windowSizeHCAL > 0):
             HCAL = Variable(data["HCAL"].cuda())
@@ -135,7 +135,7 @@ class GoogLeNet(nn.Module):
         recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1) * self.inputScaleEta
 
         # net
-        x = self.norm(x)
+        x = self.norm(ECAL)
         x = self.pre_layers(x)
         x = self.a3(x)
         x = self.b3(x)
