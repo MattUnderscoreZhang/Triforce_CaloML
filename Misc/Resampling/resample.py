@@ -2,6 +2,18 @@ import h5py as h5
 import numpy as np
 from math import ceil, floor
 import sys, pdb
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+
+def plot_ECAL(ECAL, save_name):
+    x,y,z = ECAL.nonzero() 
+    fig = plt.figure() 
+    ax = Axes3D(fig)
+    ax.scatter(x, y, -z, marker='.', zdir='z', c=ECAL[x,y,z], cmap='jet', alpha=0.3) 
+    ax.set_xlabel('X') 
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z') 
+    plt.savefig(save_name)
 
 def resample_3D(ECAL, x_scale, y_scale, z_scale):
     # resample hit info for new cell sizes
@@ -82,6 +94,7 @@ def resample_3D(ECAL, x_scale, y_scale, z_scale):
                             cell_fraction = x_fraction*y_fraction*z_fraction
                             if cell_fraction != 0:
                                 new_ECAL[x_i][y_i][z_i] += cell_fraction*ECAL[x_j][y_j][z_j]
+    return new_ECAL
 
 def spoof_ATLAS_geometry(ECAL):
     # geometry taken from https://indico.cern.ch/event/693870/contributions/2890799/attachments/1597965/2532270/CaloMeeting-Feb-09-18.pdf
@@ -119,6 +132,7 @@ if __name__ == "__main__":
     in_file_path = sys.argv[1]
     out_file_path = sys.argv[2]
     resample_type = int(sys.argv[3])
+    make_plots = True
 
     in_file = h5.File(in_file_path)
     print("Working on converting file " + in_file_path)
@@ -133,6 +147,11 @@ if __name__ == "__main__":
         elif resample_type == 1:
             new_ECAL_event = spoof_CMS_geometry(ECAL_event)
         new_ECAL.append(new_ECAL_event)
+        if make_plots:
+            plot_ECAL(ECAL_event, "ResamplingTestCode/Plots/ECAL_"+str(i)+"_before.png")
+            plot_ECAL(new_ECAL_event, "ResamplingTestCode/Plots/ECAL_"+str(i)+"_after.png")
+            pdb.set_trace()
+            if i>4: sys.exit(0)
     out_file = h5.File(out_file_path, "w")
     out_file.create_dataset('ECAL', data=np.array(new_ECAL).squeeze(), compression='gzip')
 
