@@ -1,20 +1,18 @@
 import h5py as h5
 import numpy as np
 from math import ceil, floor
-import sys
+import sys, pdb
 
 def resample_3D(ECAL, x_scale, y_scale, z_scale):
-    print("OLD")
-    print(ECAL)
     # resample hit info for new cell sizes
-    (z, x, y) = ECAL.shape
+    (x, y, z) = ECAL.shape
     new_x = int(ceil(x/x_scale)) # minimum number of new-sized cells that can encompass the hit info
     x_overhang = 0 if x%x_scale==0 else (x_scale - (x%x_scale)) / 2
     new_y = int(ceil(y/y_scale))
     y_overhang = 0 if y%y_scale==0 else (y_scale - (y%y_scale)) / 2
     new_z = int(ceil(z/z_scale))
     z_overhang = 0 if z%z_scale==0 else (z_scale - (z%z_scale)) / 2
-    new_ECAL = np.zeros((new_z, new_x, new_y))
+    new_ECAL = np.zeros((new_x, new_y, new_z))
     for x_i in range(x):
         for y_i in range(y):
             for z_i in range(z):
@@ -47,9 +45,9 @@ def resample_3D(ECAL, x_scale, y_scale, z_scale):
                             if z_j == high_z: z_fraction = fraction_high_z
                             cell_fraction = x_fraction*y_fraction*z_fraction
                             if cell_fraction != 0:
-                                new_ECAL[z_j][x_j][y_j] += cell_fraction*ECAL[z_i][x_i][y_i]
+                                new_ECAL[x_j][y_j][z_j] += cell_fraction*ECAL[x_i][y_i][z_i]
     ECAL = new_ECAL
-    new_ECAL = np.zeros((z, x, y))
+    new_ECAL = np.zeros((x, y, z))
     # resample back to old cell sizes
     for x_i in range(x):
         for y_i in range(y):
@@ -83,7 +81,7 @@ def resample_3D(ECAL, x_scale, y_scale, z_scale):
                             if z_j == high_z: z_fraction = fraction_high_z
                             cell_fraction = x_fraction*y_fraction*z_fraction
                             if cell_fraction != 0:
-                                new_ECAL[z_i][x_i][y_i] += cell_fraction*ECAL[z_j][x_j][y_j]
+                                new_ECAL[x_i][y_i][z_i] += cell_fraction*ECAL[x_j][y_j][z_j]
 
 def spoof_ATLAS_geometry(ECAL):
     # geometry taken from https://indico.cern.ch/event/693870/contributions/2890799/attachments/1597965/2532270/CaloMeeting-Feb-09-18.pdf
@@ -108,7 +106,7 @@ def spoof_CMS_geometry(ECAL):
     # resample to match CMS
     x_scale = (CMS_eta/CMS_Moliere) / (CLIC_eta/CLIC_Moliere) # how many cells go together to form a new cell
     y_scale = x_scale
-    z_scale = z # just collapse the whole thing
+    z_scale = ECAL.shape[2] # just collapse the whole thing
     new_ECAL = resample_3D(ECAL, x_scale, y_scale, z_scale)
     return new_ECAL
 
@@ -128,7 +126,8 @@ if __name__ == "__main__":
     ECAL = in_file['ECAL']
     new_ECAL = []
     for i, ECAL_event in enumerate(ECAL):
-        print(str(i), "out of", len(ECAL))
+        if (i%1000 == 0):
+            print(str(i), "out of", len(ECAL))
         if resample_type == 0:
             new_ECAL_event = spoof_ATLAS_geometry(ECAL_event)
         elif resample_type == 1:
