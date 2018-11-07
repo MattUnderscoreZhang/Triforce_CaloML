@@ -12,7 +12,6 @@ from skimage.util.shape import view_as_windows
 import sys
 import ast
 import h5py as h5
-import nsub
 
 # takes numpy arrays num, denom and returns num/denom. division by 0 yields 0 in the output
 def safeDivide(num, denom):
