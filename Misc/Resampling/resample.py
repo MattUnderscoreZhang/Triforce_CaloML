@@ -185,7 +185,7 @@ if __name__ == "__main__":
     in_file_path = sys.argv[1]
     out_file_path = sys.argv[2]
     resample_type = int(sys.argv[3])
-    make_plots = True
+    make_plots = False
 
     in_file = h5.File(in_file_path)
     print("Working on converting file " + in_file_path)
