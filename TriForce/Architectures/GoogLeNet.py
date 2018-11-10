@@ -7,8 +7,6 @@ import math, pdb
 from Architectures import LossFunctions
 import numpy as np
 
-import pdb
-
 ##################
 # Classification #
 ##################
@@ -119,7 +117,8 @@ class GoogLeNet(nn.Module):
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
         ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
-        ECAL_sum = torch.sum(ECAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+        # ECAL_sum = torch.sum(ECAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+        ECAL_sum = ECAL.sum(1).sum(1).sum(1).sum(1) * self.inputScaleSumE
         # HCAL slice to get energy sum
         if (self.windowSizeHCAL > 0):
             HCAL = Variable(data["HCAL"].cuda())
@@ -127,7 +126,8 @@ class GoogLeNet(nn.Module):
             upperBound = lowerBound + self.windowSizeHCAL
             HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
             HCAL = HCAL.contiguous().view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60)
-            HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+            # HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+            HCAL_sum = HCAL.sum(1).sum(1).sum(1).sum(1) * self.inputScaleSumE
         else:
             HCAL_sum = Variable(torch.zeros(ECAL_sum.size()).cuda())
         # reco angles
