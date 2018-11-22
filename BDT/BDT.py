@@ -208,7 +208,7 @@ print("Feature ranking:")
 for f in range(len(features)):
     print("%d. %s (%f)" % (f+1, features[indices[f]], importances[indices[f]]))
 
-plt.figure(figsize=(20,10))
+plt.figure(figsize=(10,5))
 plt.title("Feature importances")
 plt.bar(range(len(features)), importances[indices],
        color="r", yerr=std[indices], align="center")
