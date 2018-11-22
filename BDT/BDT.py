@@ -18,17 +18,17 @@ options={}
 # Set options #
 ###############
 
-basePath = "/data/LCD/NewSamples/RandomAngle/"
+basePath = "/data/LCD/NewSamples/RandomAngle/CLIC/"
 
-options['samplePath'] = [basePath + "Pi0Escan_RandomAngle_MERGED/Pi0Escan_*.h5", basePath + "GammaEscan_RandomAngle_MERGED/GammaEscan_*.h5"]
-options['target_names'] = ['neutral pion', 'photon']
-options['classPdgID'] = [111, 22] # [Pi0, Gamma]
-OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/GammaPi0_WithR9_Ranking/"
+# options['samplePath'] = [basePath + "Pi0Escan_RandomAngle_MERGED/Pi0Escan_*.h5", basePath + "GammaEscan_RandomAngle_MERGED/GammaEscan_*.h5"]
+# options['target_names'] = ['neutral pion', 'photon']
+# options['classPdgID'] = [111, 22] # [Pi0, Gamma]
+# OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/GammaPi0_WithR9_Ranking/"
 
-# options['samplePath'] = [basePath + "ChPiEscan_RandomAngle_MERGED/ChPiEscan_*.h5", basePath + "EleEscan_RandomAngle_MERGED/EleEscan_*.h5"]
-# options['target_names'] = ['charged pion', 'electron']
-# options['classPdgID'] = [211, 11] # [ChPi, Ele]
-# OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/EleChPi/"
+options['samplePath'] = [basePath + "ChPiEscan_RandomAngle_Filtered_2_Combined/ChPiEscan_*.h5", basePath + "EleEscan_RandomAngle_MERGED/EleEscan_*.h5"]
+options['target_names'] = ['charged pion', 'electron']
+options['classPdgID'] = [211, 11] # [ChPi, Ele]
+OutPath = "/home/mazhang/Triforce_CaloML/BDT/Outputs/EleChPi_WithR9/"
 
 badKeys = ['ECAL', 'HCAL', 'conversion', 'energy', 'openingAngle'] # leave pdgID for now - needed below
 badKeys += ['eta', 'phi', 'theta'] # leave the reco versions of these variables
@@ -205,13 +205,13 @@ file.create_dataset("importances", data=np.array(importances))
 file.create_dataset("std", data=np.array(std))
 
 print("Feature ranking:")
-for f in range(X.shape[1]):
+for f in range(len(features)):
     print("%d. %s (%f)" % (f+1, features[indices[f]], importances[indices[f]]))
 
-plt.figure()
+plt.figure(figsize=(20,10))
 plt.title("Feature importances")
-plt.bar(range(X.shape[1]), importances[indices],
+plt.bar(range(len(features)), importances[indices],
        color="r", yerr=std[indices], align="center")
-plt.xticks(range(X.shape[1]))
-plt.xlim([-1, X.shape[1]])
+plt.xticks(range(len(features)), np.array(features)[indices], rotation='vertical')
+plt.xlim([-1, len(features)])
 plt.savefig(OutPath+'feature_importances.png', bbox_inches='tight')
