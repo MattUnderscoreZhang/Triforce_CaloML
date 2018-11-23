@@ -31,7 +31,7 @@ class Classifier_Net(nn.Module):
         # layers
         ECAL_size = self.windowSizeECAL * self.windowSizeECAL * 25
         HCAL_size = self.windowSizeHCAL * self.windowSizeHCAL * 60
-        nsums = 2 if self.windowSizeHCAL > 0 else 1
+        nsums = 2
         self.input = nn.Linear(ECAL_size + HCAL_size + nsums + 2, hiddenLayerNeurons)
         self.hidden = nn.ModuleList()
         self.dropout = nn.ModuleList()
@@ -61,7 +61,8 @@ class Classifier_Net(nn.Module):
             HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1) * self.inputScaleSumE
             x = torch.cat([ECAL, HCAL, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
         else:
-            x = torch.cat([ECAL, recoPhi, recoEta, ECAL_sum], 1)
+            HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+            x = torch.cat([ECAL, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
         # feed forward
         x = self.input(x)
         for i in range(self.nHiddenLayers):
