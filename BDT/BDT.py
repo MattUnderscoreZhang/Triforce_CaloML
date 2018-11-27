@@ -12,6 +12,7 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.metrics import roc_curve, auc
 import cPickle
+import pdb
 options={}
 
 ###############
@@ -84,7 +85,7 @@ for count, feature in enumerate(features):
     if feature == 'pdgID':
         y = newFeature
         for i, ID in enumerate(options['classPdgID']):
-            y[y==ID] = i
+            y[abs(y)==ID] = i
     else:
         data.append(newFeature);
 features.remove('pdgID')
@@ -120,6 +121,7 @@ print "Analyzing BDT results"
 y_predicted = bdt.predict(X_test)
 decisions = bdt.decision_function(X_test)
 print (classification_report(y_test, y_predicted, target_names=options['target_names'], digits=4))
+pdb.set_trace()
 print ("Area under ROC curve: %.4f"%(roc_auc_score(y_test, decisions)))
 
 ################
