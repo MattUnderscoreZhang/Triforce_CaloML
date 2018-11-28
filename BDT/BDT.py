@@ -25,13 +25,14 @@ basePath = "/data/LCD/NewSamples/RandomAngle/CLIC/"
 # options['classPdgID'] = [111, 22] # [Pi0, Gamma]
 # OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/GammaPi0_WithR9_Ranking/"
 
-options['samplePath'] = [basePath + "ChPiEscan_RandomAngle_Filtered_2_Combined/ChPiEscan_*.h5", basePath + "EleEscan_RandomAngle_MERGED/EleEscan_*.h5"]
-options['target_names'] = ['charged pion', 'electron']
-options['classPdgID'] = [211, 11] # [ChPi, Ele]
-OutPath = "/home/mazhang/Triforce_CaloML/BDT/Outputs/EleChPi_WithR9/"
+options['samplePath'] = [basePath + "EleEscan_RandomAngle_MERGED/EleEscan_*.h5", basePath + "ChPiEscan_RandomAngle_Filtered_2_Combined/ChPiEscan_*.h5"]
+options['target_names'] = ['electron', 'charged pion']
+options['classPdgID'] = [11, 211] # [Ele, ChPi]
+OutPath = "/home/mazhang/Triforce_CaloML/BDT/Outputs/EleChPi/"
 
 badKeys = ['ECAL', 'HCAL', 'conversion', 'energy', 'openingAngle'] # leave pdgID for now - needed below
 badKeys += ['eta', 'phi', 'theta'] # leave the reco versions of these variables
+badKeys += ['R9'] # don't use R9 for ele/chpi
 
 max_depth = 3
 n_estimators = 800
@@ -46,8 +47,14 @@ nEvents = -1 # subset of events, -1 for all
 # load files
 print "Loading files"
 dataFileNames = []
+nFiles = -1
 for particlePath in options['samplePath']:
-    dataFileNames += glob.glob(particlePath)
+    if nFiles == -1:
+        nFiles = len(glob.glob(particlePath))
+    else:
+        nFiles = min(nFiles, len(glob.glob(particlePath)))
+for particlePath in options['samplePath']:
+    dataFileNames += glob.glob(particlePath)[:nFiles]
 
 dataFiles = []
 for i in range(len(dataFileNames)):
