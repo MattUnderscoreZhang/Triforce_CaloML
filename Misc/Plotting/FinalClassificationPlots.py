@@ -9,12 +9,21 @@ from sklearn import metrics
 # File Paths #
 ##############
 
-base_path = "/home/mazhang/Triforce_CaloML/FinalResults/CLIC/GammaPi0/TriForce/"
-DNN_path = base_path + "Output_DNN_4_512_0.0002_0.04/"
-CNN_path = base_path + "Output_CNN_4_512_0.0004_0.12/"
-GN_path = base_path + "Output_GN_0_1024_0.0001_0.01/"
-BDT_path = "/home/mazhang/Triforce_CaloML/FinalResults/CLIC/GammaPi0/BDT/GammaPi0_WithR9/Results.h5"
-out_path = "Plots/GammaPi0/"
+base_path = "/home/mazhang/Triforce_CaloML/FinalResults/CLIC/EleChPi/TriForce/"
+DNN_path = base_path + "ChPi_DNN/"
+CNN_path = base_path + "ChPi_CNN/"
+GN_path = base_path + "ChPi_GN/"
+BDT_path = "/home/mazhang/Triforce_CaloML/FinalResults/CLIC/EleChPi/BDT/EleChPi_Long/Results.h5"
+out_path = "Plots/EleChPi/"
+log_scale = True
+
+# base_path = "/home/mazhang/Triforce_CaloML/FinalResults/CLIC/GammaPi0/TriForce/"
+# DNN_path = base_path + "Output_DNN_4_512_0.0002_0.04/"
+# CNN_path = base_path + "Output_CNN_4_512_0.0004_0.12/"
+# GN_path = base_path + "Output_GN_0_1024_0.0001_0.01/"
+# BDT_path = "/home/mazhang/Triforce_CaloML/FinalResults/CLIC/GammaPi0/BDT/GammaPi0_WithR9/Results.h5"
+# out_path = "Plots/GammaPi0/"
+# log_scale = False
 
 ###################
 # Training Curves #
@@ -52,13 +61,13 @@ def plot_history(train, test, loss, batch, filename):
     plt.clf()
 
 test_train_history = h5.File(DNN_path + "training_results.h5")
-plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename = out_path + "DNN_accuracy_batches.png")
+plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename = out_path + "DNN_accuracy_batches.eps")
 
 test_train_history = h5.File(CNN_path + "training_results.h5")
-plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename = out_path + "CNN_accuracy_batches.png")
+plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename = out_path + "CNN_accuracy_batches.eps")
 
 test_train_history = h5.File(GN_path + "training_results.h5")
-plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename = out_path + "GN_accuracy_batches.png")
+plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename = out_path + "GN_accuracy_batches.eps")
 
 ##############
 # ROC Curves #
@@ -91,12 +100,19 @@ tpr = data['tpr']
 roc_auc = metrics.auc(data['fpr'], data['tpr'])
 plt.plot(fpr, tpr, color='blue', lw=2, label='BDT (area = %0.2f)' % roc_auc)
 
+if log_scale:
+    plt.yscale('log')
+
 plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
-plt.xlim([0.0, 1.0])
-plt.ylim([0.0, 1.05])
+if log_scale:
+    plt.xlim([0.0, 0.3])
+    plt.ylim([0.9, 1.01])
+else:
+    plt.xlim([0.0, 1.0])
+    plt.ylim([0.0, 1.05])
 plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.grid('on', linestyle='--')
 plt.title('ROC Curve for Classification')
 plt.legend(loc="lower right")
-plt.savefig(out_path + "compare_ROC.png")
+plt.savefig(out_path + "compare_ROC.eps")
