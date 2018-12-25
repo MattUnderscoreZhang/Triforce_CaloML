@@ -159,32 +159,32 @@ class Analyzer():
 
         folder = test_train_history.filename[:test_train_history.filename.rfind('/')]
 
-        self.plot_ROC(final_val_results, folder+"/ROC.png")
+        self.plot_ROC(final_val_results, folder+"/ROC.eps")
 
-        self.plot_accuracy_bins('energy', final_val_results, folder+"/accuracy_vs_energy.png")
-        self.plot_accuracy_bins('eta', final_val_results, folder+"/accuracy_vs_eta.png")
-        self.plot_accuracy_bins('openingAngle', final_val_results, folder+"/accuracy_vs_openingAngle.png")
+        self.plot_accuracy_bins('energy', final_val_results, folder+"/accuracy_vs_energy.eps")
+        self.plot_accuracy_bins('eta', final_val_results, folder+"/accuracy_vs_eta.eps")
+        self.plot_accuracy_bins('openingAngle', final_val_results, folder+"/accuracy_vs_openingAngle.eps")
 
-        self.plot_history(test_train_history['class_reg_loss_train_batch'], test_train_history['class_reg_loss_test_batch'], loss=True, batch=True, filename=folder+"/loss_batches.png")
-        self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/accuracy_batches.png")
-        self.plot_history(test_train_history['class_reg_loss_train_epoch'], test_train_history['class_reg_loss_test_epoch'], loss=True, batch=False, filename=folder+"/loss_epoches.png")
-        self.plot_history(test_train_history['class_acc_train_epoch'], test_train_history['class_acc_test_epoch'], loss=False, batch=False, filename=folder+"/accuracy_epoches.png")
+        self.plot_history(test_train_history['class_reg_loss_train_batch'], test_train_history['class_reg_loss_test_batch'], loss=True, batch=True, filename=folder+"/loss_batches.eps")
+        self.plot_history(test_train_history['class_acc_train_batch'], test_train_history['class_acc_test_batch'], loss=False, batch=True, filename=folder+"/accuracy_batches.eps")
+        self.plot_history(test_train_history['class_reg_loss_train_epoch'], test_train_history['class_reg_loss_test_epoch'], loss=True, batch=False, filename=folder+"/loss_epoches.eps")
+        self.plot_history(test_train_history['class_acc_train_epoch'], test_train_history['class_acc_test_epoch'], loss=False, batch=False, filename=folder+"/accuracy_epoches.eps")
 
         # regression plots
         if 'reg_energy_prediction' in final_val_results.keys():
             self.plot_regression_bins('energy', 'energy', final_val_results,
-                                      [folder+'/reg_bias_energy_vs_energy.png', folder+'/reg_res_energy_vs_energy.png'])
+                                      [folder+'/reg_bias_energy_vs_energy.eps', folder+'/reg_res_energy_vs_energy.eps'])
             self.plot_regression_bins('eta', 'energy', final_val_results,
-                                      [folder+'/reg_bias_energy_vs_eta.png', folder+'/reg_res_energy_vs_eta.png'])
+                                      [folder+'/reg_bias_energy_vs_eta.eps', folder+'/reg_res_energy_vs_eta.eps'])
             self.plot_regression_bins('phi', 'energy', final_val_results,
-                                      [folder+'/reg_bias_energy_vs_phi.png', folder+'/reg_res_energy_vs_phi.png'])
+                                      [folder+'/reg_bias_energy_vs_phi.eps', folder+'/reg_res_energy_vs_phi.eps'])
         if 'reg_eta_prediction' in final_val_results.keys():
             self.plot_regression_bins('energy', 'eta', final_val_results,
-                                      [folder+'/reg_bias_eta_vs_energy.png', folder+'/reg_res_eta_vs_energy.png'])
+                                      [folder+'/reg_bias_eta_vs_energy.eps', folder+'/reg_res_eta_vs_energy.eps'])
             self.plot_regression_bins('eta', 'eta', final_val_results,
-                                      [folder+'/reg_bias_eta_vs_eta.png', folder+'/reg_res_eta_vs_eta.png'])
+                                      [folder+'/reg_bias_eta_vs_eta.eps', folder+'/reg_res_eta_vs_eta.eps'])
             self.plot_regression_bins('phi', 'eta', final_val_results,
-                                      [folder+'/reg_bias_eta_vs_phi.png', folder+'/reg_res_eta_vs_phi.png'])
+                                      [folder+'/reg_bias_eta_vs_phi.eps', folder+'/reg_res_eta_vs_phi.eps'])
 
     def analyze_online(self, history, folder): 
         """
@@ -193,8 +193,8 @@ class Analyzer():
         TRAIN, _, TEST = 0, 1, 2
         # ['class_reg_loss', ..., 'class_acc'] = [0, ..., 5]
         BATCH, EPOCH = 0, 1
-        self.plot_history(np.array(history[0][0][0]), np.array(history[0][2][0]), loss=True, batch=True, filename=folder+"/loss_batches.png")
-        self.plot_history(np.array(history[5][0][0]), np.array(history[5][2][0]), loss=False, batch=True, filename=folder+"/accuracy_batches.png")
-        self.plot_history(np.array(history[0][0][1]), np.array(history[0][2][1]), loss=True, batch=False, filename=folder+"/loss_epoches.png")
-        self.plot_history(np.array(history[5][0][1]), np.array(history[5][2][1]), loss=False, batch=False, filename=folder+"/accuracy_epoches.png")
+        self.plot_history(np.array(history[0][0][0]), np.array(history[0][2][0]), loss=True, batch=True, filename=folder+"/loss_batches.eps")
+        self.plot_history(np.array(history[5][0][0]), np.array(history[5][2][0]), loss=False, batch=True, filename=folder+"/accuracy_batches.eps")
+        self.plot_history(np.array(history[0][0][1]), np.array(history[0][2][1]), loss=True, batch=False, filename=folder+"/loss_epoches.eps")
+        self.plot_history(np.array(history[5][0][1]), np.array(history[5][2][1]), loss=False, batch=False, filename=folder+"/accuracy_epoches.eps")
 
