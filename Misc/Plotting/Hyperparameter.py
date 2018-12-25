@@ -3,19 +3,34 @@
 import glob
 import numpy as np
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import itertools as itr
 import pdb
 
-# Files
-files = glob.glob("/Users/mattzhang/Dropbox/Projects/Data/HyperparameterResults/DNN/*.txt")
-
 # Options
-parameter_names = ["Hidden Layers", "Neurons per Hidden Layer", "Learning Rate", "Dropout Probability"]
-parameter_space = [[1, 2, 3, 4, 5], [128, 256, 512, 1024, 2048], [0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0006, 0.0007], [0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14]]
+# files = glob.glob("/data/LCD/NewSamples/HyperparameterResults/DNN/*.txt")
+# net_type = "DNN"
+# parameter_names = ["Hidden Layers", "Neurons Per Hidden Layer", "Learning Rate", "Dropout Probability"]
+# parameter_space = [[1, 2, 3, 4, 5], [128, 256, 512, 1024, 2048], [0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0006, 0.0007], [0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14]]
+# parameter_shape = [len(dimension) for dimension in parameter_space]
+# baseline_parameters = (2, 2, 3, 3)
+
+# files = glob.glob("/data/LCD/NewSamples/HyperparameterResults/CNN/*.txt")
+# net_type = "CNN"
+# parameter_names = ["Hidden Layers", "Neurons Per Hidden Layer", "Learning Rate", "Dropout Probability", "Number of ECAL Filters", "Number of ECAL Kernels"]
+# parameter_space = [[1, 2, 3, 4, 5], [128, 256, 512, 1024, 2048], [0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0006, 0.0007], [0.02, 0.04, 0.06, 0.08, 0.10, 0.12, 0.14], [1, 2, 3, 4, 5, 6], [2, 3, 4, 5, 6]]
+# parameter_shape = [len(dimension) for dimension in parameter_space]
+# baseline_parameters = (2, 2, 3, 3, 2, 2)
+
+files = glob.glob("/data/LCD/NewSamples/HyperparameterResults/GN/*.txt")
+net_type = "GN"
+parameter_names = ["Neurons in Final Hidden Layer", "Learning Rate", "Decay Rate"]
+parameter_space = [[128, 256, 512, 1024, 2048, 4096], [0.0001, 0.0002, 0.0003, 0.0004, 0.0005, 0.0006, 0.0007], [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09]]
 parameter_shape = [len(dimension) for dimension in parameter_space]
-baseline_parameters = (2, 2, 3, 3)
+baseline_parameters = (2, 3, 3)
 
 # Extract losses and accuracies
 losses = np.empty(shape=(parameter_shape), dtype=object)
@@ -102,7 +117,7 @@ for k in combinations:
     plt.xlabel(parameter_names[y])
     plt.ylabel(parameter_names[x])
     plt.title("Accuracy")
-    plt.savefig(str(x)+"_"+str(y)+".pdf")
+    plt.savefig("Plots/HyperparameterScan/"+net_type+"/"+str(x)+"_"+str(y)+".eps")
     # ax = sns.heatmap(loss, annot = True, fmt = "")
     # plt.xlabel(parameter_names[y])
     # plt.ylabel(parameter_names[x])
