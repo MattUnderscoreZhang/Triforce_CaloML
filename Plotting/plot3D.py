@@ -12,7 +12,7 @@ import numpy as np
 # PLOTTING FUNCTION #
 #####################
 
-def scatter3d(x, y, z, values, jets=None, eventVector=None, size=25, colorsMap='jet', saveName='Plots/Test.pdf'):
+def scatter3d(x, y, z, values, jets=None, eventVector=None, size=25, colorsMap='jet', saveName='Plots/Test.eps'):
 
     cm = plt.get_cmap(colorsMap) # set up color map
     cNorm = matplotlib.colors.Normalize(vmin=min(values), vmax=max(values)) # normalize to min and max of data
@@ -89,20 +89,20 @@ for eventN in events:
     jet2 = data['N_Subjettiness/bestJets2']
     x, y, z = np.nonzero(ECAL[eventN]) # first event
     E = ECAL[eventN][np.nonzero(ECAL[eventN])]
-    if len(E)>0: scatter3d(x, y, z, E, (jet1[eventN], jet2[eventN]), eventVector, size=25, saveName=saveDirectory+"ECAL_event"+str(eventN)+".pdf")
+    if len(E)>0: scatter3d(x, y, z, E, (jet1[eventN], jet2[eventN]), eventVector, size=25, saveName=saveDirectory+"ECAL_event"+str(eventN)+".eps")
 
     # HCAL = data['HCAL/HCAL']
     # x, y, z = np.nonzero(HCAL[eventN]) # first event
     # E = HCAL[eventN][np.nonzero(HCAL[eventN])]
-    # if len(E)>0: scatter3d(x, y , z, E, size=5, saveName=saveDirectory+"HCAL_event"+str(eventN)+".pdf")
+    # if len(E)>0: scatter3d(x, y , z, E, size=5, saveName=saveDirectory+"HCAL_event"+str(eventN)+".eps")
 
 # # plot averages
 # ECAL_average = np.average(data['ECAL/ECAL'], axis=0)
 # x, y, z = np.nonzero(ECAL_average) # first event
 # E = ECAL_average[np.nonzero(ECAL_average)]
-# scatter3d(x, y, z, E, size=25, saveName=saveDirectory+"ECAL_average.pdf")
+# scatter3d(x, y, z, E, size=25, saveName=saveDirectory+"ECAL_average.eps")
 
 # HCAL_average = np.average(data['HCAL/HCAL'], axis=0)
 # x, y, z = np.nonzero(HCAL_average) # first event
 # E = HCAL_average[np.nonzero(HCAL_average)]
-# scatter3d(x, y , z, E, size=5, saveName=saveDirectory+"HCAL_average.pdf")
+# scatter3d(x, y , z, E, size=5, saveName=saveDirectory+"HCAL_average.eps")
