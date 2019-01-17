@@ -4,7 +4,7 @@
 #  #      /\\     TRIFORCE PARTICLE IDENTIFICATION SYSTEM   #  #
 #  #     /__\\    Classification, Energy Regression & GAN   #  #
 #  #    /\\ /\\                                             #  #
-#  #   /__\/__\\                       Run using Python 3   #  #
+#  #   /__\/__\\                                            #  #
 #  #                                                        #  #
 #  ##########################################################  #
 ################################################################
@@ -12,23 +12,20 @@
 import torch
 import torch.utils.data as data
 from torch.autograd import Variable
-import glob, os, sys, shutil, socket
+import glob
+import os
+import sys
+import shutil
 import numpy as np
 import h5py as h5
 import Loader.loader as loader
 from Loader import transforms
 import Options
-sys.dont_write_bytecode = True # prevent the creation of .pyc files
-import pdb
 from timeit import default_timer as timer
 
-# os.environ['CUDA_VISIBLE_DEVICES'] = '6, 7, 8, 9'
-
+sys.dont_write_bytecode = True  # prevent the creation of .pyc files
 start = timer()
-
-# for running at caltech
-if 'culture-plate' in socket.gethostname():
-    import setGPU
+# os.environ['CUDA_VISIBLE_DEVICES'] = '6, 7, 8, 9'
 
 ####################
 # Set options file #
@@ -40,18 +37,30 @@ optionsFileName = "combined"
 # Import options & warn if options file has problems #
 ######################################################
 
-# load options
-exec("from Options." + optionsFileName + " import *")
+# from Options.<optionsFileName> import * as *
+options = getattr(__import__("Options."+optionsFileName, fromlist=["options"]), "options")
+combined_classifier = getattr(__import__("Options."+optionsFileName, fromlist=["combined_classifier "]), "combined_classifier ")
+discriminator = getattr(__import__("Options."+optionsFileName, fromlist=["discriminator"]), "discriminator")
+generator = getattr(__import__("Options."+optionsFileName, fromlist=["generator"]), "generator")
+analyzer = getattr(__import__("Options."+optionsFileName, fromlist=["analyzer"]), "analyzer")
 
 # options file must have these parameters set
-requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs', 'microBatchSize', 'outPath']
+requiredOptionNames = ['samplePath', 'classPdgID', 'trainRatio', 'nEpochs',
+                       'microBatchSize', 'outPath']
 for optionName in requiredOptionNames:
     if optionName not in options.keys():
         print("ERROR: Please set", optionName, "in options file")
         sys.exit()
 
 # if these parameters are not set, give them default values
-defaultParameters = {'importGPU':False, 'nTrainMax':-1, 'nValidationMax':-1, 'nTestMax':-1, 'validationRatio':0, 'nMicroBatchesInMiniBatch':1, 'nWorkers':0, 'test_loss_eval_max_n_batches':10, 'earlyStopping':False, 'relativeDeltaLossThreshold':0, 'relativeDeltaLossNumber':5, 'saveModelEveryNEpochs':0, 'saveFinalModel':0}
+defaultParameters = {'importGPU': False, 'nTrainMax': -1, 'nValidationMax': -1,
+                     'nTestMax': -1, 'validationRatio': 0,
+                     'nMicroBatchesInMiniBatch': 1, 'nWorkers': 0,
+                     'test_loss_eval_max_n_batches': 10,
+                     'earlyStopping': False,
+                     'relativeDeltaLossThreshold': 0,
+                     'relativeDeltaLossNumber': 5, 'saveModelEveryNEpochs': 0,
+                     'saveFinalModel': 0}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -105,17 +114,17 @@ filesPerClass = min([len(files) for files in classFiles])
 nTrain = int(filesPerClass * options['trainRatio'])
 nValidation = int(filesPerClass * options['validationRatio'])
 nTest = filesPerClass - nTrain - nValidation
-if options['nTrainMax']>0:
-    nTrain = min(nTrain,options['nTrainMax'])
-if options['nValidationMax']>0:
-    nValidation = min(nValidation,options['nValidationMax'])
-if options['nTestMax']>0:
-    nTest = min(nTest,options['nTestMax'])
+if options['nTrainMax'] > 0:
+    nTrain = min(nTrain, options['nTrainMax'])
+if options['nValidationMax'] > 0:
+    nValidation = min(nValidation, options['nValidationMax'])
+if options['nTestMax'] > 0:
+    nTest = min(nTest, options['nTestMax'])
 if (options['validationRatio'] > 0):
     print("Split (files per class): %d train, %d test, %d validation" % (nTrain, nTest, nValidation))
 else:
     print("Split (files per class): %d train, %d test" % (nTrain, nTest))
-if (nTest==0 or nTrain==0 or (options['validationRatio']>0 and nValidation==0)):
+if (nTest == 0 or nTrain == 0 or (options['validationRatio'] > 0 and nValidation == 0)):
     print("Not enough files found - check sample paths")
     sys.exit()
 print('-------------------------------')
@@ -147,33 +156,40 @@ print('Defining validation dataset')
 validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'])
 print('Defining test dataset')
 testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'])
-trainLoader = data.DataLoader(dataset=trainSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(trainSet),num_workers=options['nWorkers'])
-validationLoader = data.DataLoader(dataset=validationSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(validationSet),num_workers=options['nWorkers'])
-testLoader = data.DataLoader(dataset=testSet,batch_size=options['microBatchSize'],sampler=loader.OrderedRandomSampler(testSet),num_workers=options['nWorkers'])
+trainLoader = data.DataLoader(dataset=trainSet, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(trainSet), num_workers=options['nWorkers'])
+validationLoader = data.DataLoader(dataset=validationSet, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(validationSet), num_workers=options['nWorkers'])
+testLoader = data.DataLoader(dataset=testSet, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(testSet), num_workers=options['nWorkers'])
 print('-------------------------------')
 
 ################################################
 # Data structures for holding training results #
 ################################################
 
+
 class historyData(list):
     def __init__(self, my_list=[]):
         super().__init__(my_list)
+
     def extend(self, places):
         for _ in range(places):
             self.append(historyData())
-    def __getitem__(self, key): # overloads list[i] for i out of range
+
+    def __getitem__(self, key):  # overloads list[i] for i out of range
         if key >= len(self):
             self.extend(key+1-len(self))
         return super().__getitem__(key)
-    def __setitem__(self, key, item): # overloads list[i]=x for i out of range
+
+    def __setitem__(self, key, item):  # overloads list[i]=x for i out of range
         if key >= len(self):
             self.extend(key+1-len(self))
         super().__setitem__(key, item)
-    def __iadd__(self, key): # overloads []+=x
+
+    def __iadd__(self, key):  # overloads []+=x
         return key
-    def __add__(self, key): # overloads []+x
+
+    def __add__(self, key):  # overloads []+x
         return key
+
 
 # training results e.g. history[CLASS_LOSS][TRAIN][EPOCH]
 history = historyData()
@@ -192,6 +208,7 @@ BATCH, EPOCH = 0, 1
 # Training and Evaluation Functions #
 #####################################
 
+
 class Trainer:
 
     def __init__(self):
@@ -201,9 +218,9 @@ class Trainer:
         self.microbatch_n = 0
         combined_classifier.optimizer.zero_grad()
 
-    def sgl_bkgd_acc(self, predicted, truth): 
-        truth_sgl = truth.nonzero() # indices of non-zero elements in truth
-        truth_bkgd = (truth == 0).nonzero() # indices of zero elements in truth
+    def sgl_bkgd_acc(self, predicted, truth):
+        truth_sgl = truth.nonzero()  # indices of non-zero elements in truth
+        truth_bkgd = (truth == 0).nonzero()  # indices of zero elements in truth
         correct_sgl_frac = 0
         correct_bkgd_frac = 0
         if len(truth_sgl) > 0:
@@ -218,9 +235,9 @@ class Trainer:
                 if predicted[truth_bkgd[i]][0] == truth[truth_bkgd[i]][0]:
                     correct_bkgd += 1
             correct_bkgd_frac = float(correct_bkgd / truth_bkgd.shape[0])
-        return correct_sgl_frac, correct_bkgd_frac # signal acc, bkg acc
+        return correct_sgl_frac, correct_bkgd_frac  # signal acc, bkg acc
 
-    def class_reg_eval(self,event_data, do_training=False, store_reg_results=False):
+    def class_reg_eval(self, event_data, do_training=False, store_reg_results=False):
         if do_training:
             combined_classifier.net.train()
         else:
@@ -239,7 +256,7 @@ class Trainer:
             if (self.microbatch_n >= options['nMicroBatchesInMiniBatch']):
                 self.microbatch_n = 0
                 combined_classifier.optimizer.step()
-        _, predicted_class = torch.max(outputs['classification'], 1) # max index in each event
+        _, predicted_class = torch.max(outputs['classification'], 1)  # max index in each event
         class_sig_acc, class_bkg_acc = self.sgl_bkgd_acc(predicted_class.data, truth_class.data)
         # regression outputs. move first to cpu
         pred_energy = transforms.pred_energy_from_reg(outputs['energy_regression'].data.cpu(), event_data)
@@ -256,7 +273,7 @@ class Trainer:
         return_event_data["reg_eta_loss"] = class_reg_loss["eta"].item()
         return_event_data["reg_phi_loss"] = class_reg_loss["phi"].item()
         return_event_data["class_acc"] = float((predicted_class.data == truth_class.data).sum())/truth_class.shape[0]
-        return_event_data["class_raw_prediction"] = outputs['classification'].data.cpu().numpy()[:,1] # getting the second number for 2-class classification
+        return_event_data["class_raw_prediction"] = outputs['classification'].data.cpu().numpy()[:, 1]  # getting the second number for 2-class classification
         return_event_data["class_prediction"] = predicted_class.data.cpu().numpy()
         return_event_data["class_truth"] = truth_class.data.cpu().numpy()
         return_event_data["class_sig_acc"] = class_sig_acc
@@ -287,11 +304,13 @@ class Trainer:
     def class_reg_train(self, event_data):
         return self.class_reg_eval(event_data, do_training=True)
 
+
 trainer = Trainer()
 
 ############################################
 # Perform Training for Combined Classifier #
 ############################################
+
 
 def update_batch_history(data, train_or_test, minibatch_n):
     if train_or_test == TRAIN:
@@ -301,44 +320,57 @@ def update_batch_history(data, train_or_test, minibatch_n):
     for stat in range(len(stat_name)):
         history[stat][train_or_test][BATCH][minibatch_n] += (eval_results[stat_name[stat]] / options['nMicroBatchesInMiniBatch'])
 
+
 def update_epoch_history():
     for stat in range(len(stat_name)):
         for split in [TRAIN, TEST]:
             history[stat][split][EPOCH].append(history[stat][split][BATCH][-1])
 
+
 def print_stats(timescale):
     print_prefix = "epoch " if timescale == EPOCH else ""
     for split in [TRAIN, TEST]:
-        if timescale == EPOCH and split == TRAIN: continue
+        if timescale == EPOCH and split == TRAIN:
+            continue
         print(print_prefix + split_name[split] + ' sample')
         for stat in range(len(stat_name)):
             if stat_name[stat] in print_metrics:
                 print('  ' + stat_name[stat] + ':\t %8.4f' % (history[stat][split][timescale][-1]))
         print()
 
+
 # early stopping
 previous_total_test_loss = 0
 previous_epoch_total_test_loss = 0
 delta_loss_below_threshold_count = 0
 
+
 def should_i_stop(timescale):
 
-    if not options['earlyStopping']: return False
+    global previous_total_test_loss, previous_epoch_total_test_loss, delta_loss_below_threshold_count
+
+    if not options['earlyStopping']:
+        return False
 
     total_test_loss = history[CLASS_LOSS][TEST][timescale][-1]
 
     if timescale == BATCH:
-        relative_delta_loss = 1 if previous_total_test_loss==0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
+        relative_delta_loss = 1 if previous_total_test_loss == 0 else (previous_total_test_loss - total_test_loss)/(previous_total_test_loss)
         previous_total_test_loss = total_test_loss
-        if (relative_delta_loss < options['relativeDeltaLossThreshold']): delta_loss_below_threshold_count += 1
-        if (delta_loss_below_threshold_count >= options['relativeDeltaLossNumber']): return True
-        else: delta_loss_below_threshold_count = 0
-    elif timescale == EPOCH:
-        relative_delta_loss = 1 if previous_epoch_total_test_loss==0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
-        previous_epoch_total_test_loss = total_test_loss
-        if (relative_delta_loss < options['relativeDeltaLossThreshold']): return True
+        if (relative_delta_loss < options['relativeDeltaLossThreshold']):
+            delta_loss_below_threshold_count += 1
+        if (delta_loss_below_threshold_count >= options['relativeDeltaLossNumber']):
+            return True
+        else:
+            delta_loss_below_threshold_count = 0
+    # elif timescale == EPOCH:
+        # relative_delta_loss = 1 if previous_epoch_total_test_loss == 0 else (previous_epoch_total_test_loss - epoch_total_test_loss)/(previous_epoch_total_test_loss)
+        # previous_epoch_total_test_loss = total_test_loss
+        # if (relative_delta_loss < options['relativeDeltaLossThreshold']):
+            # return True
 
     return False
+
 
 def class_reg_training():
 
@@ -353,8 +385,8 @@ def class_reg_training():
         trainIter = iter(trainLoader)
         testIter = iter(testLoader)
         break_loop = False
-        while True: # loop through all training events until we run out (one epoch)
-            trainer.reset() # zeros gradients and gets ready for a new batch
+        while True:  # loop through all training events until we run out (one epoch)
+            trainer.reset()  # zeros gradients and gets ready for a new batch
             for _ in range(options['nMicroBatchesInMiniBatch']):
                 if train_or_test == TRAIN:
                     try:
@@ -371,13 +403,14 @@ def class_reg_training():
                     update_batch_history(test_data, train_or_test, minibatch_n)
             if break_loop:
                 break
-            if train_or_test == TEST: # print batch history after each (train, test) pair
+            if train_or_test == TEST:  # print batch history after each (train, test) pair
                 print('-------------------------------')
                 print('epoch %d, batch %d' % (epoch+1, minibatch_n))
                 print_stats(BATCH)
                 minibatch_n += 1
-            if should_i_stop(BATCH): end_training = True
-            if train_or_test == TEST: # flip between training and test batches
+            if should_i_stop(BATCH):
+                end_training = True
+            if train_or_test == TEST:  # flip between training and test batches
                 train_or_test = TRAIN
             else:
                 train_or_test = TEST
@@ -388,28 +421,34 @@ def class_reg_training():
         print_stats(EPOCH)
         # plot every epoch
         analyzer.analyze_online(history, options['outPath'])
-        if should_i_stop(EPOCH): end_training = True
+        if should_i_stop(EPOCH):
+            end_training = True
 
         # save results
         # should these be state_dicts?
         if options['saveFinalModel'] and (options['saveModelEveryNEpochs'] > 0) and ((epoch+1) % options['saveModelEveryNEpochs'] == 0):
-            if not os.path.exists(options['outPath']): os.makedirs(options['outPath'])
+            if not os.path.exists(options['outPath']):
+                os.makedirs(options['outPath'])
             torch.save(combined_classifier.net, options['outPath']+"saved_classifier_epoch_"+str(epoch)+".pt")
-            if discriminator != None: torch.save(discriminator.net, options['outPath']+"saved_discriminator_epoch_"+str(epoch)+".pt")
-            if generator != None: torch.save(generator.net, options['outPath']+"saved_generator_epoch_"+str(epoch)+".pt")
+            if discriminator is not None:
+                torch.save(discriminator.net, options['outPath']+"saved_discriminator_epoch_"+str(epoch)+".pt")
+            if generator is not None:
+                torch.save(generator.net, options['outPath']+"saved_generator_epoch_"+str(epoch)+".pt")
 
-        if end_training: break
+        if end_training:
+            break
 
 ###############################
 # Load or Train Class+Reg Net #
 ###############################
- 
+
+
 if options['skipClassRegTrain']:
     print('Loading Classifier and Regressor')
-    # check if there is a state_dict of a trained model. 
+    # check if there is a state_dict of a trained model.
     if os.path.exists(options['outPath']+"saved_classifier.pt"):
-        combined_classifier.net.load_state_dict(torch.load(options['outPath']+"saved_classifier.pt")) 
-    else: 
+        combined_classifier.net.load_state_dict(torch.load(options['outPath']+"saved_classifier.pt"))
+    else:
         print('WARNING: Found no trained models. Train new model (y/n)?')
         valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
         while True:
@@ -422,35 +461,14 @@ if options['skipClassRegTrain']:
         if overwrite:
             print('-------------------------------')
             print('Training Classifier and Regressor')
-            class_reg_training() 
+            class_reg_training()
         else:
             sys.exit()
-else: 
+else:
     print('-------------------------------')
     print('Training Classifier and Regressor')
-    class_reg_training() 
+    class_reg_training()
 print('-------------------------------')
-
-################
-# GAN Training #
-################
-
-# def GAN_training():
-
-    # for epoch in range(options['nEpochs']):
-
-        # for data_train in trainLoader:
-            # discriminator.net.train()
-            # outputs = discriminator.net(data_train)
-            # disc_loss = discriminator.lossFunction(outputs, torch.Tensor([1]))
-            # discriminator.optimizer.zero_grad()
-            # disc_loss.backward()
-            # discriminator.optimizer.step()
-
-# print('Training GAN')
-# GAN_training()
-# print('-------------------------------')
-# print('Finished Training')
 
 ################
 # Save results #
@@ -459,28 +477,31 @@ print('-------------------------------')
 print('Saving Training Results')
 test_train_history = h5.File(options['outPath']+"training_results.h5", 'w')
 for stat in range(len(stat_name)):
-    if not stat_name[stat] in print_metrics: continue
+    if not stat_name[stat] in print_metrics:
+        continue
     for split in range(len(split_name)):
         for timescale in range(len(timescale_name)):
             test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
-if options['saveFinalModel']: 
-    # save the the state_dicts instead of entire models. 
+if options['saveFinalModel']:
+    # save the the state_dicts instead of entire models.
     torch.save(combined_classifier.net.state_dict(), options['outPath']+"saved_classifier.pt")
-    if discriminator != None: torch.save(discriminator.net.state_dict(), options['outPath']+"saved_discriminator.pt")
-    if generator != None: torch.save(generator.net.state_dict(), options['outPath']+"saved_generator.pt")
+    if discriminator is not None:
+        torch.save(discriminator.net.state_dict(), options['outPath']+"saved_discriminator.pt")
+    if generator is not None:
+        torch.save(generator.net.state_dict(), options['outPath']+"saved_generator.pt")
 
 print('Getting Validation Results')
 final_val_results = {}
 trainer.reset()
 for sample in validationLoader:
     sample_results = trainer.class_reg_eval(sample, store_reg_results=True)
-    for key,data in sample_results.items():
+    for key, sample_data in sample_results.items():
         # cat together numpy array outputs
-        if 'array' in str(type(data)):
+        if 'array' in str(type(sample_data)):
             if key in final_val_results:
-                final_val_results[key] = np.concatenate([final_val_results[key], data], axis=0)
+                final_val_results[key] = np.concatenate([final_val_results[key], sample_data], axis=0)
             else:
-                final_val_results[key] = data
+                final_val_results[key] = sample_data
         # put scalar outputs into a list
         else:
             final_val_results.setdefault(key, []).append(sample_results[key])
@@ -488,9 +509,10 @@ for sample in validationLoader:
 print('Saving Validation Results')
 if len(options['val_outputs']) > 0:
     val_file = h5.File(options['outPath']+"validation_results.h5", 'w')
-    for key,data in final_val_results.items():
-        if not key in options['val_outputs']: continue
-        val_file.create_dataset(key,data=np.asarray(data))
+    for key, sample_data in final_val_results.items():
+        if key not in options['val_outputs']:
+            continue
+        val_file.create_dataset(key, sample_data=np.asarray(sample_data))
 val_file.close()
 
 ##########################
@@ -502,4 +524,4 @@ analyzer.analyze([combined_classifier, discriminator, generator], test_train_his
 test_train_history.close()
 
 end = timer()
-print('Total time taken: %.2f minutes'%(float(end - start)/60.))
+print('Total time taken: %.2f minutes' % (float(end - start)/60.))
