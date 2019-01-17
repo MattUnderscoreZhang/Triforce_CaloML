@@ -1,55 +1,6 @@
-Note: to run the following scripts, you need to open them up and edit paths and file names depending on your local setup.
+This package takes care of the initial generation and preparation of MC data for the calorimeter project.
 
------
-
-Generating:
-
-First, start with a HepMC event (made with Pythia or some other generator) describing a generated process, such as ee->jj.
-Convert this to HEPEvt using the convertHepMCToHEPEvt.sh script. Same thing, just a different file format.
-You'll need to install the HepMC/ and HepMCToHEPEvt/ Packages first and point the script to the directories where they are installed.
-
-From the HEPEvt file, DD4Sim does simulation and reconstruction, creating a ROOT file. Use the runDdsim.sh script to run this. The ROOT file saves in ROOTFiles/.
-
------
-
-Converting:
-
-Convert this ROOT file to H5 format, in the process giving us the energy arrays and calculated features we want to use.
-
-convertROOTToH5_Part1.sh and convertROOTToH5_Part2.sh call python/Convert_to_txt.py and python/Convert_to_h5.py respectively.
-convertROOTToH5_Part1 extracts the x, y, z, and E data for ECAL and HCAL, along with truth data such as gun pT, pdgID, and opening angle for pi0 -> gamma+gamma, and writes them to a text file.
-convertROOTToH5_Part2 reads the text file and does the calculations of barycenters in order to cut out windows from calorimeter. Features are also calculated in this script. An H5 file is output. This uses python/addFeatures.py.
-
-addFeatures.sh calls the equivalent script in the python folder.
-python/addFeatures.py takes an H5 file, calculates features, and writes to another H5 file.
-The difference between addFeatures.py and Convert_to_h5.py is that one starts with an H5 file and the other starts with a txt file. After creating an H5 file, Convert_to_h5.py simply calls addFeatures.py.
-python/add_nSubJettiness.py takes an H5 file and writes n-subjettiness variables to it using python/nsub.py.
-python/nsub.py contains a function nsub() which calculates n-subjettiness variables in the ECAL.
-python/axis_fix.py recalculates several features where in early versions of the code x and y axes were switched around.
-python/featuresList.py is a helper class.
-python/Normalize.py takes an H5 file, normalizes each feature by converting to z-scores, and writes back out to another H5 file. 
-
-Pass input and output file paths as arguments to convertROOTToH5 scripts.
-Source /afs/cern.ch/eng/clic/work/ilcsoft/HEAD-2016-04-06/init_ilcsoft.sh before runing convertROOTToH5_Part1.sh.
-Run convertROOTToH5_Part2.sh in a new session. This is because the ILCSoft version of Python doesn't have numpy installed, so you'll want to use the default lxplus environment to run part 2.
-
------
-
-Skimming:
-
-Use the skimH5.py script to create a file with only events with HCAL/ECAL of less than 0.2. This saves in SkimmedH5Files/.
-
-In my Macbook projects folder I have some Jupyter notebooks where I played around with looking at data, moving the h5 files to my local directory first.
-
------
-
-Plotting:
-
-Edit plot3D.py to change which file you want to look at, and for how many events.
-
------
-
-Analysis:
-
-You can use packages such as https://github.com/UTA-HEP-Computing/CaloDNN.git, for example, to create other plots and perform BDT analysis on the samples.
->>>>>>> SampleGen/master
+1. Generating/ generates MC files in ROOT format.
+2. Converting/ converts these ROOT files to H5 format and also adds calculated features.
+3. Filtering/ filters these samples and only saves the ones that we want to use for training.
+4. Resampling/ re-emulates data as it would appear on a detector with different geometry.

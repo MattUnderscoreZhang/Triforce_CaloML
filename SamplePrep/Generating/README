@@ -1,0 +1,5 @@
+First, start with a HepMC event (made with Pythia or some other generator) describing a generated process, such as ee->jj.
+Convert this to HEPEvt using the convertHepMCToHEPEvt.sh script. Same thing, just a different file format.
+You'll need to install the HepMC/ and HepMCToHEPEvt/ Packages first and point the script to the directories where they are installed.
+
+From the HEPEvt file, DD4Sim does simulation and reconstruction, creating a ROOT file. Use the runDdsim.sh script to run this. The ROOT file saves in ROOTFiles/.

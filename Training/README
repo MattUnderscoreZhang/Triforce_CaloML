@@ -1,0 +1,3 @@
+TriForce/ is our framework for training classification and regression.
+ClassificationBaseline/ contains BDT code.
+RegressionBaseline/ contains BDT (XGBoost) and linear regression code.
