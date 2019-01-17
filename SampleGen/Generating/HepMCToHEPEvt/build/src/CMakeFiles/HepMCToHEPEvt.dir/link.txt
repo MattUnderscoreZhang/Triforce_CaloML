@@ -1,0 +1,1 @@
+/afs/cern.ch/sw/lcg/contrib/gcc/4.7.2/x86_64-slc6-gcc47-opt/bin/gcc   -O3 -Wall -Wextra -Wshadow -ansi -Wno-long-long -Wuninitialized -flto -Weffc++ --std=c++11 -ggdb    CMakeFiles/HepMCToHEPEvt.dir/HepMCToHEPEvt.cpp.o  -o HepMCToHEPEvt -rdynamic /afs/cern.ch/user/m/mazhang/Projects/JetCalo/HepMC/lib/libHepMC.so -Wl,-rpath,/afs/cern.ch/user/m/mazhang/Projects/JetCalo/HepMC/lib 
