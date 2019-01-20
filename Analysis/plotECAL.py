@@ -7,15 +7,17 @@ import pathlib
 
 
 def plot_ECAL(ECAL, save_name):
-    cm = plt.get_cmap('jet')  # set up color map
-    cNorm = matplotlib.colors.Normalize(vmin=min(ECAL), vmax=max(ECAL))  # normalize to min and max of data
-    scalarMap = matplotlib.cm.ScalarMappable(norm=cNorm, cmap=cm)  # map data using color scale
-    sizes = pow(ECAL*100, 2)/max(ECAL)
-
     x, y, z = ECAL.nonzero()
+    values = ECAL[ECAL.nonzero()].flatten()
+
+    cm = plt.get_cmap('jet')  # set up color map
+    cNorm = matplotlib.colors.Normalize(vmin=values.min(), vmax=values.max())  # normalize to min and max of data
+    scalarMap = matplotlib.cm.ScalarMappable(norm=cNorm, cmap=cm)  # map data using color scale
+    sizes = pow(values*100, 1.3)/values.max()
+
     fig = plt.figure()
     ax = Axes3D(fig)
-    ax.scatter(x, y, z, marker='.', zdir='z', c=scalarMap.to_rgba(ECAL), cmap='jet', alpha=0.3, s=sizes)
+    ax.scatter(x, y, z, marker='.', zdir='z', c=scalarMap.to_rgba(values), cmap='jet', alpha=0.8, s=sizes)
 
     ax.set_title("Energy in calorimeter")
     ax.set_xlabel("X")
@@ -37,4 +39,4 @@ if __name__ == "__main__":
 
     ECAL = h5.File(file_name)['ECAL']
     for i in range(n_events):
-        plot_ECAL(ECAL[i], pathlib.Path(out_folder)/("ECAL_"+str(i)+".eps"))
+        plot_ECAL(ECAL[i], pathlib.Path(out_folder)/("ECAL_"+str(i)+".png"))
