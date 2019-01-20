@@ -3,23 +3,7 @@ import h5py as h5
 import numpy as np
 from math import ceil, floor
 import sys
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-
-
-############
-# PLOTTING #
-############
-
-def plot_ECAL(ECAL, save_name):
-    x, y, z = ECAL.nonzero()
-    fig = plt.figure()
-    ax = Axes3D(fig)
-    ax.scatter(x, y, -z, marker='.', zdir='z', c=ECAL[x, y, z], cmap='jet', alpha=0.3)
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.savefig(save_name)
+import pathlib
 
 
 ########################
@@ -254,24 +238,21 @@ if __name__ == "__main__":
     ATLAS_resampling_matrices = get_ATLAS_resampling_matrices(ECAL[0].shape)
     CMS_resampling_matrix = get_CMS_resampling_matrix(ECAL[0].shape)
 
-    new_ECAL = []
+    pathlib.Path(("/").join(out_file_path.split("/")[:-1])).mkdir(parents=True, exist_ok=True)
+    out_file = h5.File(out_file_path, "w")
+    new_ECAL = out_file.create_dataset('ECAL', ECAL.shape, dtype='float32', chunks=(1,) + ECAL.shape[1:], compression='gzip')
+
     for i, ECAL_event in enumerate(ECAL):
-        if (i % 1000 == 0):
-            print(str(i), "out of", len(ECAL))
+        if ((i+1) % 1000 == 0):
+            print(str(i+1), "out of", len(ECAL))
         if resample_type == "ATLAS":
             new_ECAL_event = spoof_ATLAS_geometry(ECAL_event, ATLAS_resampling_matrices)
         elif resample_type == "CMS":
             new_ECAL_event = spoof_CMS_geometry(ECAL_event, CMS_resampling_matrix)
-        new_ECAL.append(new_ECAL_event)
-        if make_plots:
-            plot_ECAL(ECAL_event, "ResamplingTestCode/Plots/ECAL_"+str(i)+"_before.png")
-            plot_ECAL(new_ECAL_event, "ResamplingTestCode/Plots/ECAL_"+str(i)+"_after.png")
-            if i > 4:
-                sys.exit(0)
-    out_file = h5.File(out_file_path, "w")
-    out_file.create_dataset('ECAL', data=np.array(new_ECAL).squeeze(), compression='gzip')
+        new_ECAL[i] = new_ECAL_event
 
     keep_features = ['HCAL', 'recoTheta', 'recoEta', 'recoPhi', 'energy', 'pdgID', 'conversion', 'openingAngle']
     for feature in keep_features:
-        out_file.create_dataset(feature, data=in_file[feature], compression='gzip')
+        if feature in in_file.keys():
+            out_file.create_dataset(feature, data=in_file[feature], compression='gzip', compression_opts=9)
     print("Finished converting file " + out_file_path)
