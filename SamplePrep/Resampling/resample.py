@@ -237,7 +237,7 @@ if __name__ == "__main__":
     in_file = h5.File(in_file_path)
     print("Working on converting file " + in_file_path)
 
-    ECAL = in_file['ECAL'][()]
+    ECAL = in_file['ECAL']
     ATLAS_resampling_matrices = get_ATLAS_resampling_matrices(ECAL[0].shape)
     CMS_resampling_matrix = get_CMS_resampling_matrix(ECAL[0].shape)
 
