@@ -231,6 +231,9 @@ if __name__ == "__main__":
     resample_type = sys.argv[3]
     make_plots = False
 
+    if pathlib.Path(in_file_path).exists() is False:
+        print("Could not find file " + in_file_path)
+        sys.exit(0)
     in_file = h5.File(in_file_path)
     print("Working on converting file " + in_file_path)
 
