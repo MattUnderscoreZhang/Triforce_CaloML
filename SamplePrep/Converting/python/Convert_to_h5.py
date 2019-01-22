@@ -412,7 +412,11 @@ def convertFile(inFile, outFile):
     # Save features to an h5 file
     f = h5py.File(outFile, "w")
     for key in myFeatures.keys():
-        f.create_dataset(key, data=np.array(myFeatures.get(key)).squeeze(),compression='gzip')
+        if key in ['ECAL', 'HCAL']:
+            data = np.array(myFeatures.get(key)).squeeze()
+            f.create_dataset(key, data=data, chunks=(1,)+data.shape[1:], compression='gzip')
+        else:
+            f.create_dataset(key, data=np.array(myFeatures.get(key)).squeeze(), compression='gzip')
     f.close()
     
 #################
