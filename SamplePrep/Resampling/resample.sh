@@ -11,8 +11,20 @@ do
     do
         for j in {1..10}
         do
-            python resample.py ${CLIC_PATH}/${PREFIX}_${i}_${j}.h5 ${ATLAS_PATH}/${PREFIX}_${i}_${j}.h5 "ATLAS"
-            python resample.py ${CLIC_PATH}/${PREFIX}_${i}_${j}.h5 ${CMS_PATH}/${PREFIX}_${i}_${j}.h5 "CMS"
+            sem -j 16 python resample.py ${CLIC_PATH}/${PREFIX}_${i}_${j}.h5 ${ATLAS_PATH}/${PREFIX}_${i}_${j}.h5 "ATLAS"
+        done
+    done
+done
+
+sem --wait
+
+for PREFIX in $SAMPLE_PREFIXES
+do
+    for i in {1..8}
+    do
+        for j in {1..10}
+        do
+            sem -j 16 python resample.py ${CLIC_PATH}/${PREFIX}_${i}_${j}.h5 ${CMS_PATH}/${PREFIX}_${i}_${j}.h5 "CMS"
         done
     done
 done
@@ -28,8 +40,20 @@ do
     do
         for j in {1..10}
         do
-            python resample.py ${CLIC_PATH}/${PREFIX}_${i}_${j}.h5 ${ATLAS_PATH}/${PREFIX}_${i}_${j}.h5 "ATLAS"
-            python resample.py ${CLIC_PATH}/${PREFIX}_${i}_${j}.h5 ${CMS_PATH}/${PREFIX}_${i}_${j}.h5 "CMS"
+            sem -j 16 python resample.py ${CLIC_PATH}/${PREFIX}_${i}_${j}.h5 ${ATLAS_PATH}/${PREFIX}_${i}_${j}.h5 "ATLAS"
+        done
+    done
+done
+
+sem --wait
+
+for PREFIX in $SAMPLE_PREFIXES
+do
+    for i in {1..8}
+    do
+        for j in {1..10}
+        do
+            sem -j 16 python resample.py ${CLIC_PATH}/${PREFIX}_${i}_${j}.h5 ${CMS_PATH}/${PREFIX}_${i}_${j}.h5 "CMS"
         done
     done
 done
