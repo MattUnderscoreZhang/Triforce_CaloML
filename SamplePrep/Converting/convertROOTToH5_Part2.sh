@@ -1,6 +1,1 @@
-#for n in {1..10}
-for n in {1..1}
-do
-    python python/Convert_to_h5.py ../AllFiles/TxtFiles/v1/WithOpeningAngle/pi0_60_GeV_$n.txt ../AllFiles/H5Files/v1/Unskimmed_withOpeningAngle_FixedCoordinates/pi0_60_GeV_$n.h5
-    #python python/Convert_to_h5.py ../AllFiles/TxtFiles/v1/WithOpeningAngle/gamma_60_GeV_$n.txt ../AllFiles/H5Files/v1/Unskimmed_withOpeningAngle/gamma_60_GeV_$n.h5
-done
+python python/Convert_to_h5.py <in_txt_path> <out_h5_path>

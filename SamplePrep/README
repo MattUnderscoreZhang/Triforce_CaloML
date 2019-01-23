@@ -2,5 +2,7 @@ This package takes care of the initial generation and preparation of MC data for
 
 1. Generating/ generates MC files in ROOT format.
 2. Converting/ converts these ROOT files to H5 format and also adds calculated features.
+    There are unit tests for samples included here.
 3. Filtering/ filters these samples and only saves the ones that we want to use for training.
 4. Resampling/ re-emulates data as it would appear on a detector with different geometry.
+    There are unit tests for samples included here.

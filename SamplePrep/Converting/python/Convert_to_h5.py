@@ -13,7 +13,6 @@ import h5py
 import nsub
 import os
 import math
-from featuresList import FeaturesList
 import addFeatures
 
 #####################################
@@ -313,6 +312,20 @@ def getHCALArray(event,ix_avg,iy_avg):
 ############################
 # File reading and writing #
 ############################
+
+class FeaturesList(object):
+
+    def __init__(self):
+        self.features = {}
+
+    def add(self, featureName, feature):
+        self.features.setdefault(featureName, []).append(feature)
+
+    def keys(self):
+        return self.features.keys()
+
+    def get(self, featureName):
+        return self.features[featureName]
 
 def convertFile(inFile, outFile):
 
