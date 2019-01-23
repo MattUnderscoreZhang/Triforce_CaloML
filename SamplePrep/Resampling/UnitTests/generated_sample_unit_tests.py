@@ -19,12 +19,17 @@ class UnitTests(unittest.TestCase):
 
     def test_keys(self, sample):
         fixed_keys = ['ECAL', 'HCAL', 'conversion', 'energy', 'openingAngle', 'pdgID']
-        self.assertEqual(list(h5.File(sample).keys()), fixed_keys)
+        random_keys = ['ECAL', 'HCAL', 'conversion', 'energy', 'openingAngle', 'pdgID', 'recoEta', 'recoPhi', 'recoTheta']
+        if "RandomAngle" in sample:
+            self.assertEqual(list(h5.File(sample).keys()), random_keys)
+        else:
+            self.assertEqual(list(h5.File(sample).keys()), fixed_keys)
 
     def test_nevents(self, sample):
         self.assertEqual(h5.File(sample)['ECAL'].shape[0], 10000)
 
     def test(self, sample):
+        print(f"Testing {sample}")
         self.test_existence(sample)
         self.test_readable(sample)
         self.test_keys(sample)
