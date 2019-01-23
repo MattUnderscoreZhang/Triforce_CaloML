@@ -39,4 +39,4 @@ if __name__ == "__main__":
 
     ECAL = h5.File(file_name)['ECAL']
     for i in range(n_events):
-        plot_ECAL(ECAL[i], pathlib.Path(out_folder)/("ECAL_"+str(i)+".png"))
+        plot_ECAL(ECAL[i], pathlib.Path(out_folder)/("ECAL_"+str(i)+".eps"))
