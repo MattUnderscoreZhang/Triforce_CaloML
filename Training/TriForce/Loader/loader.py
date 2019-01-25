@@ -33,31 +33,38 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
     return return_data
 
 
-def countEvents(dataname_tuples, filters, pdgIDs, nClasses):
+def get_min_filter_features(filters):
     # make minimal list of inputs needed to check (or count events)
     minFeatures = []
     for filt in filters:
         minFeatures += filt.featuresUsed
     # use energy to count number of events if no filters
-    if len(minFeatures) == 0:
+    if len(filters) == 0:
         minFeatures.append('energy')
-    totalevents = 0
-    # num_per_file and totalevents count the minimum events in a file tuple (one file for each class)
-    num_per_file = len(dataname_tuples) * [0]
-    for fileN in range(len(dataname_tuples)):
-        nevents_before_filtering, nevents_after_filtering = [], []
-        for dataname in dataname_tuples[fileN]:
-            file_data = load_hdf5(dataname, pdgIDs, minFeatures)
-            nevents_before_filtering.append(len(list(file_data.values())[0]))
-            for filt in filters:
-                filt.filter(file_data)
+    return minFeatures
+
+
+def get_good_events(filename, filters, pdgIDs):
+    minFeatures = get_min_filter_features(filters)
+    file_data = load_hdf5(filename, pdgIDs, minFeatures)
+    for filt in filters:
+        filt.filter(file_data)
+    return file_data
+
+
+def count_events(filename_tuples, filters, pdgIDs, nClasses):
+    # n_events_in_file_tuple counts the minimum events in a file tuple (one file for each class)
+    n_events_in_file_tuple = len(filename_tuples) * [0]
+
+    for tuple_n, filename_tuple in enumerate(filename_tuples):
+        nevents_after_filtering = []
+        for filename in filename_tuple:
+            file_data = get_good_events(filename, filters, pdgIDs)
             nevents_after_filtering.append(len(list(file_data.values())[0]))
-        num_per_file[fileN] = min(nevents_after_filtering) * nClasses
-        totalevents += min(nevents_before_filtering) * nClasses
-    print('total events:', totalevents)
-    if len(filters) > 0:
-        print('total events passing filters:', sum(num_per_file))
-    return num_per_file
+        n_events_in_file_tuple[tuple_n] = min(nevents_after_filtering) * nClasses
+
+    print('total events passing filters:', sum(n_events_in_file_tuple))
+    return n_events_in_file_tuple
 
 
 class HDF5Dataset(data.Dataset):
@@ -65,13 +72,13 @@ class HDF5Dataset(data.Dataset):
     """Creates a dataset from a set of H5 files.
         Used to create PyTorch DataLoader.
     Arguments:
-        dataname_tuples: list of filename tuples, where each tuple will be mixed into a single file
-        num_per_file: number of events in each data file
+        filename_tuples: list of filename tuples, where each tuple will be mixed into a single file
+        n_events_in_file_tuple: number of events in each data file
     """
 
-    def __init__(self, dataname_tuples, pdgIDs, filters=[]):
-        self.dataname_tuples = sorted(dataname_tuples)
-        self.nClasses = len(dataname_tuples[0])
+    def __init__(self, filename_tuples, pdgIDs, filters=[]):
+        self.filename_tuples = sorted(filename_tuples)
+        self.nClasses = len(filename_tuples[0])
         self.fileInMemory = -1
         self.fileInMemoryFirstIndex = 0
         self.fileInMemoryLastIndex = -1
@@ -80,7 +87,7 @@ class HDF5Dataset(data.Dataset):
         self.filters = filters
         for i, ID in enumerate(pdgIDs):
             self.pdgIDs[ID] = i
-        self.num_per_file = countEvents(self.dataname_tuples, self.filters, self.pdgIDs, self.nClasses)
+        self.n_events_in_file_tuple = count_events(self.filename_tuples, self.filters, self.pdgIDs, self.nClasses)
 
     def __getitem__(self, index):
         # if entering a new epoch, re-initialze necessary variables
@@ -105,10 +112,10 @@ class HDF5Dataset(data.Dataset):
         # update indices to new file
         self.fileInMemory += 1
         self.fileInMemoryFirstIndex = int(self.fileInMemoryLastIndex+1)
-        self.fileInMemoryLastIndex += self.num_per_file[self.fileInMemory]
+        self.fileInMemoryLastIndex += self.n_events_in_file_tuple[self.fileInMemory]
         # print(index, self.fileInMemory, self.fileInMemoryFirstIndex, self.fileInMemoryLastIndex)
         self.data = {}
-        for dataname in self.dataname_tuples[self.fileInMemory]:
+        for dataname in self.filename_tuples[self.fileInMemory]:
             file_data = load_hdf5(dataname, self.pdgIDs)
             # apply any filters here
             if self.filters is not None:
@@ -121,7 +128,7 @@ class HDF5Dataset(data.Dataset):
                     self.data[key] = file_data[key]
 
     def __len__(self):
-        return sum(self.num_per_file)
+        return sum(self.n_events_in_file_tuple)
 
 
 class OrderedRandomSampler(data.Sampler):
@@ -134,15 +141,15 @@ class OrderedRandomSampler(data.Sampler):
 
     def __init__(self, data_source):
         self.data_source = data_source
-        self.num_per_file = self.data_source.num_per_file
+        self.n_events_in_file_tuple = data_source.n_events_in_file_tuple
 
     def __iter__(self):
         indices = np.array([], dtype=np.int64)
         prev_file_end = 0
-        for i in range(len(self.num_per_file)):
-            indices = np.append(indices, np.random.permutation(self.num_per_file[i])+prev_file_end)
-            prev_file_end += self.num_per_file[i]
+        for i in range(len(self.n_events_in_file_tuple)):
+            indices = np.append(indices, np.random.permutation(self.n_events_in_file_tuple[i])+prev_file_end)
+            prev_file_end += self.n_events_in_file_tuple[i]
         return iter(from_numpy(indices))
 
     def __len__(self):
-        return len(sum(self.num_per_file))
+        return len(sum(self.n_events_in_file_tuple))
