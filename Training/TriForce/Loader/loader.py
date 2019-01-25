@@ -44,12 +44,26 @@ def get_min_filter_features(filters):
     return minFeatures
 
 
-def get_good_events(filename, filters, pdgIDs):
+def get_min_filtered_data(filename, filters, pdgIDs):
     minFeatures = get_min_filter_features(filters)
     file_data = load_hdf5(filename, pdgIDs, minFeatures)
     for filt in filters:
         filt.filter(file_data)
     return file_data
+
+
+def get_filtered_data(filename_tuple, filters, pdgIDs):
+    data = {}
+    for dataname in filename_tuple:
+        file_data = load_hdf5(dataname, pdgIDs)
+        for filt in filters:
+            filt.filter(file_data)
+        for key in file_data.keys():
+            if key in data.keys():
+                data[key] = np.append(data[key], file_data[key], axis=0)
+            else:
+                data[key] = file_data[key]
+    return data
 
 
 def count_events(filename_tuples, filters, pdgIDs, nClasses):
@@ -59,8 +73,8 @@ def count_events(filename_tuples, filters, pdgIDs, nClasses):
     for tuple_n, filename_tuple in enumerate(filename_tuples):
         nevents_after_filtering = []
         for filename in filename_tuple:
-            file_data = get_good_events(filename, filters, pdgIDs)
-            nevents_after_filtering.append(len(list(file_data.values())[0]))
+            filtered_data = get_min_filtered_data(filename, filters, pdgIDs)
+            nevents_after_filtering.append(len(list(filtered_data.values())[0]))
         n_events_in_file_tuple[tuple_n] = min(nevents_after_filtering) * nClasses
 
     print('total events passing filters:', sum(n_events_in_file_tuple))
@@ -92,10 +106,10 @@ class HDF5Dataset(data.Dataset):
     def __getitem__(self, index):
         # if entering a new epoch, re-initialze necessary variables
         if (index < self.fileInMemoryFirstIndex):
-            self.set_last_file()
+            self.prep_first_file()
         # if we started to look at a new file, read the file data
         if(index > self.fileInMemoryLastIndex):
-            self.set_next_file()
+            self.prep_next_file()
         # return the correct sample
         indexInFile = index - self.fileInMemoryFirstIndex
         return_data = {}
@@ -103,29 +117,18 @@ class HDF5Dataset(data.Dataset):
             return_data[key] = self.data[key][indexInFile]
         return return_data
 
-    def set_last_file(self):
+    def prep_first_file(self):
         self.fileInMemory = -1
         self.fileInMemoryFirstIndex = 0
         self.fileInMemoryLastIndex = -1
 
-    def set_next_file(self):
+    def prep_next_file(self):
         # update indices to new file
         self.fileInMemory += 1
         self.fileInMemoryFirstIndex = int(self.fileInMemoryLastIndex+1)
         self.fileInMemoryLastIndex += self.n_events_in_file_tuple[self.fileInMemory]
         # print(index, self.fileInMemory, self.fileInMemoryFirstIndex, self.fileInMemoryLastIndex)
-        self.data = {}
-        for dataname in self.filename_tuples[self.fileInMemory]:
-            file_data = load_hdf5(dataname, self.pdgIDs)
-            # apply any filters here
-            if self.filters is not None:
-                for filt in self.filters:
-                    filt.filter(file_data)
-            for key in file_data.keys():
-                if key in self.data.keys():
-                    self.data[key] = np.append(self.data[key], file_data[key], axis=0)
-                else:
-                    self.data[key] = file_data[key]
+        self.data = get_filtered_data(self.filename_tuples[self.fileInMemory], self.filters, self.pdgIDs)
 
     def __len__(self):
         return sum(self.n_events_in_file_tuple)
