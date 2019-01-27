@@ -3,14 +3,14 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import math, pdb
+import math
 from Architectures import LossFunctions
 
 ##################
 # Classification #
 ##################
-
 CLASSIFICATION, REGRESSION = 0, 1
+
 
 class Classifier_Net(nn.Module):
 
@@ -37,20 +37,20 @@ class Classifier_Net(nn.Module):
         self.dropout = nn.ModuleList()
         for i in range(self.nHiddenLayers):
             self.hidden.append(nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons))
-            self.dropout.append(nn.Dropout(p = options['dropoutProb']))
-        self.finalLayer = nn.Linear(hiddenLayerNeurons + nsums + 2, len(self.outputs)) # nClasses = 2 for binary classifier
+            self.dropout.append(nn.Dropout(p=options['dropoutProb']))
+        self.finalLayer = nn.Linear(hiddenLayerNeurons + nsums + 2, len(self.outputs))  # nClasses = 2 for binary classifier
 
     def forward(self, data):
         # reco angles
-        recoEta = Variable(data["recoEta"].cuda()).view(-1,1) * self.inputScaleEta
-        recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1) * self.inputScaleEta
+        recoEta = Variable(data["recoEta"].cuda()).view(-1, 1) * self.inputScaleEta
+        recoPhi = Variable(data["recoPhi"].cuda()).view(-1, 1) * self.inputScaleEta
         # ECAL slice and energy sum
         ECAL = Variable(data["ECAL"].cuda())
         lowerBound = 26 - int(math.ceil(self.windowSizeECAL/2))
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
         ECAL = ECAL.contiguous().view(-1, self.windowSizeECAL * self.windowSizeECAL * 25)
-        ECAL_sum = torch.sum(ECAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+        ECAL_sum = torch.sum(ECAL, dim=1).view(-1, 1) * self.inputScaleSumE
         # HCAL slice and energy sum
         if (self.windowSizeHCAL > 0):
             HCAL = Variable(data["HCAL"].cuda())
@@ -58,10 +58,10 @@ class Classifier_Net(nn.Module):
             upperBound = lowerBound + self.windowSizeHCAL
             HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
             HCAL = HCAL.contiguous().view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60)
-            HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+            HCAL_sum = torch.sum(HCAL, dim=1).view(-1, 1) * self.inputScaleSumE
             x = torch.cat([ECAL, HCAL, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
         else:
-            HCAL_sum = torch.sum(HCAL, dim = 1).view(-1, 1) * self.inputScaleSumE
+            HCAL_sum = torch.sum(HCAL, dim=1).view(-1, 1) * self.inputScaleSumE
             x = torch.cat([ECAL, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
         # feed forward
         x = self.input(x)
@@ -86,6 +86,7 @@ class Classifier_Net(nn.Module):
                 return_data[label] = x[:, i]
         return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
         return return_data
+
 
 class Net():
     def __init__(self, options):

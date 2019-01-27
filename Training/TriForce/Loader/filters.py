@@ -26,11 +26,11 @@ class hOverE_filter():
         self.maxhOverE = maxhOverE
         self.featuresUsed = ['HCAL_ECAL_ERatio']
 
-    def get_passing_events(self, event_data):
+    def events_pass(self, event_data):
         return (event_data['HCAL_ECAL_ERatio'] < self.maxhOverE)
 
     def filter(self, event_data):
-        passing_indices = self.get_passing_events(event_data)
+        passing_indices = self.events_pass(event_data)
         for key, data in event_data.items():
             event_data[key] = data[passing_indices]
 
@@ -44,11 +44,11 @@ class recoOverGen_filter():
         self.minRecoOverGen = minRecoOverGen
         self.featuresUsed = ['energy', 'ECAL_E', 'HCAL_E']
 
-    def get_passing_events(self, event_data):
+    def events_pass(self, event_data):
         return (event_data['ECAL_E'] + event_data['HCAL_E'] > self.minRecoOverGen * event_data['energy'])
 
     def filter(self, event_data):
-        passing_indices = self.get_passing_events(event_data)
+        passing_indices = self.events_pass(event_data)
         for key, data in event_data.items():
             event_data[key] = data[passing_indices]
 
@@ -58,7 +58,7 @@ def get_events_passing_filters(data, filters):
         n_events = len(list(data.values())[0])
         return [True] * n_events
     else:
-        passing_events = [filter.get_passing_events(data) for filter in filters]
+        passing_events = [filter.events_pass(data) for filter in filters]
         return [all(tup) for tup in zip(passing_events)]
 
 
@@ -66,3 +66,10 @@ def take_passing_events(data, passing_events):
     for key, values in data.items():
         data[key] = values[passing_events]
     return data
+
+
+def does_event_pass_filters(event, filters):
+    for filter in filters:
+        if not filter.events_pass(event):
+            return False
+    return True

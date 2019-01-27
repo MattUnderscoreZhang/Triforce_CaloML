@@ -9,19 +9,21 @@
 #  ##########################################################  #
 ################################################################
 
-import torch
-import torch.utils.data as data
-from torch.autograd import Variable
 import glob
 import os
 import sys
 import shutil
+from timeit import default_timer as timer
+
 import numpy as np
 import h5py as h5
-import Loader.loader as loader
-from Loader import transforms
+import torch
+import torch.utils.data as data
+from torch.autograd import Variable
+
 import Options
-from timeit import default_timer as timer
+from Loader import transforms
+import Loader.blunt_loader as loader
 
 sys.dont_write_bytecode = True  # prevent the creation of .pyc files
 start = timer()
@@ -31,7 +33,7 @@ start = timer()
 # Set options file #
 ####################
 
-optionsFileName = "combined"
+optionsFileName = "best_DNN"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -39,7 +41,7 @@ optionsFileName = "combined"
 
 # from Options.<optionsFileName> import * as *
 options = getattr(__import__("Options."+optionsFileName, fromlist=["options"]), "options")
-combined_classifier = getattr(__import__("Options."+optionsFileName, fromlist=["combined_classifier "]), "combined_classifier ")
+combined_classifier = getattr(__import__("Options."+optionsFileName, fromlist=["combined_classifier "]), "combined_classifier")
 discriminator = getattr(__import__("Options."+optionsFileName, fromlist=["discriminator"]), "discriminator")
 generator = getattr(__import__("Options."+optionsFileName, fromlist=["generator"]), "generator")
 analyzer = getattr(__import__("Options."+optionsFileName, fromlist=["analyzer"]), "analyzer")
@@ -104,61 +106,59 @@ print('-------------------------------')
 print('Loading Files')
 
 # gather sample files for each type of particle
-nClasses = len(options['samplePath'])
-classFiles = [[]] * nClasses
-for i, classPath in enumerate(options['samplePath']):
-    classFiles[i] = glob.glob(classPath)
+n_classes = len(options['samplePath'])
+class_files = [[]] * n_classes
+for i, class_path in enumerate(options['samplePath']):
+    class_files[i] = glob.glob(class_path)
 
 # determine numbers of test, train, and validation files
-filesPerClass = min([len(files) for files in classFiles])
-nTrain = int(filesPerClass * options['trainRatio'])
-nValidation = int(filesPerClass * options['validationRatio'])
-nTest = filesPerClass - nTrain - nValidation
+files_per_class = min([len(files) for files in class_files])
+n_train = int(files_per_class * options['trainRatio'])
+n_validation = int(files_per_class * options['validationRatio'])
+n_test = files_per_class - n_train - n_validation
 if options['nTrainMax'] > 0:
-    nTrain = min(nTrain, options['nTrainMax'])
+    n_train = min(n_train, options['nTrainMax'])
 if options['nValidationMax'] > 0:
-    nValidation = min(nValidation, options['nValidationMax'])
+    n_validation = min(n_validation, options['nValidationMax'])
 if options['nTestMax'] > 0:
-    nTest = min(nTest, options['nTestMax'])
+    n_test = min(n_test, options['nTestMax'])
 if (options['validationRatio'] > 0):
-    print("Split (files per class): %d train, %d test, %d validation" % (nTrain, nTest, nValidation))
+    print("Split (files per class): %d train, %d test, %d validation" % (n_train, n_test, n_validation))
 else:
-    print("Split (files per class): %d train, %d test" % (nTrain, nTest))
-if (nTest == 0 or nTrain == 0 or (options['validationRatio'] > 0 and nValidation == 0)):
+    print("Split (files per class): %d train, %d test" % (n_train, n_test))
+if (n_test == 0 or n_train == 0 or (options['validationRatio'] > 0 and n_validation == 0)):
     print("Not enough files found - check sample paths")
     sys.exit()
 print('-------------------------------')
 
 # split the train, test, and validation files
 # get lists of [[class1_file1, class2_file1], [class1_file2, class2_file2], ...]
-trainFiles = []
-validationFiles = []
-testFiles = []
-for i in range(filesPerClass):
-    newFiles = []
-    for j in range(nClasses):
-        newFiles.append(classFiles[j][i])
-    if i < nTrain:
-        trainFiles.append(newFiles)
-    elif i < nTrain + nValidation:
-        validationFiles.append(newFiles)
-    elif i < nTrain + nValidation + nTest:
-        testFiles.append(newFiles)
+train_files = []
+validation_files = []
+test_files = []
+for i in range(files_per_class):
+    new_files = []
+    for j in range(n_classes):
+        new_files.append(class_files[j][i])
+    if i < n_train:
+        train_files.append(new_files)
+    elif i < n_train + n_validation:
+        validation_files.append(new_files)
+    elif i < n_train + n_validation + n_test:
+        test_files.append(new_files)
     else:
         break
 if options['validationRatio'] == 0:
-    validationFiles = testFiles
+    validation_files = test_files
 
 # prepare the generators
-print('Defining training dataset')
-trainSet = loader.HDF5Dataset(trainFiles, options['classPdgID'], options['filters'])
-print('Defining validation dataset')
-validationSet = loader.HDF5Dataset(validationFiles, options['classPdgID'], options['filters'])
-print('Defining test dataset')
-testSet = loader.HDF5Dataset(testFiles, options['classPdgID'], options['filters'])
-trainLoader = data.DataLoader(dataset=trainSet, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(trainSet), num_workers=options['nWorkers'])
-validationLoader = data.DataLoader(dataset=validationSet, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(validationSet), num_workers=options['nWorkers'])
-testLoader = data.DataLoader(dataset=testSet, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(testSet), num_workers=options['nWorkers'])
+print('Preparing data loaders')
+train_set = loader.HDF5Dataset(train_files, options['classPdgID'], options['filters'])
+validation_set = loader.HDF5Dataset(validation_files, options['classPdgID'], options['filters'])
+test_set = loader.HDF5Dataset(test_files, options['classPdgID'], options['filters'])
+train_loader = data.DataLoader(dataset=train_set, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(train_set), num_workers=options['nWorkers'])
+validation_loader = data.DataLoader(dataset=validation_set, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(validation_set), num_workers=options['nWorkers'])
+test_loader = data.DataLoader(dataset=test_set, batch_size=options['microBatchSize'], sampler=loader.OrderedRandomSampler(test_set), num_workers=options['nWorkers'])
 print('-------------------------------')
 
 ################################################
@@ -382,8 +382,8 @@ def class_reg_training():
     for epoch in range(options['nEpochs']):
 
         train_or_test = TRAIN
-        trainIter = iter(trainLoader)
-        testIter = iter(testLoader)
+        trainIter = iter(train_loader)
+        testIter = iter(test_loader)
         break_loop = False
         while True:  # loop through all training events until we run out (one epoch)
             trainer.reset()  # zeros gradients and gets ready for a new batch
@@ -398,7 +398,7 @@ def class_reg_training():
                     try:
                         test_data = next(testIter)
                     except StopIteration:
-                        testIter = iter(testLoader)
+                        testIter = iter(test_loader)
                         test_data = next(testIter)
                     update_batch_history(test_data, train_or_test, minibatch_n)
             if break_loop:
@@ -493,7 +493,7 @@ if options['saveFinalModel']:
 print('Getting Validation Results')
 final_val_results = {}
 trainer.reset()
-for sample in validationLoader:
+for sample in validation_loader:
     sample_results = trainer.class_reg_eval(sample, store_reg_results=True)
     for key, sample_data in sample_results.items():
         # cat together numpy array outputs

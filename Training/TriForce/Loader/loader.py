@@ -3,14 +3,10 @@
 # __getitem__ takes an index and returns that event. First it sees which file the indexed event would be in, and loads that file if it is not already in memory. It reads the entire ECAL, HCAL, and target information of that file into memory. Then it returns info for the requested event.
 # OrderedRandomSampler is used to pass indices to HDF5Dataset, but the indices are created in such a way that the first file is completely read first, and then the second file, then the third etc.
 
-import pdb
-
 import h5py as h5
 import numpy as np
 from torch import from_numpy
 import torch.utils.data as data
-
-from Loader.filters import get_events_passing_filters, take_passing_events
 
 
 def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
@@ -37,25 +33,52 @@ def load_hdf5(file, pdgIDs, loadMinimalFeatures=None):
     return return_data
 
 
-def load_min_feature_data_and_find_passing_events(filename, filters, pdgIDs):
-    def get_min_filter_features(filters):
-        # make minimal list of inputs needed to check (or count events)
-        minFeatures = []
-        for filt in filters:
-            minFeatures += filt.featuresUsed
-        # use energy to count number of events if no filters
-        if len(filters) == 0:
-            minFeatures.append('energy')
-        return minFeatures
+def get_min_filter_features(filters):
+    # make minimal list of inputs needed to check (or count events)
+    minFeatures = []
+    for filt in filters:
+        minFeatures += filt.featuresUsed
+    # use energy to count number of events if no filters
+    if len(filters) == 0:
+        minFeatures.append('energy')
+    return minFeatures
+
+
+def get_min_filtered_data(filename, filters, pdgIDs):
     minFeatures = get_min_filter_features(filters)
     file_data = load_hdf5(filename, pdgIDs, minFeatures)
-    passing_events = get_events_passing_filters(file_data, filters)
-    return passing_events
+    for filt in filters:
+        filt.filter(file_data)
+    return file_data
 
 
-def get_filtered_data(filename, filters, pdgIDs, passing_events):
-    file_data = load_hdf5(filename, pdgIDs)
-    return take_passing_events(file_data, passing_events)
+def get_filtered_data(filename_tuple, filters, pdgIDs):
+    data = {}
+    for dataname in filename_tuple:
+        file_data = load_hdf5(dataname, pdgIDs)
+        for filt in filters:
+            filt.filter(file_data)
+        for key in file_data.keys():
+            if key in data.keys():
+                data[key] = np.append(data[key], file_data[key], axis=0)
+            else:
+                data[key] = file_data[key]
+    return data
+
+
+def count_events(filename_tuples, filters, pdgIDs, nClasses):
+    # n_events_in_file_tuple counts the minimum events in a file tuple (one file for each class)
+    n_events_in_file_tuple = len(filename_tuples) * [0]
+
+    for tuple_n, filename_tuple in enumerate(filename_tuples):
+        nevents_after_filtering = []
+        for filename in filename_tuple:
+            filtered_data = get_min_filtered_data(filename, filters, pdgIDs)
+            nevents_after_filtering.append(len(list(filtered_data.values())[0]))
+        n_events_in_file_tuple[tuple_n] = min(nevents_after_filtering) * nClasses
+
+    print('total events passing filters:', sum(n_events_in_file_tuple))
+    return n_events_in_file_tuple
 
 
 class HDF5Dataset(data.Dataset):
@@ -70,75 +93,42 @@ class HDF5Dataset(data.Dataset):
     def __init__(self, filename_tuples, pdgIDs, filters=[]):
         self.filename_tuples = sorted(filename_tuples)
         self.nClasses = len(filename_tuples[0])
-        self.tuple_in_memory = 0
-        self.tuple_in_memory_first_index = 0
-        self.tuple_in_memory_last_index = -1
-        self.tuple_in_memory_good_events =[]
+        self.fileInMemory = -1
+        self.fileInMemoryFirstIndex = 0
+        self.fileInMemoryLastIndex = -1
+        self.data = {}
         self.pdgIDs = {}
         self.filters = filters
         for i, ID in enumerate(pdgIDs):
             self.pdgIDs[ID] = i
-        self.n_events_in_file_tuple = self.count_events(self.filename_tuples, self.filters, self.pdgIDs, self.nClasses)
+        self.n_events_in_file_tuple = count_events(self.filename_tuples, self.filters, self.pdgIDs, self.nClasses)
 
     def __getitem__(self, index):
-        if (index < self.tuple_in_memory_first_index):  # starting new epoch
-            self.prep_first_tuple()
-        if(index > self.tuple_in_memory_last_index):  # finished reading this tuple 
-            self.prep_next_tuple()
-        index_in_tuple = index - self.tuple_in_memory_first_index
-        return self.read_event_from_tuple_in_memory(index_in_tuple)
-
-    def find_good_events_for_file_tuple(self, self.filename_tuples[self.tuple_in_memory]):
-        self.tuple_in_memory_good_events = load_min_feature_data_and_find_passing_events(filename, filters, pdgIDs)
-
-    def count_events(self, filename_tuples, filters, pdgIDs, nClasses):
-        def n_filtered_events(filename):
-            passing_events = load_min_feature_data_and_find_passing_events(filename, filters, pdgIDs)
-            return len(passing_events)
-
-        def min_filtered_events(filename_tuple):
-            return min([n_filtered_events(filename) for filename in filename_tuple])
-
-        n_events_in_file_tuple = [min_filtered_events(filename_tuple) * nClasses for filename_tuple in filename_tuples]
-        print('total events passing filters:', sum(n_events_in_file_tuple))
-        return n_events_in_file_tuple
-
-    def prep_first_tuple(self):
-        self.tuple_in_memory = 0
-        self.tuple_in_memory_first_index = 0
-        self.tuple_in_memory_last_index = -1
-
-    def prep_next_tuple(self):
-        self.tuple_in_memory += 1
-        self.tuple_in_memory_first_index = self.tuple_in_memory_last_index + 1
-        self.tuple_in_memory_last_index += self.n_events_in_file_tuple[self.tuple_in_memory]
-        # print(index, self.tuple_in_memory, self.tuple_in_memory_first_index, self.tuple_in_memory_last_index)
-
-    def read_event_from_tuple_in_memory(self, index):
-
-        def get_filtered_data_tuple(filename_tuple, filters, pdgIDs):
-            def passing_events(filename):
-                load_min_feature_data_and_find_passing_events(filename, filters, pdgIDs)
-
-            def combine_dictionaries(dictionaries):
-                combined_dictionary = {}
-                for dictionary in dictionaries:
-                    for key in dictionary.keys():
-                        if key in combined_dictionary.keys():
-                            combined_dictionary[key] = np.append(combined_dictionary[key], dictionary[key], axis=0)
-                        else:
-                            combined_dictionary[key] = dictionary[key]
-                return combined_dictionary
-
-            file_tuple_data = [get_filtered_data(filename, filters, pdgIDs, passing_events(filename)) for filename in filename_tuple]
-
-            return combine_dictionaries(file_tuple_data)
-
-        data = get_filtered_data_tuple(self.filename_tuples[self.tuple_in_memory], self.filters, self.pdgIDs)
-
+        # if entering a new epoch, re-initialze necessary variables
+        if (index < self.fileInMemoryFirstIndex):
+            self.prep_first_file()
+        # if we started to look at a new file, read the file data
+        if(index > self.fileInMemoryLastIndex):
+            self.prep_next_file()
+        # return the correct sample
+        indexInFile = index - self.fileInMemoryFirstIndex
         return_data = {}
-        for key in data.keys():
-            return_data[key] = data[key][index]
+        for key in self.data.keys():
+            return_data[key] = self.data[key][indexInFile]
+        return return_data
+
+    def prep_first_file(self):
+        self.fileInMemory = -1
+        self.fileInMemoryFirstIndex = 0
+        self.fileInMemoryLastIndex = -1
+
+    def prep_next_file(self):
+        # update indices to new file
+        self.fileInMemory += 1
+        self.fileInMemoryFirstIndex = int(self.fileInMemoryLastIndex+1)
+        self.fileInMemoryLastIndex += self.n_events_in_file_tuple[self.fileInMemory]
+        # print(index, self.fileInMemory, self.fileInMemoryFirstIndex, self.fileInMemoryLastIndex)
+        self.data = get_filtered_data(self.filename_tuples[self.fileInMemory], self.filters, self.pdgIDs)
 
     def __len__(self):
         return sum(self.n_events_in_file_tuple)
