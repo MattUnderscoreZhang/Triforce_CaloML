@@ -1,8 +1,7 @@
 import glob
 import torch.utils.data as data
 from timeit import default_timer as timer
-import blunt_loader as loader
-import unittest
+from . import blunt_loader as loader
 
 #################################
 # Load files and set up loaders #
@@ -61,27 +60,20 @@ def time_loading():
     print(f"Loading 10 batches took {end-start} seconds.")
 
 
-class UnitTests(unittest.TestCase):
+def test_event_overlap():
+    train_files_list = [i for j in train_files for i in j]
+    test_files_list = [i for j in test_files for i in j]
+    all_files_list = train_files_list + test_files_list
+    assert len(set(all_files_list)) == len(set(train_files_list)) + len(set(test_files_list))
 
-    def check_event_overlap(self):
-        train_files_list = [i for j in train_files for i in j]
-        test_files_list = [i for j in test_files for i in j]
-        all_files_list = train_files_list + test_files_list
-        self.assertTrue(len(set(all_files_list)) == len(set(train_files_list)) + len(set(test_files_list)))
 
-    def check_event_coverage(self):
-        self.assertTrue(len(set(train_events)) + len(set(test_events)) == len(train_set) + len(test_set))
-
-    def check_event_overlap_and_coverage(self):
-        self.check_event_overlap()
-        self.check_event_coverage()
+def test_event_coverage():
+    assert len(set(train_events)) + len(set(test_events)) == len(train_set) + len(test_set)
 
 
 #################
 # Perform tests #
 #################
 
-if __name__ == "__main__":
-    my_tests = UnitTests()
+# if __name__ == "__main__":
     # time_loading()
-    my_tests.check_event_overlap_and_coverage()
