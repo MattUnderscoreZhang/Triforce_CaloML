@@ -512,7 +512,7 @@ if len(options['val_outputs']) > 0:
     for key, sample_data in final_val_results.items():
         if key not in options['val_outputs']:
             continue
-        val_file.create_dataset(key, sample_data=np.asarray(sample_data))
+        val_file.create_dataset(key, data=np.asarray(sample_data))
 val_file.close()
 
 ##########################
