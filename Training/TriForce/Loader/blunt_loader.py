@@ -25,14 +25,9 @@ class HDF5Dataset(data.Dataset):
         files = []
         file_classes = []
         for class_n, filename_list in enumerate(filename_lists_by_class):
-            # files += [h5.File(filename) for filename in filename_list]
-            files += [filename for filename in filename_list]
+            files += [h5.File(filename) for filename in filename_list]
             file_classes += [class_n for filename in filename_list]
-        # file_nevents = [i['ECAL'].shape[0] for i in files]
-        file_nevents = []
-        for one_file in files:
-            with h5.File(one_file) as open_file:
-                file_nevents.append(open_file['ECAL'].shape[0])
+        file_nevents = [i['ECAL'].shape[0] for i in files]
         return files, file_classes, file_nevents
 
     def convert_index_to_file_event_n(self, index):
@@ -48,17 +43,17 @@ class HDF5Dataset(data.Dataset):
 
     def __getitem__(self, index):
         file_n, event_n = self.convert_index_to_file_event_n(index)
-        with h5.File(self.files[file_n]) as this_file:
-            event = {}
-            pdgID = this_file['pdgID'][event_n].astype(int)
-            event['pdgID'] = pdgID
-            event['classID'] = self.pdgID_to_class[abs(pdgID)]
-            features = ['ECAL', 'HCAL', 'ECAL_E', 'HCAL_E', 'HCAL_ECAL_ERatio', 'energy', 'eta', 'recoEta', 'phi', 'recoPhi', 'openingAngle']
-            for feat in features:
-                if feat in this_file.keys():
-                    event[feat] = this_file[feat][event_n].astype(np.float32)
-                else:
-                    event[feat] = np.float32(0)
+        this_file = self.files[file_n]
+        event = {}
+        pdgID = this_file['pdgID'][event_n].astype(int)
+        event['pdgID'] = pdgID
+        event['classID'] = self.pdgID_to_class[abs(pdgID)]
+        features = ['ECAL', 'HCAL', 'ECAL_E', 'HCAL_E', 'HCAL_ECAL_ERatio', 'energy', 'eta', 'recoEta', 'phi', 'recoPhi', 'openingAngle']
+        for feat in features:
+            if feat in this_file.keys():
+                event[feat] = this_file[feat][event_n].astype(np.float32)
+            else:
+                event[feat] = np.float32(0)
         return event
 
     def __len__(self):
