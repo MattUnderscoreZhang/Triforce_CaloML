@@ -6,12 +6,12 @@ import numpy as np
 import glob
 import os
 import sys
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import classification_report, roc_auc_score
 from sklearn.metrics import roc_curve, auc
-import cPickle
+import pickle
 options={}
 
 ###############
@@ -45,7 +45,7 @@ nEvents = -1 # subset of events, -1 for all
 ##########################
 
 # load files
-print "Loading files"
+print("Loading files")
 dataFileNames = []
 nFiles = -1
 for particlePath in options['samplePath']:
@@ -62,7 +62,7 @@ for i in range(len(dataFileNames)):
         dataFiles.append(h5.File(dataFileNames[i], "r"))
 
 # list all features in tree
-print "Finding features"
+print("Finding features")
 features = []
 def h5_dataset_iterator(g, prefix=''):
     for key in g.keys():
@@ -82,7 +82,7 @@ for key in badKeys:
 
 # concat all data to form X and y
 data = []
-print "Reading features"
+print("Reading features")
 for count, feature in enumerate(features):
     sys.stdout.flush()
     newFeature = dataFiles[0][feature]
@@ -121,13 +121,13 @@ bdt = AdaBoostClassifier(
         learning_rate=learning_rate,
         random_state=492)
 
-print "Training BDT"
+print("Training BDT")
 bdt.fit(X_train, y_train)
-print "Analyzing BDT results"
+print("Analyzing BDT results")
 y_predicted = bdt.predict(X_test)
 decisions = bdt.decision_function(X_test)
-print (classification_report(y_test, y_predicted, target_names=options['target_names'], digits=4))
-print ("Area under ROC curve: %.4f"%(roc_auc_score(y_test, decisions)))
+print(classification_report(y_test, y_predicted, target_names=options['target_names'], digits=4))
+print("Area under ROC curve: %.4f"%(roc_auc_score(y_test, decisions)))
 
 ################
 # Plot results #
