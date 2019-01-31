@@ -32,8 +32,8 @@ def convertFile(inFile, outFile):
     HCAL = oldFile["HCAL"][()]
 
     # copy ECAL and HCAL cell info to new file
-    newFile.create_dataset("ECAL", data=ECAL, compression='gzip')
-    newFile.create_dataset("HCAL", data=HCAL, compression='gzip')
+    newFile.create_dataset("ECAL", data=ECAL, dtype='float32', chunks=(1,) + ECAL.shape[1:], compression='gzip')
+    newFile.create_dataset("HCAL", data=HCAL, dtype='float32', chunks=(1,) + HCAL.shape[1:], compression='gzip')
 
     # if 'GAN' in inFile: # match Geant units
         # ECAL = ECAL/100
