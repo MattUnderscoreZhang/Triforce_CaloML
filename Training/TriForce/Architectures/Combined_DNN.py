@@ -8,6 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from Architectures import LossFunctions
+from Architectures import Optimizer
 
 ##################
 # Classification #
@@ -96,4 +97,6 @@ class Net():
         self.net = Classifier_Net(options)
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=options['learningRate'], weight_decay=options['decayRate'])
+        # self.optimizer = optim.SGD(self.net.parameters(), lr=options['learningRate'], weight_decay=options['decayRate'])
+        # self.optimizer = Optimizer.LinearRampOptimizer(self.net.parameters(), lr=options['learningRate'], ramp_factor=options['rampFactor'], ramp_batches=options['rampBatches'])
         self.lossFunction = LossFunctions.combinedLossFunction
