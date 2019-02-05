@@ -18,21 +18,15 @@ options={}
 # Set options #
 ###############
 
-basePath = "/data/LCD/NewSamples/RandomAngle/CLIC/"
+basePath = sys.argv[1]
 
-# options['samplePath'] = [basePath + "Pi0Escan_RandomAngle_MERGED/Pi0Escan_*.h5", basePath + "GammaEscan_RandomAngle_MERGED/GammaEscan_*.h5"]
-# options['target_names'] = ['neutral pion', 'photon']
-# options['classPdgID'] = [111, 22] # [Pi0, Gamma]
-# OutPath = "/home/mazhang/Triforce_CaloML/Misc/BDT/Outputs/GammaPi0_WithR9_Ranking/"
-
-options['samplePath'] = [basePath + "EleEscan_RandomAngle_MERGED/EleEscan_*.h5", basePath + "ChPiEscan_RandomAngle_Filtered_2_Combined/ChPiEscan_*.h5"]
-options['target_names'] = ['electron', 'charged pion']
-options['classPdgID'] = [11, 211] # [Ele, ChPi]
-OutPath = "/home/mazhang/Triforce_CaloML/BDT/Outputs/EleChPi/"
+options['samplePath'] = [basePath + "Pi0/*.h5", basePath + "Gamma/*.h5"]
+options['target_names'] = ['neutral pion', 'photon']
+options['classPdgID'] = [111, 22] # [Pi0, Gamma]
+OutPath = sys.argv[2]
 
 badKeys = ['ECAL', 'HCAL', 'conversion', 'energy', 'openingAngle'] # leave pdgID for now - needed below
 badKeys += ['eta', 'phi', 'theta'] # leave the reco versions of these variables
-badKeys += ['R9'] # don't use R9 for ele/chpi
 
 max_depth = 3
 n_estimators = 800
@@ -200,7 +194,7 @@ def compare_train_test(clf, X_train, y_train, X_test, y_test, bins=30):
 compare_train_test(bdt, X_train, y_train, X_test, y_test)
 
 with open(OutPath+'bdt.pkl', 'wb') as pickleFile:
-    cPickle.dump(bdt, pickleFile)    
+    pickle.dump(bdt, pickleFile)    
 
 # feature rankings
 importances = bdt.feature_importances_
