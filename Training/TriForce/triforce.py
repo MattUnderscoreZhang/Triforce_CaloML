@@ -33,7 +33,7 @@ start = timer()
 # Set options file #
 ####################
 
-optionsFileName = "best_DNN"
+optionsFileName = "test"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -62,7 +62,8 @@ defaultParameters = {'importGPU': False, 'nTrainMax': -1, 'nValidationMax': -1,
                      'earlyStopping': False,
                      'relativeDeltaLossThreshold': 0,
                      'relativeDeltaLossNumber': 5, 'saveModelEveryNEpochs': 0,
-                     'saveFinalModel': 0}
+                     'saveFinalModel': 0,
+                     'skipClassRegTrain': False}
 for optionName in defaultParameters.keys():
     if optionName not in options.keys():
         options[optionName] = defaultParameters[optionName]
@@ -75,20 +76,35 @@ if options['validationRatio'] + options['trainRatio'] >= 1:
 if not os.path.exists(options['outPath']):
     os.makedirs(options['outPath'])
 else:
-    print("WARNING: Output directory already exists - overwrite (y/n)?")
-    valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
-    while True:
-        choice = input().lower()
-        if choice in valid:
-            overwrite = valid[choice]
-            break
-        else:
-            print("Please respond with 'yes' or 'no'")
+    if options['skipClassRegTrain']:
+        overwrite = False
+    else:
+        print("WARNING: Output directory already exists - delete and redo training (y/n)?")
+        valid = {"yes": True, "y": True, "ye": True, "no": False, "n": False}
+        while True:
+            choice = input().lower()
+            if choice in valid:
+                overwrite = valid[choice]
+                break
+            else:
+                print("Please respond with 'yes' or 'no'")
     if overwrite:
         shutil.rmtree(options['outPath'])
         os.makedirs(options['outPath'])
     else:
-        sys.exit()
+        if not options['skipClassRegTrain']:
+            print("Evaluate saved net (y/n)?")
+            while True:
+                choice = input().lower()
+                if choice in valid:
+                    options['skipClassRegTrain'] = valid[choice]
+                    break
+                else:
+                    print("Please respond with 'yes' or 'no'")
+        if options['skipClassRegTrain']:
+            print("Loading saved net")
+        else:
+            sys.exit()
 
 # copy code to output directory for logging purposes
 optionsFilePath = Options.__file__[:Options.__file__.rfind('/')]
