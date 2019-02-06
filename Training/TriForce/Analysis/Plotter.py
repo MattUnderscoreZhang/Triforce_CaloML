@@ -141,6 +141,26 @@ class Analyzer():
         plt.savefig(filenames[1])
         plt.clf()
 
+    #################
+    # TESTING PLOTS #
+    #################
+
+    def check_truth_label_vs_pdgID(self, final_val_results):
+        class_pdgID_pairs = set(zip(final_val_results['pdgID'], final_val_results['class_truth']))
+        assert len(class_pdgID_pairs) == 2
+
+    def plot_score_bins(self, final_val_results, filename):
+        raw_score = final_val_results['class_raw_prediction'][()]
+        class_truth = final_val_results['class_truth'][()]
+        plt.hist(raw_score[class_truth==0], bins=50, range=(0,1), histtype='step', color='r', label=final_val_results['pdgID'][class_truth==0][0])
+        plt.hist(raw_score[class_truth==1], bins=50, range=(0,1), histtype='step', color='b', label=final_val_results['pdgID'][class_truth==1][0])
+        plt.title('Raw Net Score')
+        plt.xlabel('score')
+        plt.grid()
+        plt.legend()
+        plt.savefig(filename)
+        plt.clf()
+
     ##########################
     # MAIN ANALYSIS FUNCTION #
     ##########################
@@ -159,6 +179,11 @@ class Analyzer():
 
         folder = test_train_history.filename[:test_train_history.filename.rfind('/')]
 
+        # test plots
+        self.check_truth_label_vs_pdgID(final_val_results)
+        self.plot_score_bins(final_val_results, folder+"/score.eps")
+
+        # final classification plots
         self.plot_ROC(final_val_results, folder+"/ROC.eps")
 
         self.plot_accuracy_bins('energy', final_val_results, folder+"/accuracy_vs_energy.eps")
