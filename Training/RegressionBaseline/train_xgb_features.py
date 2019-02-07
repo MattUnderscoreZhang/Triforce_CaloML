@@ -1,21 +1,16 @@
-import os,sys
+import os,sys,glob
 import h5py as h5
 import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
 from sklearn.utils import shuffle
 
-if len(sys.argv) < 2:
-    print 'usage: python train_xgb_features.py <output_label>'
-
-label = sys.argv[1]
-
 ## local laptop
-basepath = '/home/olivito/datasci/lcd/data'
+# basepath = '/home/olivito/datasci/lcd/data'
 ## culture-plate at caltech
 #basepath = '/data/shared/LCDLargeWindow'
 
-input_filename = basepath + '/fixedangle/EleEscan/merged_featuresonly/merged_minfeatures.h5'
+# input_filename = basepath + '/fixedangle/EleEscan/merged_featuresonly/merged_minfeatures.h5'
 #input_filename = basepath + '/fixedangle/GammaEscan/merged_featuresonly/merged_minfeatures.h5'
 #input_filename = basepath + '/fixedangle/Pi0Escan/merged_featuresonly/merged_minfeatures.h5'
 #input_filename = basepath + '/fixedangle/ChPiEscan/merged_featuresonly/merged_minfeatures.h5'
@@ -24,9 +19,8 @@ input_filename = basepath + '/fixedangle/EleEscan/merged_featuresonly/merged_min
 #input_filename = basepath + '/varangle/Pi0Escan/merged_featuresonly/merged_minfeatures.h5'
 #input_filename = basepath + '/varangle/ChPiEscan/merged_featuresonly/merged_minfeatures.h5'
 
-# if test_filename == input_filename, will use the same file for training and testing with a 70/30 split
+# if test_filename == None, will use the same file for training and testing with a 70/30 split
 # if test_filename is another file, will use one full file for training and the other for testing
-test_filename = input_filename
 #test_filename = basepath + '/fixedangle/EleEscan/merged_featuresonly/merged_minfeatures.h5'
 #test_filename = basepath + '/fixedangle/GammaEscan/merged_featuresonly/merged_minfeatures.h5'
 #test_filename = basepath + '/fixedangle/Pi0Escan/merged_featuresonly/merged_minfeatures.h5'
@@ -35,6 +29,21 @@ test_filename = input_filename
 #test_filename = basepath + '/varangle/GammaEscan/merged_featuresonly/merged_minfeatures.h5'
 #test_filename = basepath + '/varangle/Pi0Escan/merged_featuresonly/merged_minfeatures.h5'
 #test_filename = basepath + '/varangle/ChPiEscan/merged_featuresonly/merged_minfeatures.h5'
+
+## UTA
+test_filename = None
+
+# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/EleEscan_RandomAngle_MERGED/*.h5'
+# output_folder = 'EleXgb'
+
+# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/ChPiEscan_RandomAngle_MERGED/*.h5'
+# output_folder = 'ChPiXgb'
+
+# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/GammaEscan_RandomAngle_MERGED/*.h5'
+# output_folder = 'GammaXgb'
+
+input_filepaths = '/public/data/calo/FixedAngle/CLIC/Pi0/*.h5'
+output_folder = 'Pi0Xgb'
 
 do_transverse = False
 
@@ -80,7 +89,7 @@ def clean_chpi(X,y):
     Xy = np.concatenate([X,y.reshape(-1,1)],axis=1)
     Xy_good = Xy[np.where((Xy[:,0] + Xy[:,1]) > 0.3 * Xy[:,-1])]
     X, y = Xy_good[:,:-1], Xy_good[:,-1]
-    print X.shape, y.shape
+    print(X.shape, y.shape)
     return X, y
 
 # for variable angle electrons, photons, pi0s:
@@ -90,7 +99,7 @@ def clean_varangle(X,y):
     Xy_good = Xy[np.where((Xy[:,0] + Xy[:,1]) > 0.66 * Xy[:,-1])]
     Xy_good = Xy_good[np.where((Xy_good[:,1]/Xy_good[:,0]) < 0.4)]
     X, y = Xy_good[:,:-1], Xy_good[:,-1]
-    print X.shape, y.shape
+    print(X.shape, y.shape)
     return X, y
 
 # apply a min/max energy cut.  Assumes that energy is column -1...
@@ -98,7 +107,7 @@ def energy_cut(X,y,cutmin = -1,cutmax = 1000):
     Xy = np.concatenate([X,y.reshape(-1,1)],axis=1)
     Xy_good = Xy[np.where((Xy[:,-1] > cutmin) & (Xy[:,-1] < cutmax))]
     X, y = Xy_good[:,:-1], Xy_good[:,-1]
-    print X.shape, y.shape
+    print(X.shape, y.shape)
     return X, y
 
 # apply a min/max eta cut.  Assumes that eta is column -2...
@@ -106,7 +115,7 @@ def abseta_cut(X,y,cutmin = -1,cutmax = 1000):
     Xy = np.concatenate([X,y.reshape(-1,1)],axis=1)
     Xy_good = Xy[np.where((np.fabs(Xy[:,-2]) > cutmin) & (np.fabs(Xy[:,-2]) < cutmax))]
     X, y = Xy_good[:,:-1], Xy_good[:,-1]
-    print X.shape, y.shape
+    print(X.shape, y.shape)
     return X, y
 
 # select only photons that have (not) converted.  Assumes that conversion is column -2...
@@ -114,14 +123,23 @@ def select_conversions(X,y,cut = 1):
     Xy = np.concatenate([X,y.reshape(-1,1)],axis=1)
     Xy_good = Xy[np.where(Xy[:,-2] == cut)]
     X, y = Xy_good[:,:-1], Xy_good[:,-1]
-    print X.shape, y.shape
+    print(X.shape, y.shape)
     return X, y
 
-#X, y = load_hdf5(input_filename)
-X, y = load_hdf5(input_filename,do_transverse=do_transverse)
-print X.shape, y.shape
-if 'ChPi' in input_filename: X,y = clean_chpi(X,y)
-elif 'varangle' in input_filename: X,y = clean_varangle(X,y)
+input_filenames = glob.glob(input_filepaths)
+X = None
+y = None
+for input_filename in input_filenames:
+    if X is None:
+        X, y = load_hdf5(input_filename,do_transverse=do_transverse)
+        if 'ChPi' in input_filename: X,y = clean_chpi(X,y)
+        elif 'varangle' in input_filename: X,y = clean_varangle(X,y)
+    else:
+        this_X, this_y = load_hdf5(input_filename,do_transverse=do_transverse)
+        if 'ChPi' in input_filename: this_X,this_y = clean_chpi(this_X,this_y)
+        elif 'varangle' in input_filename: this_X,this_y = clean_varangle(this_X,this_y)
+        X = np.concatenate([X, this_X])
+        y = np.concatenate([y, this_y])
 
 #X,y = abseta_cut(X,y,cutmax=0.05)
 ## remove eta var if necessary
@@ -135,7 +153,7 @@ elif 'varangle' in input_filename: X,y = clean_varangle(X,y)
 X_train, X_test, y_train, y_test = None, None, None, None
 
 # if only using one file: split into train/test
-if test_filename == input_filename:
+if test_filename == None:
     X_train, X_test, y_train, y_test = train_test_split(X,y,test_size=0.3)
 # if using two files: shuffle within each file
 else:
@@ -169,16 +187,16 @@ bst = xgb.train(param,dtrain,num_round,evallist,evals_result=progress,early_stop
 
 y_pred = bst.predict(dtest)
 
-output_dir = './Output/%s/'%(label)
+output_dir = './Output/%s/'%(output_folder)
 if not os.path.exists(output_dir):
     os.makedirs(output_dir)
 output_filename = output_dir + 'results.h5'
 outfile = h5.File(output_filename,'w')
 
-outfile.create_dataset('reg_loss_history_train',data=np.asarray(progress['train']['rmse']))
-outfile.create_dataset('reg_loss_history_test',data=np.asarray(progress['test']['rmse']))
-outfile.create_dataset('reg_energy_prediction',data=np.asarray(y_pred))
-outfile.create_dataset('energy',data=np.asarray(y_test))
+outfile.create_dataset('regressor_loss_history_train',data=np.array(progress['train']['rmse']))
+outfile.create_dataset('regressor_loss_history_test',data=np.array(progress['test']['rmse']))
+outfile.create_dataset('regressor_pred',data=np.array(y_pred))
+outfile.create_dataset('regressor_true',data=np.array(y_test))
 
 outfile.close()
 
