@@ -3,9 +3,10 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import math, pdb
+import math
+import pdb # NOQA
 from Architectures import LossFunctions
-import numpy as np
+
 
 ##################
 # Classification #
@@ -13,6 +14,7 @@ import numpy as np
 
 epsilon = 1e-07
 CLASSIFICATION, REGRESSION = 0, 1
+
 
 class Inception(nn.Module):
 
@@ -64,7 +66,8 @@ class Inception(nn.Module):
         y2 = self.b2(x)
         y3 = self.b3(x)
         y4 = self.b4(x)
-        return torch.cat([y1,y2,y3,y4], 1)
+        return torch.cat([y1, y2, y3, y4], 1)
+
 
 class GoogLeNet(nn.Module):
 
@@ -105,9 +108,8 @@ class GoogLeNet(nn.Module):
         self.b5 = Inception(832, 384, 192, 384, 48, 128, 128)
 
         self.avgpool = nn.AvgPool3d(7, stride=1)
-        self.dense = nn.Linear(1024 + 4, 1024) # window size of 25, plus reco angles and energy sums
-        self.linear = nn.Linear(1024 + 4, len(self.outputs)) # output layer
-        # self.linear = nn.Linear(50176, 2) # window size of 51
+        self.dense = nn.Linear(1024 + 4, 1024)  # window size of 25, plus reco angles and energy sums
+        self.linear = nn.Linear(1024 + 5, len(self.outputs))  # output layer
 
     def forward(self, data):
 
@@ -131,8 +133,8 @@ class GoogLeNet(nn.Module):
         else:
             HCAL_sum = Variable(torch.zeros(ECAL_sum.size()).cuda())
         # reco angles
-        recoEta = Variable(data["recoEta"].cuda()).view(-1,1) * self.inputScaleEta
-        recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1) * self.inputScaleEta
+        recoEta = Variable(data["recoEta"].cuda()).view(-1, 1) * self.inputScaleEta
+        recoPhi = Variable(data["recoPhi"].cuda()).view(-1, 1) * self.inputScaleEta
 
         # net
         x = self.norm(ECAL)
@@ -154,7 +156,7 @@ class GoogLeNet(nn.Module):
         x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
         x = F.relu(self.dense(x))
         # cat angles / energy sums back in before final layer
-        x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
+        x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum, torch.ones([data['ECAL'].shape[0], 1]).cuda()], 1)
         x = self.linear(x)
         # preparing output
         return_data = {}
@@ -169,6 +171,7 @@ class GoogLeNet(nn.Module):
         return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
         return return_data
 
+
 class Net():
 
     def __init__(self, options):
@@ -177,4 +180,5 @@ class Net():
         # self.net = torch.nn.DataParallel(GoogLeNet(options), device_ids=[0,1,2,3,4,5,6,7,8,9]).cuda()
         self.net.cuda()
         self.optimizer = optim.Adam(self.net.parameters(), lr=options['learningRate'], weight_decay=options['decayRate'])
-        self.lossFunction = LossFunctions.classificationOnlyLossFunction
+        # self.lossFunction = LossFunctions.classificationOnlyLossFunction
+        self.lossFunction = LossFunctions.combinedLossFunction

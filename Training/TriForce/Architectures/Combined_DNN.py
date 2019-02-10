@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from Architectures import LossFunctions
-from Architectures import Optimizer
+from Architectures import Optimizer # NOQA
 
 ##################
 # Classification #
@@ -35,14 +35,13 @@ class Classifier_Net(nn.Module):
         # layers
         ECAL_size = self.windowSizeECAL * self.windowSizeECAL * 25
         HCAL_size = self.windowSizeHCAL * self.windowSizeHCAL * 60
-        nsums = 2
-        self.input = nn.Linear(ECAL_size + HCAL_size + nsums + 2, hiddenLayerNeurons)
+        self.input = nn.Linear(ECAL_size + HCAL_size + 4, hiddenLayerNeurons)
         self.hidden = nn.ModuleList()
         self.dropout = nn.ModuleList()
         for i in range(self.nHiddenLayers):
             self.hidden.append(nn.Linear(hiddenLayerNeurons, hiddenLayerNeurons))
             self.dropout.append(nn.Dropout(p=options['dropoutProb']))
-        self.finalLayer = nn.Linear(hiddenLayerNeurons + nsums + 2, len(self.outputs))  # nClasses = 2 for binary classifier
+        self.finalLayer = nn.Linear(hiddenLayerNeurons + 5, len(self.outputs))  # nClasses = 2 for binary classifier
 
     def forward(self, data):
         # reco angles
@@ -74,9 +73,9 @@ class Classifier_Net(nn.Module):
             x = self.dropout[i](x)
         # cat angles / energy sums back in before final layer
         if (self.windowSizeHCAL > 0):
-            x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
+            x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum, torch.ones([data['ECAL'].shape[0], 1]).cuda()], 1)
         else:
-            x = torch.cat([x, recoPhi, recoEta, ECAL_sum], 1)
+            x = torch.cat([x, recoPhi, recoEta, ECAL_sum, torch.ones([data['ECAL'].shape[0], 1]).cuda()], 1)
         x = self.finalLayer(x)
         # preparing output
         return_data = {}

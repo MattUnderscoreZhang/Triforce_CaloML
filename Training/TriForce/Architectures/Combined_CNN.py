@@ -3,27 +3,33 @@ from torch.autograd import Variable
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-import math, pdb
+import math
+import pdb # NOQA
 from functools import reduce
 from Architectures import LossFunctions
 
-### helper functions for getting output sizes
-def size_Conv3d(in_size, kernel_size, stride = [1,1,1], padding = [0,0,0], dilation = [1,1,1]):
+
+# helper functions for getting output sizes
+def size_Conv3d(in_size, kernel_size, stride=[1, 1, 1], padding=[0, 0, 0], dilation=[1, 1, 1]):
     out_size = 3 * [0]
     for i in range(3):
         out_size[i] = math.floor((in_size[i] + 2*padding[i] - dilation[i]*(kernel_size[i] - 1) - 1)/stride[i] + 1)
     return out_size
 
-def size_MaxPool3d(in_size, kernel_size, stride = None, padding = [0,0,0], dilation = [1,1,1]):
+
+def size_MaxPool3d(in_size, kernel_size, stride=None, padding=[0, 0, 0], dilation=[1, 1, 1]):
     # default stride size is the kernel_size
-    if stride is None: stride = kernel_size
+    if stride is None:
+        stride = kernel_size
     return size_Conv3d(in_size, kernel_size, stride, padding, dilation)
+
 
 ##################
 # Classification #
 ##################
 
 CLASSIFICATION, REGRESSION = 0, 1
+
 
 class Classifier_Net(nn.Module):
 
@@ -41,7 +47,7 @@ class Classifier_Net(nn.Module):
         self.inputScaleSumE = options['inputScaleSumE']
         self.inputScaleEta = options['inputScaleEta']
         self.inputScalePhi = options['inputScalePhi']
-        
+
         self.outputs = []
         for particle_class in options['classPdgID']:
             self.outputs += [(str(particle_class)+"_classification", CLASSIFICATION)]
@@ -71,9 +77,9 @@ class Classifier_Net(nn.Module):
                 self.hidden.append(nn.Linear(size_ECAL_flat+size_HCAL_flat+4, self.hiddenLayerNeurons))
             else:
                 self.hidden.append(nn.Linear(self.hiddenLayerNeurons, self.hiddenLayerNeurons))
-            self.dropout.append(nn.Dropout(p = options['dropoutProb']))
+            self.dropout.append(nn.Dropout(p=options['dropoutProb']))
 
-        self.finalLayer = nn.Linear(self.hiddenLayerNeurons+4, len(self.outputs))
+        self.finalLayer = nn.Linear(self.hiddenLayerNeurons+5, len(self.outputs))
 
     def forward(self, data):
 
@@ -83,18 +89,18 @@ class Classifier_Net(nn.Module):
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
         ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
-        ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim = 1).view(-1, 1) * self.inputScaleSumE
+        ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim=1).view(-1, 1) * self.inputScaleSumE
 
         HCAL = Variable(data["HCAL"].cuda())
         lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
         upperBound = lowerBound + self.windowSizeHCAL
         HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
         HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
-        HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim = 1).view(-1, 1) * self.inputScaleSumE
+        HCAL_sum = torch.sum(HCAL.view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60), dim=1).view(-1, 1) * self.inputScaleSumE
 
         # get reco angles from event
-        recoEta = Variable(data["recoEta"].cuda()).view(-1,1) * self.inputScaleEta
-        recoPhi = Variable(data["recoPhi"].cuda()).view(-1,1) * self.inputScalePhi
+        recoEta = Variable(data["recoEta"].cuda()).view(-1, 1) * self.inputScaleEta
+        recoPhi = Variable(data["recoPhi"].cuda()).view(-1, 1) * self.inputScalePhi
 
         # ECAL convolutions
         branchECAL = self.convECAL(ECAL)
@@ -117,7 +123,7 @@ class Classifier_Net(nn.Module):
             x = F.relu(self.hidden[i](x))
             x = self.dropout[i](x)
         # cat angles / energy sums back in before final layer
-        x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum], 1)
+        x = torch.cat([x, recoPhi, recoEta, ECAL_sum, HCAL_sum, torch.ones([data['ECAL'].shape[0], 1]).cuda()], 1)
         x = self.finalLayer(x)
 
         # preparing output
@@ -132,6 +138,7 @@ class Classifier_Net(nn.Module):
                 return_data[label] = x[:, i]
         return_data['classification'] = F.softmax(return_data['classification'].transpose(0, 1), dim=1)
         return return_data
+
 
 class Net():
     def __init__(self, options):

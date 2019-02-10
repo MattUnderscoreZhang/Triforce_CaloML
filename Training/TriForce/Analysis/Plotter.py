@@ -146,7 +146,7 @@ class Analyzer():
     #################
 
     def check_truth_label_vs_pdgID(self, final_val_results):
-        class_pdgID_pairs = set(zip(final_val_results['pdgID'], final_val_results['class_truth']))
+        class_pdgID_pairs = set(zip(abs(final_val_results['pdgID']), final_val_results['class_truth']))
         assert len(class_pdgID_pairs) == 2
 
     def plot_score_bins(self, final_val_results, filename):
