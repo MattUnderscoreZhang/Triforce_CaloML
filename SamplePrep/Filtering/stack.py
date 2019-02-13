@@ -21,10 +21,13 @@ for input_file in input_files:
     input_file = h5.File(input_file,'r')
     for key in list(input_file.keys()):
         input_data = input_file[key][:]
+        if key == 'target':
+            input_data = input_file[key][:,0,1]
+            key = 'energy'
         if key not in output_data.keys():
             output_data[key] = input_data
         else:
-            output_data[key] = np.concatenate(output_data[key], input_data)
+            output_data[key] = np.concatenate([output_data[key], input_data])
 
     # if we have enough events, write output files
     while output_data['ECAL'].shape[0] >= events_per_output_file:
@@ -39,4 +42,4 @@ for input_file in input_files:
     input_file.close()
 
 if (output_data['ECAL'].shape[0] > 0):
-    print output_data['ECAL'].shape[0], " events remaining, not written."
+    print(output_data['ECAL'].shape[0], " events remaining, not written.")
