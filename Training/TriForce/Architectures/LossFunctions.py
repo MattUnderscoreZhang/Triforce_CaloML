@@ -12,9 +12,13 @@ def weighted_mse_loss(pred, target, weights):
     return loss
 
 
+# def linear_misclassification_penalty_loss(pred
+
+
 def combinedLossFunction(output, data, term_weights):
     # classification loss: cross entropy
-    loss_class = term_weights['classification'] * F.cross_entropy(output['classification'], Variable(data['classID'].cuda()))
+    # loss_class = term_weights['classification'] * F.cross_entropy(output['classification'], Variable(data['classID'].cuda()))
+    loss_class = term_weights['classification'] * F.binary_cross_entropy(output['classification'][:, 1], Variable(data['classID'].cuda()).float())
     # regression loss: mse
     reg_energy, target_energy = transforms.reg_target_energy_for_loss(output, data)
     loss_energy = term_weights['energy_regression'] * F.mse_loss(reg_energy, target_energy)
