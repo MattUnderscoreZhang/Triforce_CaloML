@@ -85,14 +85,14 @@ class Classifier_Net(nn.Module):
 
         # window slice and energy sums
         ECAL = Variable(data["ECAL"].cuda())
-        lowerBound = math.ceil(ECAL.shape[0]/2) - int(math.ceil(self.windowSizeECAL/2))
+        lowerBound = math.ceil(ECAL.shape[1]/2) - int(math.ceil(self.windowSizeECAL/2))
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
         ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
         ECAL_sum = torch.sum(ECAL.view(-1, self.windowSizeECAL * self.windowSizeECAL * 25), dim=1).view(-1, 1) * self.inputScaleSumE
 
         HCAL = Variable(data["HCAL"].cuda())
-        lowerBound = math.ceil(HCAL.shape[0]/2) - int(math.ceil(self.windowSizeHCAL/2))
+        lowerBound = math.ceil(HCAL.shape[1]/2) - int(math.ceil(self.windowSizeHCAL/2))
         upperBound = lowerBound + self.windowSizeHCAL
         HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
         HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)

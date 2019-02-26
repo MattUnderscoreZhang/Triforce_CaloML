@@ -49,7 +49,7 @@ class Classifier_Net(nn.Module):
         recoPhi = Variable(data["recoPhi"].cuda()).view(-1, 1) * self.inputScaleEta
         # ECAL slice and energy sum
         ECAL = Variable(data["ECAL"].cuda())
-        lowerBound = math.ceil(ECAL.shape[0]/2) - int(math.ceil(self.windowSizeECAL/2))
+        lowerBound = math.ceil(ECAL.shape[1]/2) - int(math.ceil(self.windowSizeECAL/2))
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
         ECAL = ECAL.contiguous().view(-1, self.windowSizeECAL * self.windowSizeECAL * 25)
@@ -57,7 +57,7 @@ class Classifier_Net(nn.Module):
         # HCAL slice and energy sum
         if (self.windowSizeHCAL > 0):
             HCAL = Variable(data["HCAL"].cuda())
-            lowerBound = math.ceil(HCAL.shape[0]/2) - int(math.ceil(self.windowSizeHCAL/2))
+            lowerBound = math.ceil(HCAL.shape[1]/2) - int(math.ceil(self.windowSizeHCAL/2))
             upperBound = lowerBound + self.windowSizeHCAL
             HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
             HCAL = HCAL.contiguous().view(-1, self.windowSizeHCAL * self.windowSizeHCAL * 60)
