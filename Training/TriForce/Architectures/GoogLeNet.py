@@ -115,7 +115,7 @@ class GoogLeNet(nn.Module):
 
         # ECAL slice and energy sum
         ECAL = Variable(data["ECAL"].cuda())
-        lowerBound = 26 - int(math.ceil(self.windowSizeECAL/2))
+        lowerBound = math.ceil(ECAL.shape[0]/2) - int(math.ceil(self.windowSizeECAL/2))
         upperBound = lowerBound + self.windowSizeECAL
         ECAL = ECAL[:, lowerBound:upperBound, lowerBound:upperBound]
         ECAL = ECAL.contiguous().view(-1, 1, self.windowSizeECAL, self.windowSizeECAL, 25)
@@ -124,7 +124,7 @@ class GoogLeNet(nn.Module):
         # HCAL slice to get energy sum
         if (self.windowSizeHCAL > 0):
             HCAL = Variable(data["HCAL"].cuda())
-            lowerBound = 6 - int(math.ceil(self.windowSizeHCAL/2))
+            lowerBound = math.ceil(ECAL.shape[0]/2) - int(math.ceil(self.windowSizeHCAL/2))
             upperBound = lowerBound + self.windowSizeHCAL
             HCAL = HCAL[:, lowerBound:upperBound, lowerBound:upperBound]
             HCAL = HCAL.contiguous().view(-1, 1, self.windowSizeHCAL, self.windowSizeHCAL, 60)
