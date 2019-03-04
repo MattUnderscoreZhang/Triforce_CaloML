@@ -33,7 +33,7 @@ start = timer()
 # Set options file #
 ####################
 
-optionsFileName = "test"
+optionsFileName = "variable_GN_reg_CLIC"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -129,23 +129,30 @@ for i, class_path in enumerate(options['samplePath']):
 
 # determine numbers of test, train, and validation files
 files_per_class = min([len(files) for files in class_files])
-n_train = int(files_per_class * options['trainRatio'])
-n_validation = int(files_per_class * options['validationRatio'])
-n_test = files_per_class - n_train - n_validation
-if options['nTrainMax'] > 0:
-    n_train = min(n_train, options['nTrainMax'])
-if options['nValidationMax'] > 0:
-    n_validation = min(n_validation, options['nValidationMax'])
-if options['nTestMax'] > 0:
-    n_test = min(n_test, options['nTestMax'])
-if (options['validationRatio'] > 0):
-    print("Split (files per class): %d train, %d test, %d validation" % (n_train, n_test, n_validation))
+if options['skipClassRegTrain']:
+    n_train = 0
+    n_test = files_per_class
+    n_validation = 0
+    print("Using all files as validation")
+    print('-------------------------------')
 else:
-    print("Split (files per class): %d train, %d test" % (n_train, n_test))
-if (n_test == 0 or n_train == 0 or (options['validationRatio'] > 0 and n_validation == 0)):
-    print("Not enough files found - check sample paths")
-    sys.exit()
-print('-------------------------------')
+    n_train = int(files_per_class * options['trainRatio'])
+    n_validation = int(files_per_class * options['validationRatio'])
+    n_test = files_per_class - n_train - n_validation
+    if options['nTrainMax'] > 0:
+        n_train = min(n_train, options['nTrainMax'])
+    if options['nValidationMax'] > 0:
+        n_validation = min(n_validation, options['nValidationMax'])
+    if options['nTestMax'] > 0:
+        n_test = min(n_test, options['nTestMax'])
+    if (options['validationRatio'] > 0):
+        print("Split (files per class): %d train, %d test, %d validation" % (n_train, n_test, n_validation))
+    else:
+        print("Split (files per class): %d train, %d test" % (n_train, n_test))
+    if (n_test == 0 or n_train == 0 or (options['validationRatio'] > 0 and n_validation == 0)):
+        print("Not enough files found - check sample paths")
+        sys.exit()
+    print('-------------------------------')
 
 # split the train, test, and validation files
 # get lists of [[class1_file1, class2_file1], [class1_file2, class2_file2], ...]
@@ -521,6 +528,7 @@ for sample in validation_loader:
         # put scalar outputs into a list
         else:
             final_val_results.setdefault(key, []).append(sample_results[key])
+import pdb; pdb.set_trace()
 
 print('Saving Validation Results')
 if len(options['val_outputs']) > 0:

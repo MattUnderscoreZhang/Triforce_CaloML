@@ -45,13 +45,14 @@ class HDF5Dataset(data.Dataset):
         file_n, event_n = self.convert_index_to_file_event_n(index)
         this_file = self.files[file_n]
         event = {}
-        pdgID = this_file['pdgID'][event_n].astype(int)
-        event['pdgID'] = pdgID
-        event['classID'] = self.pdgID_to_class[abs(pdgID)]
         features = ['ECAL', 'HCAL', 'ECAL_E', 'HCAL_E', 'HCAL_ECAL_ERatio', 'energy', 'eta', 'recoEta', 'phi', 'recoPhi', 'openingAngle']
         for feat in features:
             if feat in this_file.keys():
                 event[feat] = this_file[feat][event_n].astype(np.float32)
+                if feat == 'pdgID':
+                    pdgID = this_file['pdgID'][event_n].astype(int)
+                    event['pdgID'] = pdgID
+                    event['classID'] = self.pdgID_to_class[abs(pdgID)]
             else:
                 event[feat] = np.float32(0)
         return event

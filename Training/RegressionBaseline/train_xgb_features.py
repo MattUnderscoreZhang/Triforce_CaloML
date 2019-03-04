@@ -33,17 +33,17 @@ from sklearn.utils import shuffle
 ## UTA
 test_filename = None
 
-# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/EleEscan_RandomAngle_MERGED/*.h5'
-# output_folder = 'EleXgb'
+# input_filepaths = '/public/data/calo/RandomAngle/CMS/Gamma/*.h5'
+# output_folder = 'GammaXgb_CMS'
 
-# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/ChPiEscan_RandomAngle_MERGED/*.h5'
-# output_folder = 'ChPiXgb'
+# input_filepaths = '/public/data/calo/RandomAngle/CMS/Pi0/*.h5'
+# output_folder = 'Pi0Xgb_CMS'
 
-# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/GammaEscan_RandomAngle_MERGED/*.h5'
-# output_folder = 'GammaXgb'
+# input_filepaths = '/public/data/calo/RandomAngle/ATLAS/Gamma/*.h5'
+# output_folder = 'GammaXgb_ATLAS'
 
-input_filepaths = '/public/data/calo/FixedAngle/CLIC/Pi0/*.h5'
-output_folder = 'Pi0Xgb'
+input_filepaths = '/public/data/calo/RandomAngle/ATLAS/Pi0/*.h5'
+output_folder = 'Pi0Xgb_ATLAS'
 
 do_transverse = False
 

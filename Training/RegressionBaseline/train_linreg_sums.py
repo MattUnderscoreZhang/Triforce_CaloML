@@ -33,17 +33,17 @@ from sklearn.linear_model import LinearRegression
 ## UTA
 test_filename = None
 
-# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/EleEscan_RandomAngle_MERGED/*.h5'
-# output_folder = 'EleLin'
+# input_filepaths = '/public/data/calo/RandomAngle/CMS/Gamma/*.h5'
+# output_folder = 'GammaLinReg_CMS'
 
-# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/ChPiEscan_RandomAngle_MERGED/*.h5'
-# output_folder = 'ChPiLin'
+# input_filepaths = '/public/data/calo/RandomAngle/CMS/Pi0/*.h5'
+# output_folder = 'Pi0LinReg_CMS'
 
-# input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/GammaEscan_RandomAngle_MERGED/*.h5'
-# output_folder = 'GammaLin'
+# input_filepaths = '/public/data/calo/RandomAngle/ATLAS/Gamma/*.h5'
+# output_folder = 'GammaLinReg_ATLAS'
 
-input_filepaths = '/data/LCD/NewSamples/RandomAngle/CLIC/Pi0Escan_RandomAngle_MERGED/*.h5'
-output_folder = 'Pi0Lin'
+input_filepaths = '/public/data/calo/RandomAngle/ATLAS/Pi0/*.h5'
+output_folder = 'Pi0LinReg_ATLAS'
 
 def load_hdf5(filename):
     with h5.File(filename, 'r') as f:
@@ -64,7 +64,7 @@ input_filenames = glob.glob(input_filepaths)
 X = None
 y = None
 for input_filename in input_filenames:
-    if X == None:
+    if X is None:
         X, y = load_hdf5(input_filename)
         if 'ChPi' in input_filename: X,y = clean_chpi(X,y)
     else:
@@ -88,7 +88,7 @@ else:
 linreg = LinearRegression()
 linreg.fit(X_train,y_train)
 
-print linreg.coef_
+print(linreg.coef_)
 
 y_pred = linreg.predict(X_test)
 
