@@ -45,7 +45,7 @@ class HDF5Dataset(data.Dataset):
         file_n, event_n = self.convert_index_to_file_event_n(index)
         this_file = self.files[file_n]
         event = {}
-        features = ['ECAL', 'HCAL', 'ECAL_E', 'HCAL_E', 'HCAL_ECAL_ERatio', 'energy', 'eta', 'recoEta', 'phi', 'recoPhi', 'openingAngle']
+        features = ['ECAL', 'HCAL', 'ECAL_E', 'HCAL_E', 'HCAL_ECAL_ERatio', 'energy', 'eta', 'recoEta', 'phi', 'recoPhi', 'openingAngle', 'pdgID']
         for feat in features:
             if feat in this_file.keys():
                 event[feat] = this_file[feat][event_n].astype(np.float32)
