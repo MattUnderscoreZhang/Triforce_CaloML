@@ -33,7 +33,7 @@ start = timer()
 # Set options file #
 ####################
 
-optionsFileName = "variable_GN_reg_CLIC"
+optionsFileName = "best_EleChPi_net"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -528,7 +528,6 @@ for sample in validation_loader:
         # put scalar outputs into a list
         else:
             final_val_results.setdefault(key, []).append(sample_results[key])
-import pdb; pdb.set_trace()
 
 print('Saving Validation Results')
 if len(options['val_outputs']) > 0:

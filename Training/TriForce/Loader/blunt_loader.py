@@ -49,12 +49,17 @@ class HDF5Dataset(data.Dataset):
         for feat in features:
             if feat in this_file.keys():
                 event[feat] = this_file[feat][event_n].astype(np.float32)
-                if feat == 'pdgID':
-                    pdgID = this_file['pdgID'][event_n].astype(int)
-                    event['pdgID'] = pdgID
-                    event['classID'] = self.pdgID_to_class[abs(pdgID)]
             else:
                 event[feat] = np.float32(0)
+                if feat == 'ECAL':
+                    event[feat] = np.zeros((25, 25, 25), dtype=np.float32)
+                if feat == 'HCAL':
+                    event[feat] = np.zeros((5, 5, 60), dtype=np.float32)
+            if feat == 'pdgID':
+                pdgID = event['pdgID'].astype(int)
+                # pdgID = file_n
+                event['pdgID'] = pdgID
+                event['classID'] = self.pdgID_to_class[abs(pdgID)]
         return event
 
     def __len__(self):
