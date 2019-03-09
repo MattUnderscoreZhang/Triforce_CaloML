@@ -57,7 +57,6 @@ class HDF5Dataset(data.Dataset):
                     event[feat] = np.zeros((5, 5, 60), dtype=np.float32)
             if feat == 'pdgID':
                 pdgID = event['pdgID'].astype(int)
-                # pdgID = file_n
                 event['pdgID'] = pdgID
                 event['classID'] = self.pdgID_to_class[abs(pdgID)]
         return event
