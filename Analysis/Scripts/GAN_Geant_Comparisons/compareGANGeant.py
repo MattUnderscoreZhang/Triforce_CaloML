@@ -34,6 +34,14 @@ def compare(title, key):
     # energyBins = [400, 420, 440, 460, 480, 500]
     energyBins = [0, 5000]
 
+    x_limits = {'ECAL_ratioFirstLayerToSecondLayerE': (1, 10),
+                'ECAL_ratioFirstLayerToTotalE': (0, 0.008),
+                'ECALmomentX2': (0, 20),
+                'ECALmomentX3': (-100, 300),
+                'ECALmomentX4': (0, 8000),
+                'ECALmomentX5': (-50000, 200000),
+                'ECALmomentY1': (20, 30)}
+
     for i in range(len(energyBins)-1):
 
         energyLow = energyBins[i]
@@ -46,7 +54,10 @@ def compare(title, key):
         handles = [Rectangle((0, 0), 1, 1, edgecolor=c, fill=False) for c in ['b', 'g']]
         labels = ['GAN', 'Geant']
 
-        bins = np.histogram(np.hstack((GAN_key_bin, Geant_key_bin)), bins=40)[1]
+        if key in x_limits.keys():
+            bins = np.histogram(np.hstack((GAN_key_bin, Geant_key_bin)), range=x_limits[key], bins=40)[1]
+        else:
+            bins = np.histogram(np.hstack((GAN_key_bin, Geant_key_bin)), bins=40)[1]
         plt.hist(GAN_key_bin, bins=bins, histtype='step', color='b', normed=True)
         plt.hist(Geant_key_bin, bins=bins, histtype='step', color='g', linestyle='--', normed=True)
         plt.legend(handles=handles, labels=labels)
