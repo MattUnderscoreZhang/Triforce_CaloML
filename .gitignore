@@ -3,3 +3,6 @@
 Output/
 Options/
 FinalResults/
+Training/GAN/
+Training/ClassificationBaseline/Outputs/
+Analysis/Scripts/GAN_Geant_Comparisons/Plots/

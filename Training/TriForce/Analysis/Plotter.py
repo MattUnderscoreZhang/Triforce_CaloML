@@ -1,13 +1,11 @@
 import matplotlib as mpl
-mpl.use('Agg')
+mpl.use('Agg')  # NOQA
 import matplotlib.pyplot as plt
-import torch
-from torch.autograd import Variable
 import numpy as np
 from sklearn import metrics
 from statistics import mean
-import pdb
 from scipy.stats import binned_statistic
+
 
 class Analyzer():
 
@@ -15,7 +13,7 @@ class Analyzer():
     # TRAINING HISTORY #
     ####################
 
-    def plot_history(self, train, test, loss, batch, filename): 
+    def plot_history(self, train, test, loss, batch, filename):
 
         plt.figure()
         title = "Classifier "
@@ -34,18 +32,18 @@ class Analyzer():
         plt.title(title)
         plt.grid('on', linestyle='--')
         if loss:
-            if train.shape[0] > 100 or test.shape[0] > 100: 
+            if train.shape[0] > 100 or test.shape[0] > 100:
                 plt.plot(range(1, train.shape[0]+1), train, '-', color="g", label="Training Loss", alpha=0.5)
                 plt.plot(range(1, test.shape[0]+1), test, '-', color="r", label="Test Loss", alpha=0.5)
-            else: 
+            else:
                 plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Loss", alpha=0.5)
                 plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Loss", alpha=0.5)
         else:
             plt.ylim(ymax=1.0)
-            if train.shape[0] > 100 or test.shape[0] > 100: 
+            if train.shape[0] > 100 or test.shape[0] > 100:
                 plt.plot(range(1, train.shape[0]+1), train, '-', color="g", label="Training Accuracy", alpha=0.5)
                 plt.plot(range(1, test.shape[0]+1), test, '-', color="r", label="Test Accuracy", alpha=0.5)
-            else: 
+            else:
                 plt.plot(range(1, train.shape[0]+1), train, 'o-', color="g", label="Training Accuracy", alpha=0.5)
                 plt.plot(range(1, test.shape[0]+1), test, 'o-', color="r", label="Test Accuracy", alpha=0.5)
         plt.legend(loc="best")
@@ -92,7 +90,7 @@ class Analyzer():
         elif bin_feature == 'openingAngle':
             bin_range = (0.0, 0.5)
         bin_class_acc = binned_statistic(class_feature, class_acc, bins=n_bins, range=bin_range).statistic
-        plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_class_acc)
+        plt.plot(np.arange(bin_range[0], bin_range[1], (bin_range[1]-bin_range[0])/n_bins), bin_class_acc)
         plt.title('Mean classification accuracy in ' + bin_feature + ' bins')
         plt.xlabel(bin_feature)
         plt.ylabel('accuracy')
@@ -106,9 +104,10 @@ class Analyzer():
 
     def plot_regression_bins(self, bin_feature, plot_feature, final_val_results, filenames):
         true = np.asarray(final_val_results[plot_feature]).flatten()
-        pred = final_val_results['reg_%s_prediction'%(plot_feature)].flatten()
+        pred = final_val_results['reg_%s_prediction' % (plot_feature)].flatten()
         diff = true - pred
-        if plot_feature == 'energy': diff = (diff/true) * 100.0
+        if plot_feature == 'energy':
+            diff = (diff/true) * 100.0
         binvar = np.asarray(final_val_results[bin_feature]).flatten()
         n_bins = 11
         if bin_feature == 'energy':
@@ -121,22 +120,23 @@ class Analyzer():
 
         # plot mean
         bin_mean = binned_statistic(binvar, diff, statistic='mean', bins=n_bins, range=bin_range).statistic
-        plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_mean, marker='o')
+        plt.plot(np.arange(bin_range[0], bin_range[1], (bin_range[1]-bin_range[0])/n_bins), bin_mean, marker='o')
         plt.title('Mean difference, ' + plot_feature + ' in bins of ' + bin_feature)
         plt.xlabel(bin_feature)
         plt.ylabel('Mean '+plot_feature)
-        plt.grid(True,which='both')
+        plt.grid(True, which='both')
         plt.savefig(filenames[0])
         plt.clf()
 
         # plot std dev
         bin_std = binned_statistic(binvar, diff, statistic=np.std, bins=n_bins, range=bin_range).statistic
-        plt.plot(np.arange(bin_range[0],bin_range[1],(bin_range[1]-bin_range[0])/n_bins), bin_std, marker='o')
+        plt.plot(np.arange(bin_range[0], bin_range[1], (bin_range[1]-bin_range[0])/n_bins), bin_std, marker='o')
         plt.title('Stddev difference, ' + plot_feature + ' in bins of ' + bin_feature)
         plt.xlabel(bin_feature)
         plt.ylabel('Stddev '+plot_feature)
-        if plot_feature == 'energy' and bin_feature == 'energy': plt.yscale('log')
-        plt.grid(True,which='both')
+        if plot_feature == 'energy' and bin_feature == 'energy':
+            plt.yscale('log')
+        plt.grid(True, which='both')
         plt.grid()
         plt.savefig(filenames[1])
         plt.clf()
@@ -152,8 +152,8 @@ class Analyzer():
     def plot_score_bins(self, final_val_results, filename):
         raw_score = final_val_results['class_raw_prediction'][()]
         class_truth = final_val_results['class_truth'][()]
-        plt.hist(raw_score[class_truth==0], bins=50, range=(0,1), histtype='step', color='r', label=final_val_results['pdgID'][class_truth==0][0])
-        plt.hist(raw_score[class_truth==1], bins=50, range=(0,1), histtype='step', color='b', label=final_val_results['pdgID'][class_truth==1][0])
+        plt.hist(raw_score[class_truth == 0], bins=50, range=(0, 1), histtype='step', color='r', label=final_val_results['pdgID'][class_truth == 0][0])
+        plt.hist(raw_score[class_truth == 1], bins=50, range=(0, 1), histtype='step', color='b', label=final_val_results['pdgID'][class_truth == 1][0])
         plt.title('Raw Net Score')
         plt.xlabel('score')
         plt.grid()
@@ -171,11 +171,11 @@ class Analyzer():
 
         classifier_test_loss = mean(final_val_results['class_reg_loss'])
         classifier_test_accuracy = mean(final_val_results['class_acc'])
-        classifier_test_scores = final_val_results['class_prediction']
-        classifier_test_truth = final_val_results['class_truth']
+        # classifier_test_scores = final_val_results['class_prediction']
+        # classifier_test_truth = final_val_results['class_truth']
 
         print('test loss: %8.4f; test accuracy: %8.4f' % (classifier_test_loss, classifier_test_accuracy))
-        test_train_history.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy) 
+        test_train_history.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy)
 
         folder = test_train_history.filename[:test_train_history.filename.rfind('/')]
 
@@ -211,15 +211,14 @@ class Analyzer():
             self.plot_regression_bins('phi', 'eta', final_val_results,
                                       [folder+'/reg_bias_eta_vs_phi.eps', folder+'/reg_res_eta_vs_phi.eps'])
 
-    def analyze_online(self, history, folder): 
+    def analyze_online(self, history, folder):
         """
         Online plotting tool for classifier results representation
         """
-        TRAIN, _, TEST = 0, 1, 2
+        # TRAIN, _, TEST = 0, 1, 2
         # ['class_reg_loss', ..., 'class_acc'] = [0, ..., 5]
-        BATCH, EPOCH = 0, 1
+        # BATCH, EPOCH = 0, 1
         self.plot_history(np.array(history[0][0][0]), np.array(history[0][2][0]), loss=True, batch=True, filename=folder+"/loss_batches.eps")
         self.plot_history(np.array(history[5][0][0]), np.array(history[5][2][0]), loss=False, batch=True, filename=folder+"/accuracy_batches.eps")
         self.plot_history(np.array(history[0][0][1]), np.array(history[0][2][1]), loss=True, batch=False, filename=folder+"/loss_epoches.eps")
         self.plot_history(np.array(history[5][0][1]), np.array(history[5][2][1]), loss=False, batch=False, filename=folder+"/accuracy_epoches.eps")
-
