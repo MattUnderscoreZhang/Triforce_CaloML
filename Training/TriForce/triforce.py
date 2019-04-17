@@ -33,7 +33,7 @@ start = timer()
 # Set options file #
 ####################
 
-optionsFileName = "best_EleChPi_net"
+optionsFileName = "best_GN_GammaPi0"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -497,46 +497,52 @@ print('-------------------------------')
 # Save results #
 ################
 
-print('Saving Training Results')
-test_train_history = h5.File(options['outPath']+"training_results.h5", 'w')
-for stat in range(len(stat_name)):
-    if not stat_name[stat] in print_metrics:
-        continue
-    for split in range(len(split_name)):
-        for timescale in range(len(timescale_name)):
-            test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
-if options['saveFinalModel']:
-    # save the the state_dicts instead of entire models.
-    torch.save(combined_classifier.net.state_dict(), options['outPath']+"saved_classifier.pt")
-    if discriminator is not None:
-        torch.save(discriminator.net.state_dict(), options['outPath']+"saved_discriminator.pt")
-    if generator is not None:
-        torch.save(generator.net.state_dict(), options['outPath']+"saved_generator.pt")
+if not options['skipClassRegTrain']:
 
-print('Getting Validation Results')
-final_val_results = {}
-trainer.reset()
-for sample in validation_loader:
-    sample_results = trainer.class_reg_eval(sample, store_reg_results=True)
-    for key, sample_data in sample_results.items():
-        # cat together numpy array outputs
-        if 'array' in str(type(sample_data)):
-            if key in final_val_results:
-                final_val_results[key] = np.concatenate([final_val_results[key], sample_data], axis=0)
+    print('Saving Training Results')
+    test_train_history = h5.File(options['outPath']+"training_results.h5", 'w')
+    for stat in range(len(stat_name)):
+        if not stat_name[stat] in print_metrics:
+            continue
+        for split in range(len(split_name)):
+            for timescale in range(len(timescale_name)):
+                test_train_history.create_dataset(stat_name[stat]+"_"+split_name[split]+"_"+timescale_name[timescale], data=np.array(history[stat][split][timescale]))
+    if options['saveFinalModel']:
+        # save the the state_dicts instead of entire models.
+        torch.save(combined_classifier.net.state_dict(), options['outPath']+"saved_classifier.pt")
+        if discriminator is not None:
+            torch.save(discriminator.net.state_dict(), options['outPath']+"saved_discriminator.pt")
+        if generator is not None:
+            torch.save(generator.net.state_dict(), options['outPath']+"saved_generator.pt")
+
+    print('Getting Validation Results')
+    final_val_results = {}
+    trainer.reset()
+    for sample in validation_loader:
+        sample_results = trainer.class_reg_eval(sample, store_reg_results=True)
+        for key, sample_data in sample_results.items():
+            # cat together numpy array outputs
+            if 'array' in str(type(sample_data)):
+                if key in final_val_results:
+                    final_val_results[key] = np.concatenate([final_val_results[key], sample_data], axis=0)
+                else:
+                    final_val_results[key] = sample_data
+            # put scalar outputs into a list
             else:
-                final_val_results[key] = sample_data
-        # put scalar outputs into a list
-        else:
-            final_val_results.setdefault(key, []).append(sample_results[key])
+                final_val_results.setdefault(key, []).append(sample_results[key])
 
-print('Saving Validation Results')
-if len(options['val_outputs']) > 0:
+    print('Saving Validation Results')
     val_file = h5.File(options['outPath']+"validation_results.h5", 'w')
     for key, sample_data in final_val_results.items():
-        if key not in options['val_outputs']:
-            continue
         val_file.create_dataset(key, data=np.asarray(sample_data))
-val_file.close()
+    val_file.close()
+
+else:
+    test_train_history = h5.File(options['outPath']+"training_results.h5", 'r')
+    final_val_results = {}
+    val_file = h5.File(options['outPath']+"validation_results.h5", 'r')
+    for key in val_file.keys():
+        final_val_results[key] = val_file[key]
 
 ##########################
 # Analyze and make plots #
