@@ -33,7 +33,7 @@ start = timer()
 # Set options file #
 ####################
 
-optionsFileName = "best_GN_GammaPi0"
+optionsFileName = "best_GN_EleChPi"
 
 ######################################################
 # Import options & warn if options file has problems #
@@ -518,7 +518,9 @@ if not options['skipClassRegTrain']:
     print('Getting Validation Results')
     final_val_results = {}
     trainer.reset()
-    for sample in validation_loader:
+    for i, sample in enumerate(validation_loader):
+        if i % 1000 == 0:
+            print("Processing", i, "out of", len(validation_loader))
         sample_results = trainer.class_reg_eval(sample, store_reg_results=True)
         for key, sample_data in sample_results.items():
             # cat together numpy array outputs
@@ -538,9 +540,9 @@ if not options['skipClassRegTrain']:
     val_file.close()
 
 else:
-    test_train_history = h5.File(options['outPath']+"training_results.h5", 'r')
+    test_train_history = h5.File(options['outPath']+"training_results.h5")
     final_val_results = {}
-    val_file = h5.File(options['outPath']+"validation_results.h5", 'r')
+    val_file = h5.File(options['outPath']+"validation_results.h5")
     for key in val_file.keys():
         final_val_results[key] = val_file[key]
 

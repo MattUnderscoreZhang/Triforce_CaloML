@@ -78,19 +78,23 @@ class Analyzer():
     ###################
 
     def plot_accuracy_bins(self, bin_feature, final_val_results, filename):
-        class_acc = (final_val_results['class_prediction'] == final_val_results['class_truth'])
+        class_acc = (final_val_results['class_prediction'][:] == final_val_results['class_truth'][:])
         class_feature = np.array(final_val_results[bin_feature]).flatten()
         n_bins = 50
         if bin_feature == 'energy':
-            n_bins = 49
+            n_bins = 20
             bin_range = (10, 500)
         elif bin_feature == 'eta':
             n_bins = 11
             bin_range = (-0.55, 0.55)
         elif bin_feature == 'openingAngle':
             bin_range = (0.0, 0.5)
-        bin_class_acc = binned_statistic(class_feature, class_acc, bins=n_bins, range=bin_range).statistic
-        plt.plot(np.arange(bin_range[0], bin_range[1], (bin_range[1]-bin_range[0])/n_bins), bin_class_acc)
+        bin_class_acc, _, _ = binned_statistic(class_feature, class_acc, statistic='mean', bins=n_bins, range=bin_range)
+        bin_class_count, _, _ = binned_statistic(class_feature, class_acc, statistic='count', bins=n_bins, range=bin_range)
+        yerr = np.sqrt(bin_class_acc * (1-bin_class_acc) / bin_class_count)
+        # bin_class_std, _, _ = binned_statistic(class_feature, class_acc, statistic='std', bins=n_bins, range=bin_range)
+        # plt.errorbar(np.arange(bin_range[0], bin_range[1], (bin_range[1]-bin_range[0])/n_bins), bin_class_acc, yerr=bin_class_std/np.sqrt(bin_class_count), fmt='-o', drawstyle='steps-mid')
+        plt.errorbar(np.arange(bin_range[0], bin_range[1], (bin_range[1]-bin_range[0])/n_bins), bin_class_acc, yerr=yerr, fmt='-o', drawstyle='steps-mid')
         plt.title('Mean classification accuracy in ' + bin_feature + ' bins')
         plt.xlabel(bin_feature)
         plt.ylabel('accuracy')
@@ -104,7 +108,7 @@ class Analyzer():
 
     def plot_regression_bins(self, bin_feature, plot_feature, final_val_results, filenames):
         true = np.asarray(final_val_results[plot_feature]).flatten()
-        pred = final_val_results['reg_%s_prediction' % (plot_feature)].flatten()
+        pred = final_val_results['reg_%s_prediction' % (plot_feature)][:].flatten()
         diff = true - pred
         if plot_feature == 'energy':
             diff = (diff/true) * 100.0
@@ -146,7 +150,7 @@ class Analyzer():
     #################
 
     def check_truth_label_vs_pdgID(self, final_val_results):
-        class_pdgID_pairs = set(zip(abs(final_val_results['pdgID']), final_val_results['class_truth']))
+        class_pdgID_pairs = set(zip(abs(final_val_results['pdgID'][:]), final_val_results['class_truth'][:]))
         assert len(class_pdgID_pairs) == 2
 
     def plot_score_bins(self, final_val_results, filename):
@@ -175,7 +179,10 @@ class Analyzer():
         # classifier_test_truth = final_val_results['class_truth']
 
         print('test loss: %8.4f; test accuracy: %8.4f' % (classifier_test_loss, classifier_test_accuracy))
-        test_train_history.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy)
+        if "classifier_test_loss" not in test_train_history.keys():
+            classifier_test_loss = mean(final_val_results['class_reg_loss'])
+        if "classifier_test_accuracy" not in test_train_history.keys():
+            test_train_history.create_dataset("classifier_test_accuracy", data=classifier_test_accuracy)
 
         folder = test_train_history.filename[:test_train_history.filename.rfind('/')]
 
