@@ -54,7 +54,7 @@ class HDF5Dataset(data.Dataset):
                 if feat == 'ECAL':
                     event[feat] = np.zeros((25, 25, 25), dtype=np.float32)
                 if feat == 'HCAL':
-                    event[feat] = np.zeros((5, 5, 60), dtype=np.float32)
+                    event[feat] = np.zeros((11, 11, 60), dtype=np.float32)
             if feat == 'pdgID':
                 pdgID = event['pdgID'].astype(int)
                 event['pdgID'] = pdgID
