@@ -98,6 +98,7 @@ class Analyzer():
         plt.title('Mean classification accuracy in ' + bin_feature + ' bins')
         plt.xlabel(bin_feature)
         plt.ylabel('accuracy')
+        plt.ylim([.98, 1])
         plt.grid()
         plt.savefig(filename)
         plt.clf()
