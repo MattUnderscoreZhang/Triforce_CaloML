@@ -27,19 +27,17 @@ import Loader.blunt_loader as loader
 
 sys.dont_write_bytecode = True  # prevent the creation of .pyc files
 start = timer()
-# os.environ['CUDA_VISIBLE_DEVICES'] = '6, 7, 8, 9'
 
 ####################
 # Set options file #
 ####################
 
-optionsFileName = "best_GN_EleChPi"
+optionsFileName = "GR"
 
 ######################################################
 # Import options & warn if options file has problems #
 ######################################################
 
-# from Options.<optionsFileName> import * as *
 options = getattr(__import__("Options."+optionsFileName, fromlist=["options"]), "options")
 combined_classifier = getattr(__import__("Options."+optionsFileName, fromlist=["combined_classifier "]), "combined_classifier")
 discriminator = getattr(__import__("Options."+optionsFileName, fromlist=["discriminator"]), "discriminator")
@@ -132,8 +130,11 @@ files_per_class = min([len(files) for files in class_files])
 if options['skipClassRegTrain']:
     n_train = 0
     n_test = files_per_class
+    if options['nTestMax'] > 0:
+        n_test = min(n_test, options['nTestMax'])
     n_validation = 0
     print("Using all files as validation")
+    print("Files per class: %d" % n_test)
     print('-------------------------------')
 else:
     n_train = int(files_per_class * options['trainRatio'])
@@ -515,36 +516,32 @@ if not options['skipClassRegTrain']:
         if generator is not None:
             torch.save(generator.net.state_dict(), options['outPath']+"saved_generator.pt")
 
-    print('Getting Validation Results')
-    final_val_results = {}
-    trainer.reset()
-    for i, sample in enumerate(validation_loader):
-        if i % 1000 == 0:
-            print("Processing", i, "out of", len(validation_loader))
-        sample_results = trainer.class_reg_eval(sample, store_reg_results=True)
-        for key, sample_data in sample_results.items():
-            # cat together numpy array outputs
-            if 'array' in str(type(sample_data)):
-                if key in final_val_results:
-                    final_val_results[key] = np.concatenate([final_val_results[key], sample_data], axis=0)
-                else:
-                    final_val_results[key] = sample_data
-            # put scalar outputs into a list
-            else:
-                final_val_results.setdefault(key, []).append(sample_results[key])
-
-    print('Saving Validation Results')
-    val_file = h5.File(options['outPath']+"validation_results.h5", 'w')
-    for key, sample_data in final_val_results.items():
-        val_file.create_dataset(key, data=np.asarray(sample_data))
-    val_file.close()
-
 else:
     test_train_history = h5.File(options['outPath']+"training_results.h5")
-    final_val_results = {}
-    val_file = h5.File(options['outPath']+"validation_results.h5")
-    for key in val_file.keys():
-        final_val_results[key] = val_file[key]
+
+print('Getting Validation Results')
+final_val_results = {}
+trainer.reset()
+for i, sample in enumerate(validation_loader):
+    if i % 1000 == 0:
+        print("Processing", i, "out of", len(validation_loader))
+    sample_results = trainer.class_reg_eval(sample, store_reg_results=True)
+    for key, sample_data in sample_results.items():
+        # cat together numpy array outputs
+        if 'array' in str(type(sample_data)):
+            if key in final_val_results:
+                final_val_results[key] = np.concatenate([final_val_results[key], sample_data], axis=0)
+            else:
+                final_val_results[key] = sample_data
+        # put scalar outputs into a list
+        else:
+            final_val_results.setdefault(key, []).append(sample_results[key])
+
+print('Saving Validation Results')
+val_file = h5.File(options['outPath']+"validation_results.h5", 'w')
+for key, sample_data in final_val_results.items():
+    val_file.create_dataset(key, data=np.asarray(sample_data))
+val_file.close()
 
 ##########################
 # Analyze and make plots #
