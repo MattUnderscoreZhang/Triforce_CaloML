@@ -30,13 +30,15 @@ def plot_ECAL(ECAL, save_name):
 
 
 if __name__ == "__main__":
-    '''python plotECAL.py <file_name> <out_folder> <n_events>'''
+    '''python plotECAL.py <file_name> <out_folder> <n_events> <ECAL/HCAL>'''
     file_name = sys.argv[1]
     out_folder = sys.argv[2]
     n_events = int(sys.argv[3])
+    cal_type = sys.argv[4] # ECAL or HCAL
+    assert(cal_type in ["ECAL", "HCAL"])
 
     pathlib.Path(out_folder).mkdir(parents=True, exist_ok=True)
 
-    ECAL = h5.File(file_name)['ECAL']
+    ECAL = h5.File(file_name)[cal_type]
     for i in range(n_events):
-        plot_ECAL(ECAL[i], pathlib.Path(out_folder)/("ECAL_"+str(i)+".eps"))
+        plot_ECAL(ECAL[i], pathlib.Path(out_folder)/(cal_type+"_"+str(i)+".eps"))
