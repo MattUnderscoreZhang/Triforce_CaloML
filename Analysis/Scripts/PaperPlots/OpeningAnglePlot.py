@@ -35,16 +35,32 @@ plt.hist(np.clip(pi0_opening_angle, bins[0], bins[-1]), bins=bins, density=True,
 plt.xlabel('Opening Angle (Radians)', fontsize=12)
 plt.ylabel('Normalized Fraction', fontsize=12)
 plt.yscale('log')
+plt.savefig('opening_angles.png')
+
+plt.clf()
+
+bins = np.arange(0, 0.01, 0.0005)
+fig, ax = plt.subplots()
+ax.hist(np.clip(pi0_opening_angle, bins[0], bins[-1]), bins=bins, density=True, histtype='step', linewidth=1, label='Pi0')
+# plt.title('Opening Angle of Pi0 Events with Overflow Bin', fontsize=15)
+ax.set_xlabel('Opening Angle (Radians)', fontsize=12)
+ax.set_ylabel('Normalized Fraction', fontsize=12)
+ax.set_yscale('log')
+
+ax2 = ax.twiny()
+ax2.set_xlim(0, 0.01/0.003)
+ax2.set_xlabel('n ECAL cells')
 plt.savefig('zoom_opening_angles.png')
 
 plt.clf()
 
-bin_pi0_E_means = binned_statistic(pi0_opening_angle, pi0_E, bins=20, range=(0, 0.2)).statistic
+bin_pi0_E_means = binned_statistic(pi0_opening_angle, pi0_E, bins=20, range=(0, 0.01)).statistic
 
-plt.plot(np.arange(0, 0.2, 0.01), bin_pi0_E_means, label='Pi0')
+plt.plot(np.arange(0, 0.01, 0.0005), bin_pi0_E_means, label='Pi0')
 # plt.title('Mean Pi0 Energy in Opening Angle Bins', fontsize=15)
 plt.xlabel('Opening Angle (Radians)', fontsize=12)
 plt.ylabel('Energy (GeV)', fontsize=12)
+plt.ylim(0, 450)
 # plt.grid()
 plt.savefig('mean_energy_vs_opening_angle.png')
 
