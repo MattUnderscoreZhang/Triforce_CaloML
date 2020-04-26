@@ -19,12 +19,12 @@ def plot_ECAL(ECAL, save_name):
     ax = Axes3D(fig)
     ax.scatter(x, y, z, marker='.', zdir='z', c=scalarMap.to_rgba(values), cmap='jet', alpha=0.8, s=sizes)
 
-    ax.set_title("Energy in calorimeter")
+    # ax.set_title("Energy in calorimeter")
     ax.set_xlabel("X")
     ax.set_ylabel("Y")
     ax.set_zlabel("Layer")
     scalarMap.set_array(ECAL)
-    fig.colorbar(scalarMap)  # plot color bar
+    # fig.colorbar(scalarMap)  # plot color bar
 
     plt.savefig(save_name)
 
