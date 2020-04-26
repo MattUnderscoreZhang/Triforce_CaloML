@@ -1,7 +1,7 @@
 import matplotlib
 matplotlib.use('Agg')  # NOQA
 import matplotlib.pyplot as plt
-import seaborn as sns
+# import seaborn as sns
 import glob
 import h5py as h5
 import numpy as np
@@ -64,10 +64,31 @@ plt.savefig('zoom_ratios.png')
 
 plt.clf()
 
-bin_chpi_E_means = binned_statistic(chpi_ratio, chpi_E, bins=20, range=(0, 5)).statistic
+# bin_chpi_E_means = binned_statistic(chpi_ratio, chpi_E, bins=20, range=(0, 5)).statistic
 
-plt.plot(np.arange(0, 5, 0.25), bin_chpi_E_means, label='ChPi')
+# plt.plot(np.arange(0, 5, 0.25), bin_chpi_E_means, label='ChPi')
+# # plt.title('Mean ChPi Energy in H/E Energy Ratio Bins', fontsize=15)
+# plt.xlabel('HCAL_ECAL_ERatio', fontsize=12)
+# plt.ylabel('Energy (GeV)', fontsize=12)
+# # plt.grid()
+# plt.savefig('mean_energy_vs_ratio.png')
+
+# plt.clf()
+
+nbins = 20
+cut_events = [(i, j) for (i, j) in zip(chpi_ratio, chpi_E) if i < 5]
+cut_chpi_ratio = [i[0] for i in cut_events]
+cut_chpi_E = [i[1] for i in cut_events]
+nevents, _ = np.histogram(cut_chpi_ratio, bins=nbins)
+bin_yields, _ = np.histogram(cut_chpi_ratio, bins=nbins, weights=cut_chpi_E)
+bin_sq_yields, _ = np.histogram(cut_chpi_ratio, bins=nbins, weights=[i*i for i in cut_chpi_E])
+mean = bin_yields / nevents
+std = np.sqrt(bin_sq_yields/nevents - mean*mean)/np.sqrt(nevents)
+
+# plt.plot(np.arange(0, 5, 0.25), bin_chpi_E_means, label='ChPi')
 # plt.title('Mean ChPi Energy in H/E Energy Ratio Bins', fontsize=15)
+# plt.plot(cut_chpi_ratio, cut_chpi_E, 'bo')
+plt.errorbar((_[1:] + _[:-1])/2, mean, yerr=std, fmt='r-')
 plt.xlabel('HCAL_ECAL_ERatio', fontsize=12)
 plt.ylabel('Energy (GeV)', fontsize=12)
 # plt.grid()
