@@ -1,5 +1,0 @@
-Codebase for complete calorimeter classification/regression/generation analysis.
-
-1. SamplePrep/ contains code for generating and preparing MC samples, including feature calculation and resampling.
-2. Training/ contains the TriForce framework for classification and regression, as well as training code for our baseline comparisons.
-3. Analysis/ contains scripts for generating paper plots.
