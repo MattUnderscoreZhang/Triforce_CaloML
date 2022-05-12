@@ -10,7 +10,6 @@ import scipy.stats
 import sys
 import ast
 import h5py
-import nsub
 import os
 import math
 import addFeatures

@@ -15,12 +15,11 @@ import h5py as h5
 
 # takes numpy arrays num, denom and returns num/denom. division by 0 yields 0 in the output
 def safeDivide(num, denom):
-    result = None
-    # suppresses warnings from division by 0
-    with np.errstate(divide='ignore'):
+    if denom == 0:
+        return 0
+    else:
         result = num / denom
-    result[denom == 0] = 0
-    return result
+        return result
 
 def convertFile(inFile, outFile):
 
