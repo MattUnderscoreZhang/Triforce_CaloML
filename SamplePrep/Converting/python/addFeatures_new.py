@@ -7,21 +7,32 @@
 from __future__ import division
 import numpy as np
 import numpy.core.umath_tests as umath
+import scipy.stats
 from skimage.util.shape import view_as_windows
 import sys
+import ast
 import h5py as h5
-
 
 # takes numpy arrays num, denom and returns num/denom. division by 0 yields 0 in the output
 def safeDivide(num, denom):
-    result = np.divide(num, denom, out=np.zeros_like(num), where=denom!=0)
-    return result
-
+    if type(denom) == "np.ndarray":
+        d
+    elif denom == 0:
+        return 0
+    else:
+        result = num / denom
+        return result
+    # result = None
+    # # suppresses warnings from division by 0
+    # with np.errstate(divide='ignore'):
+        # result = num / denom
+    # result[denom == 0] = 0
+    # return result
 
 def convertFile(inFile, outFile):
 
     # Open file and extract events
-    oldFile = h5.File(inFile, "r")
+    oldFile = h5.File(inFile)
     newFile = h5.File(outFile, "w")
 
     ECAL = oldFile["ECAL"][()]
@@ -53,7 +64,7 @@ def convertFile(inFile, outFile):
     newFile.create_dataset("HCAL_nHits", data=HCAL_nHits, compression='gzip')
 
     # Ratio of HCAL/ECAL energy, and other ratios
-    newFile.create_dataset("HCAL_ECAL_ERatio", data=safeDivide(HCAL_E, ECAL_E), dtype=float, compression='gzip')
+    newFile.create_dataset("HCAL_ECAL_ERatio", data=safeDivide(HCAL_E, ECAL_E), compression='gzip')
     newFile.create_dataset("HCAL_ECAL_nHitsRatio", data=safeDivide(HCAL_nHits, ECAL_nHits), compression='gzip')
     ECAL_E_firstLayer = np.sum(np.sum(ECAL[:,:,:,0], axis=1), axis=1)
     HCAL_E_firstLayer = np.sum(np.sum(HCAL[:,:,:,0], axis=1), axis=1)
@@ -109,19 +120,19 @@ def convertFile(inFile, outFile):
     HCAL_midZ = np.zeros(nEvents)
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeX), (nEvents,1))
-        moments = np.power((relativeIndices.transpose() - HCAL_midX).transpose(), i+1)
+        moments = np.power((relativeIndices.transpose()-HCAL_midX).transpose(), i+1)
         HCAL_momentX = safeDivide(umath.inner1d(HCALprojX, moments), totalE)
         if i==0: HCAL_midX = HCAL_momentX.transpose()
         newFile.create_dataset("HCALmomentX" + str(i+1), data=HCAL_momentX, compression='gzip')
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeY), (nEvents,1))
-        moments = np.power((relativeIndices.transpose() - HCAL_midY).transpose(), i+1)
+        moments = np.power((relativeIndices.transpose()-HCAL_midY).transpose(), i+1)
         HCAL_momentY = safeDivide(umath.inner1d(HCALprojY, moments), totalE)
         if i==0: HCAL_midY = HCAL_momentY.transpose()
         newFile.create_dataset("HCALmomentY" + str(i+1), data=HCAL_momentY, compression='gzip')
     for i in range(6):
         relativeIndices = np.tile(np.arange(HCAL_sizeZ), (nEvents,1))
-        moments = np.power((relativeIndices.transpose() - HCAL_midZ).transpose(), i+1)
+        moments = np.power((relativeIndices.transpose()-HCAL_midZ).transpose(), i+1)
         HCAL_momentZ = safeDivide(umath.inner1d(HCALprojZ, moments), totalE)
         if i==0: HCAL_midZ = HCAL_momentZ.transpose()
         newFile.create_dataset("HCALmomentZ" + str(i+1), data=HCAL_momentZ, compression='gzip')
@@ -133,7 +144,6 @@ def convertFile(inFile, outFile):
     
     newFile.close()
         
-
 #################
 # Main function #
 #################
