@@ -9,7 +9,8 @@ import sys, getopt
 helpline = 'skimH5.py -i <inputPath> -o <outputPath>'
 
 
-def main(argv):
+if __name__ == "__main__":
+    argv = sys.argv[1:]
     try:
         opts, _ = getopt.getopt(argv, "hi:o:", ["inputPath=", "outputPath="])
     except getopt.GetoptError:
@@ -23,31 +24,32 @@ def main(argv):
             inputPath = arg
         elif opt in ("-o", "--outputPath"):
             outputPath = arg
-        print 'Converting all files found in ', inputPath
-        print 'Saving converted files in ', outputPath
 
-        # loop over all the files in the inputPath folder
-        for fileName in [file for file in listdir(inputPath) if isfile(join(inputPath, file))]:
-            print "Skimming", fileName
+    print 'Converting all files found in ', inputPath
+    print 'Saving converted files in ', outputPath
 
-            oldFile = h5py.File(inputPath + fileName)
-            newFile = h5py.File(outputPath + fileName, "w")
+    # loop over all the files in the inputPath folder
+    for fileName in [file for file in listdir(inputPath) if isfile(join(inputPath, file))]:
+        print "Skimming", fileName
 
-            badIndices = [index for index, ratio in enumerate(oldFile['HCAL_ECAL_Ratios/HCAL_ECAL_ERatio']) if ratio > 0.025 or not np.isfinite(ratio)]
+        oldFile = h5py.File(inputPath + fileName, "r")
+        newFile = h5py.File(outputPath + fileName, "w")
 
-            # recursively list all datasets in the sample
-            datasets = []
+        badIndices = [index for index, (ratio, ecal_e) in enumerate(zip(oldFile['HCAL_ECAL_ERatio'], oldFile["ECAL_E"])) if ratio > 0.025 or ecal_e == 0]
 
-            def appendName(name):
-                if isinstance(oldFile[name], h5py.Dataset):
-                    datasets.append(name)
-                return None
+        # recursively list all datasets in the sample
+        datasets = []
 
-            oldFile.visit(appendName)
+        def appendName(name):
+            if isinstance(oldFile[name], h5py.Dataset):
+                datasets.append(name)
+            return None
 
-            if len(badIndices) < len(oldFile['HCAL_ECAL_Ratios/HCAL_ECAL_ERatio']):
-                for dsetName in datasets:
-                    dset = h5pp.deleteRows(oldFile, dsetName, badIndices, newFile)
+        oldFile.visit(appendName)
 
-            oldFile.close()
-            newFile.close()
+        if len(badIndices) < len(oldFile['HCAL_ECAL_ERatio']):
+            for dsetName in datasets:
+                dset = h5pp.deleteRows(oldFile, dsetName, badIndices, newFile)
+
+        oldFile.close()
+        newFile.close()
