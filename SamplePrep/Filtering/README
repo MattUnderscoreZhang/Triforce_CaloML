@@ -1,3 +1,5 @@
-Use the skimH5.py script to create a file with only events with HCAL/ECAL of less than 0.2. This saves in SkimmedH5Files/.
+Use the filter_and_recombine.py script to apply a filter on all files in a folder.
 
-In my Macbook projects folder I have some Jupyter notebooks where I played around with looking at data, moving the h5 files to my local directory first.
+Passing events from the files will be repacked in a new folder in files with the specified number of events per file.
+
+The default filter is for Gamma/Pi0, where we select only events with HCAL/ECAL of less than 0.2.
